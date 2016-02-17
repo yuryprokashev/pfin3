@@ -1,0 +1,35 @@
+{
+  "name": "pfinclient",
+  "version": "1.0.0",
+  "description": "Personal Finance MEAN single page application",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yury Prokashev",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "chai": "^3.5.0",
+    "gulp": "^3.9.0",
+    "gulp-browserify": "^0.5.1",
+    "karma": "^0.13.19",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.2.2",
+    "karma-mocha": "^0.2.1",
+    "mocha": "^2.4.5"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "express-session": "^1.13.0",
+    "http-status": "^0.2.0",
+    "method-override": "^2.3.5",
+    "mongoose": "^4.3.7",
+    "passport": "^0.3.2",
+    "passport-google-oauth20": "^1.0.0",
+    "underscore": "^1.8.3",
+    "wagner-core": "^0.2.0"
+  }
+}

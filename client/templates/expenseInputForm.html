@@ -1,0 +1,94 @@
+<!-- TODO. Make hidden input fields in form for currency and category.-->
+<form novalidate class = "col-md-12" name = "form" ng-submit = "post()">
+    <div class = "row">
+        
+        <!-- Date -->
+        <div class = "col-md-6">
+            <div class = "form-group input-group-sm">
+                <label class = "sr-only" for date>Expense date</label>
+                <input id = "date-input"
+                       type = "date"
+                       name = "date"
+                       class = "form-control"
+                       ng-model = "obj.date"
+                       required = ""/>
+                <div ng-show = "form.date.$error.required ">Date is required</div><br>
+            </div>
+        </div>
+        
+        <!-- Currency -->
+        <div class = "col-md-6">
+            <div class = "form-group input-group-sm">
+                <div class = "btn-group btn-group">
+                    <button id = "currency-option-{{ cr._id }}"
+                            type = "button"
+                            class = "btn {{ cr.className }}"
+                            ng-repeat = "cr in currencies"
+                            ng-class = "cr.isSelected ? 'btn-primary' : 'btn-default'"
+                            ng-click = "selectItem( currencies, cr._id, 'currency' )"
+                    ></button>
+                </div>
+                <input class = "sr-only" type = "text" name = "currency" ng-model = "obj.currency"/>
+            </div>
+        </div>
+        
+        <!-- Amount -->
+        <div class = "col-md-12">
+            <div class = "form-group input-group-sm">
+                <label class = "sr-only" for amount>Expense amount</label>
+                <input id = "amount-input"
+                       type = "number"
+                       class = "form-control"
+                       name = "amount"
+                       placeholder = "enter amount"
+                       ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/"
+                       step = "0.01"
+                       ng-model = "obj.amount"/>
+            </div>
+        </div>
+        
+        <!-- 5 most frequent categories -->
+        <div class = "col-md-12">
+            <div class = "form-group input-group-sm">
+                <label class = "sr-only" for categories>5 Most Frequent Categories</label>
+                <div class = "btn-group btn-group">
+                    <button class = "btn {{ ct.className }}"
+                            type = "button"
+                            ng-repeat = "ct in categories"
+                            ng-class = "ct.isSelected ? 'btn-primary' : 'btn-default'"
+                            ng-click = "selectItem( categories, ct._id, 'category' )"
+                    ></button>
+                </div>
+                <input id = "category-input"
+                       class = "sr-only"
+                       type = "text"
+                       name = "category"
+                       ng-model = "obj.category"/>
+            </div>
+            <div class = "form-group">
+                <p>{{obj.category.name}}</p>
+            </div>
+        </div>
+        
+        <!-- Text Description -->
+        <div class = "col-md-12">
+            <div class = "form-group input-group-sm">
+                <label class = "sr-only" for description>Expense description</label>
+                <input id = "expense-description"
+                       type = "text"
+                       class = "form-control"
+                       name = "description"
+                       placeholder = "describe the expense"
+                       ng-model = "obj.description"/>
+            </div>
+        </div>
+        
+        <!-- Submit button -->
+        <div class = "col-md-12">
+            <div class = "form-group input-group-sm">
+                <button type = "submit"
+                        class = "btn btn-block btn-success">Post Expense</button>
+            </div>
+        </div>
+    </div>
+</form>

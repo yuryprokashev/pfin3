@@ -1,0 +1,23 @@
+<ul class = "list-group">
+    <p ng-show = "!expenseList.length">Nothing here yet. Post your expenses in the form above.</p>
+    <li ng-show = "expenseList.length"
+        class="list-group-item"
+        ng-repeat = "e in expenseList">
+        <div class = "row">
+            <div class = "col-md-4 text-primary">
+                <p>{{ e.amount }} <span class = "{{ e.currency.className }}"></span></p>
+            </div>
+            <div class = "col-md-6"><span class = "{{ e.category.className }}"></span> {{ e.category.name }}</div>
+            <div class = "col-md-2 text-right">
+                <span class = "fa fa-trash-o text-danger"
+                      aria-hidden = "true"
+                      ng-click = "delete( e._id )">
+                </span>
+            </div>
+        </div>
+        <div class = "row">
+            <div class = "col-md-4 small">{{ e.date | date : "dd-MMM-yy" : +0300 }}</div>
+            <div class = "col-md-8 small">{{ e.description }}</div>
+        </div>
+    </li>
+</ul>

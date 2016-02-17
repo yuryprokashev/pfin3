@@ -1,0 +1,53 @@
+<html ng-app = "personalFinance" ng-controller = 'mainCtrl'>
+<head>
+    <title>Personal Finance</title>
+    <!-- import Angular and it's services -->
+    <script type = "text/javascript" src = "https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0-rc.2/angular.js"></script>
+    <script type = "text/javascript" src = "https://code.angularjs.org/1.5.0-rc.2/angular-route.js"></script>
+
+    <!-- Bootstrap CSS/JS and jQuery JS -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script type = "text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script type = "text/javascript" src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+    <!-- Plot.ly -->
+    <script type = "text/javascript" src = "https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- the App javascript -->
+    <script type = "text/javascript" src = "/assets/js/bundle.js"></script>
+</head>
+
+<body>
+<header>
+    <nav class = "navbar navbar-default">
+        <div class = "container-fluid">
+            <div class = "navbar-header">
+                <ul class="nav navbar-nav">
+                    <li><a href = "#/" class = "navbar-brand">Personal Finance</a></li>
+                    <li><a href = "#/expenses">Expenses App</a></li>
+                </ul>
+            </div>
+            <div class="navbar-header navbar-right">
+                <ul class = "nav navbar-nav">
+                    <li class="navbar-right" ng-show = "user.user">
+                        <img ng-src="{{ user.user.public.picture }}">
+                        <i class="fa fa-sign-out">
+                            <a href = "/auth/logout">sign out</a>
+                        </i>
+                    </li>
+                    <a class = "btn btn-success"
+                       ng-show = "!user.user"
+                       href = '/auth/google'>Sign In</a>
+                </ul>
+            </div>
+        </div>
+    </nav>  <!--end of navigation -->
+</header>
+
+<div class="container" ng-view></div> <!-- end of content area -->
+
+<footer></footer> <!-- end of footer -->
+</body>
+</html>
