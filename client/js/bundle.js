@@ -34,8 +34,14 @@ client.config( function( $routeProvider ){
 },{"./controllers.js":2,"./directives.js":3,"./services.js":4,"underscore":6}],2:[function(require,module,exports){
 // TODO. Write code for all controllers
 
-exports.mainCtrl = function( $scope, $user ) {
+exports.mainCtrl = function( $scope, $user, $date ) {
     $scope.user = $user;
+    $scope.date = $date;
+    $scope.selectMonth = function( event, month ) {
+        event.target.blur();
+        $scope.date.selectMonth( month );
+    };
+
 };
 
 exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http ) {
@@ -111,19 +117,26 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
 
     $scope.expenseList = [];
     $scope.date = $date;
-    var year = $scope.date.selectedDate.getFullYear();
-    var month = $scope.date.selectedDate.getMonth();
 
-    $http.get( 'api/v1/expenses/' + year + month).
-    then(
-        function successCallback (res) {
-        $scope.expenseList = res.data;
-        console.log($scope.expenseList);
-        },
-        function errorCallback (res) {
-        console.error(res);
-        }
-    );
+    $scope.reset = function() {
+        $scope.expenseList = [];
+    };
+
+    $scope.fillExpenseList = function () {
+        var year = $scope.date.selectedDate.getFullYear();
+        var month = $scope.date.selectedDate.getMonth();
+
+        $http.get( 'api/v1/expenses/' + year + month).
+        then(
+            function successCallback (res) {
+                $scope.expenseList = res.data;
+                //console.log($scope.expenseList);
+            },
+            function errorCallback (res) {
+                console.error(res);
+            }
+        );
+    };
 
 
     $scope.delete = function( id ) {
@@ -143,6 +156,15 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
             }
         );
     };
+
+    $scope.$watch( 'date', function (newVal, oldVal ){
+        //console.log(oldVal);
+        //console.log(newVal);
+        $scope.reset();
+        $scope.fillExpenseList();
+    }, true);
+
+    $scope.fillExpenseList();
 
 };
 
@@ -654,16 +676,48 @@ exports.$user = function( $http ) {
     return s;
 };
 
+// Get moment.js package to deal with months easily
+
+//var moment = require( 'moment' );
+
 exports.$date = function () {
 
     var s = {};
 
-    s.selectedDate = new Date();
-    // TODO. Code should return currently set month and year.
+    var d = new Date();
+
+    s.selectedDate = new Date(d.getFullYear(), d.getMonth());
+
+    s.months = [];
+
+    function createMonths ( origin ) {
+        //console.log(origin);
+        var result = [];
+        // make a list of 11 months, with start month in the middle
+        for( var i = -5 ; i <= 5; i++ ){
+            var m = new Date(origin.getFullYear(), origin.getMonth());
+
+            m.setMonth( origin.getMonth() + i );
+
+            m.isSelected = false;
+            result.push(m);
+        }
+        // make central month 'Selected'
+        result[5].isSelected = true;
+        return result;
+    };
+
+    s.months = createMonths( s.selectedDate );
+
+    s.selectMonth = function( month ) {
+        s.months = createMonths( month );
+        s.selectedDate = s.months[5];
+    };
+
     s.getDate = function () {
         return s.selectedDate;
     };
-    // TODO. Code should change currently set month and year
+
     s.setDate = function( date ) {
         s.selectedDate = date;
     };

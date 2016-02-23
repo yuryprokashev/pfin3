@@ -1,7 +1,13 @@
 // TODO. Write code for all controllers
 
-exports.mainCtrl = function( $scope, $user ) {
+exports.mainCtrl = function( $scope, $user, $date ) {
     $scope.user = $user;
+    $scope.date = $date;
+    $scope.selectMonth = function( event, month ) {
+        event.target.blur();
+        $scope.date.selectMonth( month );
+    };
+
 };
 
 exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http ) {
@@ -77,19 +83,26 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
 
     $scope.expenseList = [];
     $scope.date = $date;
-    var year = $scope.date.selectedDate.getFullYear();
-    var month = $scope.date.selectedDate.getMonth();
 
-    $http.get( 'api/v1/expenses/' + year + month).
-    then(
-        function successCallback (res) {
-        $scope.expenseList = res.data;
-        console.log($scope.expenseList);
-        },
-        function errorCallback (res) {
-        console.error(res);
-        }
-    );
+    $scope.reset = function() {
+        $scope.expenseList = [];
+    };
+
+    $scope.fillExpenseList = function () {
+        var year = $scope.date.selectedDate.getFullYear();
+        var month = $scope.date.selectedDate.getMonth();
+
+        $http.get( 'api/v1/expenses/' + year + month).
+        then(
+            function successCallback (res) {
+                $scope.expenseList = res.data;
+                //console.log($scope.expenseList);
+            },
+            function errorCallback (res) {
+                console.error(res);
+            }
+        );
+    };
 
 
     $scope.delete = function( id ) {
@@ -109,6 +122,15 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
             }
         );
     };
+
+    $scope.$watch( 'date', function (newVal, oldVal ){
+        //console.log(oldVal);
+        //console.log(newVal);
+        $scope.reset();
+        $scope.fillExpenseList();
+    }, true);
+
+    $scope.fillExpenseList();
 
 };
 

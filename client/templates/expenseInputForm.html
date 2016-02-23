@@ -19,14 +19,15 @@
         <!-- Currency -->
         <div class = "col-md-6">
             <div class = "form-group input-group-sm">
-                <div class = "btn-group btn-group">
-                    <button id = "currency-option-{{ cr._id }}"
-                            type = "button"
-                            class = "btn {{ cr.className }}"
-                            ng-repeat = "cr in currencies"
-                            ng-class = "cr.isSelected ? 'btn-primary' : 'btn-default'"
-                            ng-click = "selectItem( currencies, cr._id, 'currency' )"
-                    ></button>
+                <div class = "btn-group btn-group-justified">
+                    <div class = "btn-group" ng-repeat = "cr in currencies">
+                        <button id = "currency-option-{{ cr._id }}"
+                                type = "button"
+                                class = "btn {{ cr.className }}"
+                                ng-class = "cr.isSelected ? 'btn-primary' : 'btn-default'"
+                                ng-click = "selectItem( currencies, cr._id, 'currency' )"
+                        ></button>
+                    </div>
                 </div>
                 <input class = "sr-only" type = "text" name = "currency" ng-model = "obj.currency"/>
             </div>
@@ -51,13 +52,14 @@
         <div class = "col-md-12">
             <div class = "form-group input-group-sm">
                 <label class = "sr-only" for categories>5 Most Frequent Categories</label>
-                <div class = "btn-group btn-group">
-                    <button class = "btn {{ ct.className }}"
-                            type = "button"
-                            ng-repeat = "ct in categories"
-                            ng-class = "ct.isSelected ? 'btn-primary' : 'btn-default'"
-                            ng-click = "selectItem( categories, ct._id, 'category' )"
-                    ></button>
+                <div class = "btn-group btn-group-justified">
+                    <div class = "btn-group" ng-repeat = "ct in categories">
+                        <button class = "btn {{ ct.className }}"
+                                type = "button"
+                                ng-class = "ct.isSelected ? 'btn-primary' : 'btn-default'"
+                                ng-click = "selectItem( categories, ct._id, 'category' )"
+                        ></button>
+                    </div>
                 </div>
                 <input id = "category-input"
                        class = "sr-only"
