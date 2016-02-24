@@ -8,6 +8,6 @@
   "failureAuthRedirectPATH": "/login",
   "expressSessionSecret": "building MEAN apps is exciting!!",
   "dbURL": "mongodb://172.31.37.222:27017/pfin",
-  "serverPort": 3000,
+  "serverPort": 80,
   "logoutURL": "/auth/logout"
 }
