@@ -4,7 +4,7 @@
   "callbackURL": "http://pf.edufun.me/auth/google/callback",
   "authPATH": "/auth/google",
   "authCallbackPATH": "/auth/google/callback",
-  "successAuthRedirectPATH": "http://pf.edufun.me/",
+  "successAuthRedirectPATH": "http://pf.edufun.me",
   "failureAuthRedirectPATH": "/login",
   "expressSessionSecret": "building MEAN apps is exciting!!",
   "dbURL": "mongodb://172.31.37.222:27017/pfin",
