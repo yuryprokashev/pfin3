@@ -5,7 +5,7 @@ function dependencies( wagner ) {
     var fs = require( 'fs' );
     // now I register Config service, that reads content of the JSON and returns it as object
     wagner.factory( 'Config', function() {
-        return JSON.parse( fs.readFileSync( './server/config.json' ).toString() );
+        return JSON.parse( fs.readFileSync( './server/config_prod.json' ).toString() );
     });
 
 };
