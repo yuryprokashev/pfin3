@@ -7,7 +7,7 @@
   "successAuthRedirectPATH": "/",
   "failureAuthRedirectPATH": "/login",
   "expressSessionSecret": "building MEAN apps is exciting!!",
-  "dbURL": "mongodb://54.229.108.38:27017/pfin",
+  "dbURL": "mongodb://ec2-54-229-108-38.eu-west-1.compute.amazonaws.com:27017/pfin",
   "serverPort": 80,
   "logoutURL": "/auth/logout"
 }
