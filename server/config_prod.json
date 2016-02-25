@@ -7,7 +7,7 @@
   "successAuthRedirectPATH": "http://pf.edufun.me",
   "failureAuthRedirectPATH": "/login",
   "expressSessionSecret": "building MEAN apps is exciting!!",
-  "dbURL": "mongodb://172.31.37.222:27017/pfin",
+  "dbURL": "mongodb://localhost3:27017/pfin",
   "serverPort": 80,
   "logoutURL": "/auth/logout"
 }
