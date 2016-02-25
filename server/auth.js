@@ -36,7 +36,7 @@ function auth ( User, server, Config ) {
 
     // set server routes for auth process
 
-    server.get( Config.authPATH, passport.authenticate( 'google', { scope: ['profile']} ));
+    server.get( Config.authPATH, passport.authenticate( 'google', { scope: ['profile'] } ));
 
     server.get( Config.authCallbackPATH,
         passport.authenticate( 'google', { failureRedirect: Config.failureAuthRedirectPATH }),
