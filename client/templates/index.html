@@ -31,15 +31,16 @@
             </div>
             <div class="navbar-header navbar-right">
                 <ul class = "nav navbar-nav">
+                    <li>
+                        <a class = "fa fa-sign-out fa-2x" href = "/auth/logout"></a>
+                    </li>
                     <li class="navbar-right" ng-show = "user.user">
                         <img ng-src="{{ user.user.public.picture }}">
-                        <i class="fa fa-sign-out">
-                            <a href = "/auth/logout">sign out</a>
-                        </i>
                     </li>
-                    <a class = "btn btn-success"
-                       ng-show = "!user.user"
-                       href = '/auth/google'>Sign In</a>
+
+                    <!--<a class = "btn btn-success"-->
+                       <!--ng-show = "!user.user"-->
+                       <!--href = '/auth/google'>Sign In</a>-->
                 </ul>
             </div>
         </div>
