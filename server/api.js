@@ -28,7 +28,7 @@ var routes = function( wagner ) {
 
                     Expense.find().
                     where( 'user' ).equals( req.user._id ).
-                    where( 'date' ).gt( new Date( year, month, 1)).lt( new Date( year, nextMonth, 0 )).
+                    where( 'date' ).gte( new Date( year, month, 1)).lte( new Date( year, nextMonth, 0 )).
                     populate( 'category currency' ).
                     sort('-date').
                     exec( function (err, result){
