@@ -1,5 +1,3 @@
-// TODO. Write code for all controllers
-
 exports.mainCtrl = function( $scope, $user, $date ) {
     $scope.user = $user;
     $scope.date = $date;

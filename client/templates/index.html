@@ -32,7 +32,9 @@
             <div class="navbar-header navbar-right">
                 <ul class = "nav navbar-nav">
                     <li>
-                        <a class = "fa fa-sign-out fa-2x" href = "/auth/logout"></a>
+                        <a class = "fa fa-sign-out fa-2x"
+                           href = "/auth/logout"
+                           ng-show = "user.user"></a>
                     </li>
                     <li class="navbar-right" ng-show = "user.user">
                         <img ng-src="{{ user.user.public.picture }}">
