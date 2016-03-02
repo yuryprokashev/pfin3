@@ -63,7 +63,8 @@ exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
         //console.log($scope.obj);
         $http.post( '/api/v1/expenses', $scope.obj ).
         success( function( res ) {
-            $scope.expenseList.push(res.expense);
+            $scope.$emit('ExpenseCreated');
+            //$scope.expenseList.push(res.expense);
             $scope.reset();
         }).
         error(function (res) {
@@ -122,13 +123,14 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
     };
 
     $scope.$watch( 'date', function (newVal, oldVal ){
-        //console.log(oldVal);
-        //console.log(newVal);
-        $scope.reset();
         $scope.fillExpenseList();
     }, true);
 
-    $scope.fillExpenseList();
+    $scope.$on('ExpenseCreated', function(){
+        $scope.fillExpenseList();
+    });
+
+    //$scope.fillExpenseList();
 
 };
 

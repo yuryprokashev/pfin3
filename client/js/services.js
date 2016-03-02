@@ -27,9 +27,10 @@ exports.$date = function () {
 
     var s = {};
 
-    var d = new Date();
+    //var d = new Date();
 
-    s.selectedDate = new Date(d.getFullYear(), d.getMonth());
+    //s.selectedDate = new Date(d.getFullYear(), d.getMonth());
+    s.selectedDate = new Date();
 
     s.months = [];
 
