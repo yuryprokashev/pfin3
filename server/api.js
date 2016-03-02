@@ -11,6 +11,15 @@ var routes = function( wagner ) {
     api.use( bodyparser.json() );
 
     // api routes
+
+    api.get( '/me', function ( req, res ) {
+        if(!req.user) {
+            return res.status( status.UNAUTHORIZED ).json( { error: 'not logged in' });
+        }
+        //console.log(req.user);
+        res.json( { user: req.user } );
+    });
+
     api.get( '/expenses/:monthId', wagner.invoke( function( Expense ) {
         return function( req, res ){
             var user = req.user;
@@ -70,7 +79,7 @@ var routes = function( wagner ) {
         }
     }));
 
-    api.delete( '/expenses/:id', wagner.invoke( function(Expense){
+    api.delete( '/expenses/:id', wagner.invoke( function( Expense ){
         return function (req, res) {
             var _id = req.params.id;
             Expense.findByIdAndRemove( _id, function deleteCallback ( err ) {
@@ -80,7 +89,6 @@ var routes = function( wagner ) {
         }
     }));
 
-    // TODO. Get all Categories and Currencies for Expense
     api.get( '/common/:name', wagner.invoke( function( Category, Currency ){
         return function( req, res ){
 
