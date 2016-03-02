@@ -120,19 +120,85 @@ var routes = function( wagner ) {
         }
     }));
 
+    // TODO. Get data for Chart3 and Chart4
+    // http://localhost:3000/api/v1/charts/20161
+    api.get( '/charts/:monthId', wagner.invoke( function( Expense ) {
+        return function( req, res ){
+            var user = req.user;
+            if (!user) { res.json({ error: "Please, log in" }); }
 
-    // TODO. Get data for Chart1, Chart2, Chart3 and Chart4
-    api.get( '/chart/:id', function( req, res ){
+            else {
+                var mId = req.params.monthId;
 
-    });
+                var charts = {};
+                var year = Number(mId.substring(0, 4));
 
-    api.get( '/me', function ( req, res ) {
-        if(!req.user) {
-            return res.status( status.UNAUTHORIZED ).json( { error: 'not logged in' });
+                if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
+                    var month = mId.length === 6 ? Number(mId.substring(4,6)) : Number(mId.substring(4,5));
+                    //month += 1;
+
+                    var baseAgg = [
+                        { $match: { user: user._id.toString() } },
+                        { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
+                        { $match: { month: month + 1 } }
+                    ];
+
+                    baseAgg.push(
+                        { $project: { amount: 1, day: { $dayOfMonth: "$date" } } },
+                        { $group: { _id: "$day", dailyTotal: { $sum:"$amount" } } },
+                        { $sort: { _id: 1 } }
+                    );
+
+                    Expense.aggregate( baseAgg ).exec( function( err, result ){
+                        if( err ) {
+                            res.send(err);
+                        }
+                        else {
+                            charts['dailyTotal'] = result;
+                        };
+                    });
+
+                    baseAgg.pop(-1);
+                    baseAgg.pop(-1);
+                    baseAgg.pop(-1);
+                    var monthIsCurrent = month === new Date().getMonth() ? true : false;
+                    var numberOfDays = function (month) {
+                        var number = 30;
+                        if (month % 2 === 0 || month === 0) {
+                            number = 31;
+                        }
+                        else if (month === 1) {
+                            if (year % 4 === 0){
+                                number = 29;
+                            }
+                            else {
+                                number = 28;
+                            }
+                        }
+                        else if (month % 2 === 1 && month !== 1){
+                            number = 30;
+                        }
+                        return number;
+                    }
+                    var daysSinceFirstDayInThisMonth = monthIsCurrent ? new Date().getDate() : numberOfDays(month);
+                    baseAgg.push(
+                        { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
+                        { $project: { monthlyAverage: { $ceil: { $divide: [ "$monthlyTotal", daysSinceFirstDayInThisMonth ] } } } }
+                    );
+
+                    Expense.aggregate( baseAgg ).exec( function( err, result ){
+                        if( err ) { res.send(err); }
+                        else {
+                            charts['dailyAverageSpendSpeed'] = result;
+                            res.json(charts);
+                        }
+                    });
+                }
+                else { console.error('wrong monthId length is passed to api'); }
+            }
         }
-        //console.log(req.user);
-        res.json( { user: req.user } );
-    });
+    }));
+
 
     return api;
 };
