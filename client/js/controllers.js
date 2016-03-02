@@ -8,7 +8,7 @@ exports.mainCtrl = function( $scope, $user, $date ) {
 
 };
 
-exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http ) {
+exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
 
     $scope.selectItem = function( array, id, item ) {
         $scope.obj[item] = id;
@@ -77,7 +77,7 @@ exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http
     }, 0);
 };
 
-exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
+exports.ExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.expenseList = [];
     $scope.date = $date;
