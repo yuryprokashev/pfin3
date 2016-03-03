@@ -19,10 +19,6 @@ exports.$user = function( $http ) {
     return s;
 };
 
-// Get moment.js package to deal with months easily
-
-//var moment = require( 'moment' );
-
 exports.$date = function () {
 
     var s = {};

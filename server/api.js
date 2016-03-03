@@ -128,7 +128,6 @@ var routes = function( wagner ) {
         }
     }));
 
-    // TODO. Get data for Chart3 and Chart4
     // http://localhost:3000/api/v1/charts/20161
     api.get( '/charts/:monthId', wagner.invoke( function( Expense ) {
         return function( req, res ){
