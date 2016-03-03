@@ -133,8 +133,19 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
 
 };
 
-exports.ExpensesDashboardCtrl = function( $scope, $charts ) {
+exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
 
     $scope.charts = $charts;
+    $scope.date = $date;
+
+    $scope.plotCharts = function() {
+        var c = $scope.charts;
+        Plotly.newPlot('chartDailyVolumes', [c.dailyVolumes]);
+        Plotly.newPlot('chartMonthlySpentSpeed', [c.monthlySpentSpeed]);
+    };
+
+    $scope.$watch( 'date', function () {
+        $scope.charts.renewCharts( $scope.plotCharts );
+    }, true);
 
 };
