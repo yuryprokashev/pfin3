@@ -28,6 +28,17 @@ exports.$date = function () {
     //s.selectedDate = new Date(d.getFullYear(), d.getMonth());
     s.selectedDate = new Date();
 
+    s.getMonthId = function () {
+        var result =  undefined;
+
+        var year = this.selectedDate.getFullYear();
+        var month = this.selectedDate.getMonth();
+
+        result = year.toString() + month.toString();
+
+        return result;
+    };
+
     s.months = [];
 
     function createMonths ( origin ) {

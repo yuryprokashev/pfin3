@@ -64,7 +64,6 @@ exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
         $http.post( '/api/v1/expenses', $scope.obj ).
         success( function( res ) {
             $scope.$emit('ExpenseCreated');
-            //$scope.expenseList.push(res.expense);
             $scope.reset();
         }).
         error(function (res) {
@@ -88,10 +87,12 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
     };
 
     $scope.fillExpenseList = function () {
-        var year = $scope.date.selectedDate.getFullYear();
-        var month = $scope.date.selectedDate.getMonth();
+        //var year = $scope.date.selectedDate.getFullYear();
+        //var month = $scope.date.selectedDate.getMonth();
 
-        $http.get( 'api/v1/expenses/' + year + month).
+        var mId = $scope.date.getMonthId();
+
+        $http.get( 'api/v1/expenses/' + mId).
         then(
             function successCallback (res) {
                 $scope.expenseList = res.data;
