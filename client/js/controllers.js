@@ -130,33 +130,10 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         $scope.fillExpenseList();
     });
 
-    //$scope.fillExpenseList();
-
 };
 
+exports.ExpensesDashboardCtrl = function( $scope, $charts ) {
 
-exports.ChartsViewCtrl = function ( $scope, $charts, $date, $user ) {
-
-    $scope.date = {};
-
-    $scope.$watch( 'date', function () {
-        $scope.chart1 = $charts.getChartForUserPerMonth('chart1', $user.user, $scope.date.month, $scope.date.year );
-        $scope.chart2 = $charts.getChartForUserPerMonth('chart2', $user.user, $scope.date.month, $scope.date.year );
-        $scope.chart3 = $charts.getChartForUserPerMonth('chart3', $user.user, $scope.date.month, $scope.date.year );
-        $scope.chart4 = $charts.getChartForUserPerMonth('chart4', $user.user, $scope.date.month, $scope.date.year );
-    });
-
-    // TODO. Get 4 charts to the scope from $charts service
-    $scope.date = $date.selectedDate;
-
-};
-
-exports.DateSelectorCtrl = function ( $scope, $date ) {
-
-    $scope.selection = $date.getDate();
-
-    $scope.changeDate = function( date ) {
-        $date.setDate( date );
-    };
+    $scope.charts = $charts;
 
 };

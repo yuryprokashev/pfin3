@@ -63,3 +63,27 @@ exports.$date = function () {
     };
     return s;
 };
+
+exports.$charts = function( $http, $date ) {
+    var s = {};
+
+    s.dailyVolumes = {};
+    s.monthlySpentSpeed = {};
+    s.volumesByCategory = {};
+    s.frequencyByCategory = {};
+
+    s.renewCharts = function ( callback ) {
+        $http.get('/api/v1/charts/' + $date.getMonthId()).
+        then( function successCallback( res ) {
+            s.dailyVolumes = res.data['dailyVolumes'];
+            s.monthlySpentSpeed = res.data['monthlySpentSpeed'];
+            s.volumesByCategory = res.data['volumesByCategory'];
+            s.frequencyByCategory = res.data['frequencyByCategory'];
+            callback();
+        }, function errorCallback( res ){
+            console.log( res );
+        });
+    };
+
+    return s;
+};

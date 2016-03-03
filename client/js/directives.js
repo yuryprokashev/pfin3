@@ -16,11 +16,18 @@ exports.expenseList = function () {
 
 };
 
-exports.dateSelector = function () {
+exports.expensesDashboard = function () {
 
     return {
-        controller: 'DateSelectorCtrl',
-        templateUrl: '/assets/templates/dateSelector.html'
+        controller: 'ExpensesDashboardCtrl',
+        templateUrl: '/assets/templates/expensesDashboard.html',
+        link: function(scope, element, attrs ) {
+            var c = scope.charts;
+            c.renewCharts( function() {
+                Plotly.newPlot('chartDailyVolumes', [c.dailyVolumes]);
+                Plotly.newPlot('chartMonthlySpentSpeed', [c.monthlySpentSpeed]);
+            });
+        }
     }
 
 };

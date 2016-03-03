@@ -3,6 +3,7 @@
 
 
 <!-- ROW 1 -->
+<!-- Month selector btns -->
 <!-- Expense Input Form: { Amount (input field ), Currency (dropdown field), text description (input field), submit (btn) }  -->
 <!-- Expenses List, current (selected) Month -->
 <!-- Chart 1: Daily expenses volume in current Month: by day. -->
@@ -32,7 +33,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-md-4">
         <div class = "row">
             <div class = "col-md-12">
@@ -54,44 +54,7 @@
         </div>
     </div>
     <div class="col-md-8">
-        <div class = "row">
-            <div class = "col-md-12">
-                <div class="panel panel-info">
-                    <div class = "panel-heading">Daily Expenses volume in current month by day</div>
-                    <div class = "panel-body">
-                        <chart-1></chart-1>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-12">
-                <div class="panel panel-info">
-                    <div class="panel-heading">Daily expense rate in current Month: past and forecast</div>
-                    <div class = "panel-body">
-                        <chart-2></chart-2>
-                    </div>
-                </div>
-            </div>
-            <div class = "col-md-12">
-                <div class = "row">
-                    <div class = "col-md-6">
-                        <div class="panel panel-info">
-                            <div class = "panel-heading">You spent most volume to</div>
-                            <div class = "panel-body">
-                                <chart-3></chart-3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="panel panel-info">
-                            <div class="panel-heading">You spent most frequently to</div>
-                            <div class = "panel-body">
-                                <chart-4></chart-4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <expenses-dashboard></expenses-dashboard>
     </div>
 </div>
 

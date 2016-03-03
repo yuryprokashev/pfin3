@@ -141,6 +141,26 @@ var routes = function( wagner ) {
                 var year = Number(mId.substring(0, 4));
 
                 if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
+
+                    var makePlotlyTrace = function( traceName, arr, type, month ) {
+                        var trace = { x: [], y: [], type: type };
+                        console.log(arr);
+
+                        for( var i = 1; i <= numberOfDays(month); i++ ) {
+                            trace.x.push( i );
+
+                            for( var j in arr ){
+                                if( !trace.y[i] && arr[j]._id === i ) {
+                                    trace.y[i] = arr[j][traceName];
+                                }
+                                else if( !trace.y[i] && arr[j]._id !== i) {
+                                    trace.y[i] = 0;
+                                }
+                            }
+                        }
+                        return trace;
+                    };
+
                     var month = mId.length === 6 ? Number(mId.substring(4,6)) : Number(mId.substring(4,5));
                     //month += 1;
 
@@ -152,7 +172,7 @@ var routes = function( wagner ) {
 
                     baseAgg.push(
                         { $project: { amount: 1, day: { $dayOfMonth: "$date" } } },
-                        { $group: { _id: "$day", dailyTotal: { $sum:"$amount" } } },
+                        { $group: { _id: "$day", dailyVolumes: { $sum:"$amount" } } },
                         { $sort: { _id: 1 } }
                     );
 
@@ -161,7 +181,7 @@ var routes = function( wagner ) {
                             res.send(err);
                         }
                         else {
-                            charts['dailyTotal'] = result;
+                            charts['dailyVolumes'] = makePlotlyTrace('dailyVolumes', result, 'bar', month);
                         };
                     });
 
@@ -186,17 +206,17 @@ var routes = function( wagner ) {
                             number = 30;
                         }
                         return number;
-                    }
+                    };
                     var daysSinceFirstDayInThisMonth = monthIsCurrent ? new Date().getDate() : numberOfDays(month);
                     baseAgg.push(
                         { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
-                        { $project: { monthlyAverage: { $ceil: { $divide: [ "$monthlyTotal", daysSinceFirstDayInThisMonth ] } } } }
+                        { $project: { monthlySpentSpeed: { $ceil: { $divide: [ "$monthlyTotal", daysSinceFirstDayInThisMonth ] } } } }
                     );
 
                     Expense.aggregate( baseAgg ).exec( function( err, result ){
                         if( err ) { res.send(err); }
                         else {
-                            charts['dailyAverageSpendSpeed'] = result;
+                            charts['monthlySpentSpeed'] = makePlotlyTrace('monthlySpentSpeed', result, 'scatter', month);
                             res.json(charts);
                         }
                     });
