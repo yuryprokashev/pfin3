@@ -87,8 +87,6 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
     };
 
     $scope.fillExpenseList = function () {
-        //var year = $scope.date.selectedDate.getFullYear();
-        //var month = $scope.date.selectedDate.getMonth();
 
         var mId = $scope.date.getMonthId();
 
@@ -123,7 +121,7 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         );
     };
 
-    $scope.$watch( 'date', function (newVal, oldVal ){
+    $scope.$watch( 'date', function (){
         $scope.fillExpenseList();
     }, true);
 
