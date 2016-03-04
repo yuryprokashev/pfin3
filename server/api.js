@@ -129,26 +129,28 @@ var routes = function( wagner ) {
     }));
 
     // http://localhost:3000/api/v1/charts/20161
-    api.get( '/charts/:monthId', wagner.invoke( function( Expense ) {
+    api.get( '/charts/:monthId', wagner.invoke( function( Expense, myDates ) {
         return function( req, res ){
             var user = req.user;
             if (!user) { res.json({ error: "Please, log in" }); }
 
             else {
+                // 1 Setup.
                 var mId = req.params.monthId;
-
+                console.log(typeof mId);
+                var month = myDates.getMonth( mId );
                 var charts = {};
-                var year = Number(mId.substring(0, 4));
 
-                if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
+                // 2. Logic
 
-                    var makePlotlyTrace = function( traceName, arr, type, month ) {
+                if ( myDates.monthIdIsValid( mId ) ) {
+
+                    var makePlotlyTrace = function( traceName, arr, type, monthIdString ) {
                         var trace = { x: [], y: [], type: type };
                         console.log(arr);
 
-                        for( var i = 1; i <= numberOfDays(month); i++ ) {
+                        for( var i = 1; i <= myDates.daysInMonth( monthIdString ); i++ ) {
                             trace.x.push( i );
-
                             for( var j in arr ){
                                 if( !trace.y[i] && arr[j]._id === i ) {
                                     trace.y[i] = arr[j][traceName];
@@ -160,9 +162,6 @@ var routes = function( wagner ) {
                         }
                         return trace;
                     };
-
-                    var month = mId.length === 6 ? Number(mId.substring(4,6)) : Number(mId.substring(4,5));
-                    //month += 1;
 
                     var baseAgg = [
                         { $match: { user: user._id.toString() } },
@@ -181,42 +180,23 @@ var routes = function( wagner ) {
                             res.send(err);
                         }
                         else {
-                            charts['dailyVolumes'] = makePlotlyTrace('dailyVolumes', result, 'bar', month);
+                            charts['dailyVolumes'] = makePlotlyTrace('dailyVolumes', result, 'bar', mId);
                         };
                     });
 
                     baseAgg.pop(-1);
                     baseAgg.pop(-1);
                     baseAgg.pop(-1);
-                    var monthIsCurrent = month === new Date().getMonth() ? true : false;
-                    var numberOfDays = function (month) {
-                        var number = 30;
-                        if (month % 2 === 0 || month === 0) {
-                            number = 31;
-                        }
-                        else if (month === 1) {
-                            if (year % 4 === 0){
-                                number = 29;
-                            }
-                            else {
-                                number = 28;
-                            }
-                        }
-                        else if (month % 2 === 1 && month !== 1){
-                            number = 30;
-                        }
-                        return number;
-                    };
-                    var daysSinceFirstDayInThisMonth = monthIsCurrent ? new Date().getDate() : numberOfDays(month);
+
                     baseAgg.push(
                         { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
-                        { $project: { monthlySpentSpeed: { $ceil: { $divide: [ "$monthlyTotal", daysSinceFirstDayInThisMonth ] } } } }
+                        { $project: { monthlySpentSpeed: { $ceil: { $divide: [ "$monthlyTotal", myDates.getDaysInSelectedMonth( mId) ] } } } }
                     );
 
                     Expense.aggregate( baseAgg ).exec( function( err, result ){
                         if( err ) { res.send(err); }
                         else {
-                            charts['monthlySpentSpeed'] = makePlotlyTrace('monthlySpentSpeed', result, 'scatter', month);
+                            charts['monthlySpentSpeed'] = makePlotlyTrace('monthlySpentSpeed', result, 'scatter', mId);
                             res.json(charts);
                         }
                     });

@@ -7,6 +7,9 @@ require('./server/dependencies' )( wagner );
 // grab all Mongoose models with wagner and execute them with (wagner) call
 require( './server/models/model' )( wagner );
 
+// grab and launch myDates service
+require( './server/myDates' )( wagner );
+
 // get server object already configured from my 'server.js' file
 var server = require( './server' );
 
