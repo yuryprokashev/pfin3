@@ -9,7 +9,6 @@ module.exports = function( wagner ) {
     };
 
     s.getMonth = function( monthIdString ) {
-        //console.log(monthIdString);
         return monthIdString.length === 6 ? Number(monthIdString.substring(4,6)) : Number(monthIdString.substring(4,5));
     };
 
@@ -19,8 +18,7 @@ module.exports = function( wagner ) {
 
     s.daysInMonth = function( monthIdString ) {
         // gets 'month' as string, e.g. '20161'
-        // returns number of days in this month. Takes leap year into account.
-
+        // returns number of calendar days in this month. Takes leap year into account.
         // 1. Setup.
         var number = 30;
         var month = s.getMonth( monthIdString );
@@ -46,6 +44,10 @@ module.exports = function( wagner ) {
     };
 
     s.getDaysInSelectedMonth = function( monthIdString ) {
+        // gets 'month' as string, e.g. '20168'
+        // returns number of days in this month, and when month current, it returns the number of days, actually passed in this month.
+        // made for aggregation query, when calculating 'monthlySpentSpeed'.
+
         // 1. Setup.
 
         // 2.Logic.
@@ -57,7 +59,7 @@ module.exports = function( wagner ) {
         return result;
     };
 
-    wagner.factory( 'myDates', function() { return s; } );
+    wagner.factory( 'MyDates', function() { return s; } );
 
     //console.log('myDates imported');
     //console.log(s);
