@@ -129,7 +129,7 @@ var routes = function( wagner ) {
     }));
 
     // http://localhost:3000/api/v1/charts/20161
-    api.get( '/charts/:monthId', wagner.invoke( function( Expense, myDates ) {
+    api.get( '/charts/:monthId', wagner.invoke( function( Expense, MyDates ) {
         return function( req, res ){
             var user = req.user;
             if (!user) { res.json({ error: "Please, log in" }); }
@@ -137,69 +137,17 @@ var routes = function( wagner ) {
             else {
                 // 1 Setup.
                 var mId = req.params.monthId;
-                console.log(typeof mId);
-                var month = myDates.getMonth( mId );
                 var charts = {};
 
                 // 2. Logic
 
-                if ( myDates.monthIdIsValid( mId ) ) {
+                if ( MyDates.monthIdIsValid( mId ) ) {
 
-                    var makePlotlyTrace = function( traceName, arr, type, monthIdString ) {
-                        var trace = { x: [], y: [], type: type };
-                        console.log(arr);
-
-                        for( var i = 1; i <= myDates.daysInMonth( monthIdString ); i++ ) {
-                            trace.x.push( i );
-                            for( var j in arr ){
-                                if( !trace.y[i] && arr[j]._id === i ) {
-                                    trace.y[i] = arr[j][traceName];
-                                }
-                                else if( !trace.y[i] && arr[j]._id !== i) {
-                                    trace.y[i] = 0;
-                                }
-                            }
-                        }
-                        return trace;
-                    };
-
-                    var baseAgg = [
-                        { $match: { user: user._id.toString() } },
-                        { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
-                        { $match: { month: month + 1 } }
-                    ];
-
-                    baseAgg.push(
-                        { $project: { amount: 1, day: { $dayOfMonth: "$date" } } },
-                        { $group: { _id: "$day", dailyVolumes: { $sum:"$amount" } } },
-                        { $sort: { _id: 1 } }
-                    );
-
-                    Expense.aggregate( baseAgg ).exec( function( err, result ){
-                        if( err ) {
-                            res.send(err);
-                        }
-                        else {
-                            charts['dailyVolumes'] = makePlotlyTrace('dailyVolumes', result, 'bar', mId);
-                        };
-                    });
-
-                    baseAgg.pop(-1);
-                    baseAgg.pop(-1);
-                    baseAgg.pop(-1);
-
-                    baseAgg.push(
-                        { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
-                        { $project: { monthlySpentSpeed: { $ceil: { $divide: [ "$monthlyTotal", myDates.getDaysInSelectedMonth( mId) ] } } } }
-                    );
-
-                    Expense.aggregate( baseAgg ).exec( function( err, result ){
-                        if( err ) { res.send(err); }
-                        else {
-                            charts['monthlySpentSpeed'] = makePlotlyTrace('monthlySpentSpeed', result, 'scatter', mId);
-                            res.json(charts);
-                        }
-                    });
+                    Expense.aggPipelineDailyVolumes( user, mId, charts, null);
+                    Expense.aggPipelineMonthlySpentSpeed( user, mId, charts, function() {
+                        // 3. Return results
+                        res.json( charts );
+                    } );
                 }
                 else { console.error('wrong monthId length is passed to api'); }
             }
