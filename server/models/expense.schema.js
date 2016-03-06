@@ -24,10 +24,6 @@ var expenseSchema = new mongoose.Schema( {
     user: { type: String, ref: 'User' }
 });
 
-expenseSchema.virtual( 'date.monthId' ).get( function(){
-    return this.date.year + this.date.month;
-});
-
 expenseSchema.set( 'toObject', { virtuals: true });
 expenseSchema.set( 'toJSON', { virtuals: true });
 
