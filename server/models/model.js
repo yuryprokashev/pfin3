@@ -6,7 +6,7 @@ module.exports = function( wagner ){
     // set up connection to Database with Mongoose
 
     var config = wagner.invoke( function(Config) { return Config });
-    mongoose.connect( config.dbURL );
+    mongoose.connect( config.db.dbURL );
 
     var PlotlyTracer = wagner.invoke( function( PlotlyTracer ) { return PlotlyTracer; } );
 

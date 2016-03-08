@@ -3,9 +3,9 @@ function auth ( User, server, Config ) {
     var GoogleStrategy = require( 'passport-google-oauth20').Strategy;
 
     passport.use( new GoogleStrategy( {
-        clientID: Config.GOOGLE_CLIENT_ID,
-        clientSecret: Config.GOOGLE_CLIENT_SECRET,
-        callbackURL: Config.callbackURL
+        clientID: Config.passport.GOOGLE_CLIENT_ID,
+        clientSecret: Config.passport.GOOGLE_CLIENT_SECRET,
+        callbackURL: Config.passport.callbackURL
     },
     function( accessToken, refreshToken, profile, cb ){
         //console.log(profile);
@@ -30,20 +30,20 @@ function auth ( User, server, Config ) {
     }));
 
     // set middleware for auth, including session storage
-    server.use( require( 'express-session' )({ secret: Config.expressSessionSecret }));
+    server.use( require( 'express-session' )({ secret: Config.passport.expressSessionSecret }));
     server.use( passport.initialize() );
     server.use( passport.session() );
 
     // set server routes for auth process
 
-    server.get( Config.authPATH, passport.authenticate( 'google', { scope: ['profile'] } ));
+    server.get( Config.passport.authPATH, passport.authenticate( 'google', { scope: ['profile'] } ));
 
-    server.get( Config.authCallbackPATH,
-        passport.authenticate( 'google', { failureRedirect: Config.failureAuthRedirectPATH }),
+    server.get( Config.passport.authCallbackPATH,
+        passport.authenticate( 'google', { failureRedirect: Config.passport.failureAuthRedirectPATH }),
         function (req, res ){
-                res.redirect( Config.successAuthRedirectPATH );
+                res.redirect( Config.passport.successAuthRedirectPATH );
         });
-    server.get( Config.logoutURL , function (req, res ) {
+    server.get( Config.passport.logoutURL , function (req, res ) {
         req.logout();
         res.redirect('/');
     });
