@@ -82,6 +82,7 @@ exports.$charts = function( $http, $date ) {
     s.monthlySpentSpeed = {};
     s.volumesByCategory = {};
     s.frequencyByCategory = {};
+    s.layout = {};
 
     s.renewCharts = function ( callback ) {
         $http.get('/api/v1/charts/' + $date.getMonthId()).
@@ -89,7 +90,8 @@ exports.$charts = function( $http, $date ) {
             s.dailyVolumes = res.data['dailyVolumes'];
             s.monthlySpentSpeed = res.data['monthlySpentSpeed'];
             s.volumesByCategory = res.data['volumesByCategory'];
-            s.frequencyByCategory = res.data['frequencyByCategory'];
+            s.expenseFrequency = res.data['expenseFrequency'];
+            s.layout = res.data['layout'];
             callback();
         }, function errorCallback( res ){
             console.log( res );

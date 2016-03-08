@@ -128,8 +128,7 @@ var routes = function( wagner ) {
         }
     }));
 
-    // http://localhost:3000/api/v1/charts/20161
-    api.get( '/charts/:monthId', wagner.invoke( function( Expense, MyDates ) {
+    api.get( '/charts/:monthId', wagner.invoke( function( Expense, MyDates, Config ) {
         return function( req, res ){
             var user = req.user;
             if (!user) { res.json({ error: "Please, log in" }); }
@@ -137,13 +136,20 @@ var routes = function( wagner ) {
             else {
                 // 1 Setup.
                 var mId = req.params.monthId;
-                var charts = {};
+                var charts = {
+                    layout: Config.plotly
+                };
 
                 // 2. Logic
 
                 if ( MyDates.monthIdIsValid( mId ) ) {
 
                     Expense.aggPipelineDailyVolumes( user, mId, charts, null);
+
+                    Expense.aggPipelineVolumesByCategory( user, mId, charts, null );
+
+                    Expense.aggPipelineFrequencyByCategory( user, mId, charts, null );
+
                     Expense.aggPipelineMonthlySpentSpeed( user, mId, charts, function() {
                         // 3. Return results
                         res.json( charts );

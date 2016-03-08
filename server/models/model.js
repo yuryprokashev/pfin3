@@ -36,8 +36,7 @@ module.exports = function( wagner ){
                 console.log( err );
             }
             else {
-                // TODO. This is callback 1 function, which is called after successful completion of query function. Put it instead of ... above
-                obj['dailyVolumes'] = PlotlyTracer.makePlotlyTrace('dailyVolumes', result, 'bar', monthIdString);
+                obj['dailyVolumes'] = PlotlyTracer.makePlotlyTrace('dailyVolumes', result, monthIdString);
                 if( callback ) {
                     callback();
                 }
@@ -60,8 +59,56 @@ module.exports = function( wagner ){
         Expense.aggregate( agg ).exec( function( err, result ){
             if( err ) { console.log( err ); }
             else {
-                // TODO. This is callback 2 function, which is called after successful completion of query function. Put it instead of ... above
-                obj['monthlySpentSpeed'] = PlotlyTracer.makePlotlyTrace('monthlySpentSpeed', result, 'scatter', monthIdString );
+                obj['monthlySpentSpeed'] = PlotlyTracer.makePlotlyTrace('monthlySpentSpeed', result, monthIdString );
+                if( callback ) {
+                    callback();
+                }
+            }
+        });
+    };
+
+    Expense.aggPipelineVolumesByCategory = function( user, monthIdString, obj, callback ) {
+        // 1. Setup
+        var month = MyDates.getMonth( monthIdString );
+        var agg = [
+            { $match: { user: user._id.toString() } },
+            { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, category: 1 } },
+            { $match: { month: month + 1 } },
+            { $group: { _id: "$category", categoryVolume: { $sum: "$amount" } } },
+            { $sort : { _id : 1 } }
+        ];
+
+        // 2. Logic
+        Expense.aggregate( agg ).exec( function( err, result ){
+            if( err ) { console.log( err ); }
+            else {
+                obj['volumesByCategory'] = PlotlyTracer.makePlotlyTrace('volumesByCategory', result, monthIdString );
+                //obj['volumesByCategory'] = result;
+
+                if( callback ) {
+                    callback();
+                }
+            }
+        });
+    };
+
+    Expense.aggPipelineFrequencyByCategory = function( user, monthIdString, obj, callback ) {
+        // 1. Setup
+        var month = MyDates.getMonth( monthIdString );
+        var agg = [
+            { $match: { user: user._id.toString() } },
+            { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, category: 1 } },
+            { $match: { month: month + 1 } },
+            { $group: { _id: "$category", expenseFrequency: { $sum: 1 } } },
+            { $sort : { _id : 1 } }
+        ];
+
+        // 2. Logic
+        Expense.aggregate( agg ).exec( function( err, result ){
+            if( err ) { console.log( err ); }
+            else {
+                obj['expenseFrequency'] = PlotlyTracer.makePlotlyTrace('expenseFrequency', result, monthIdString );
+                //obj['expenseCount'] = result;
                 if( callback ) {
                     callback();
                 }

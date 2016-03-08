@@ -107,6 +107,7 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         $http.delete('/api/v1/expenses/' + id).
             then(
             function successCallback(res) {
+                $scope.$emit('ExpenseDeleted');
                 var id = res.data._id;
                 for(var i in $scope.expenseList){
                     if($scope.expenseList[i]._id === id) {
@@ -138,12 +139,20 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
 
     $scope.plotCharts = function() {
         var c = $scope.charts;
-        Plotly.newPlot('chartDailyVolumes', [c.dailyVolumes]);
-        Plotly.newPlot('chartMonthlySpentSpeed', [c.monthlySpentSpeed]);
+        Plotly.newPlot('chartDailyVolumes', [c.dailyVolumes, c.monthlySpentSpeed], c.layout.dailyVolumes.layout);
+        Plotly.newPlot('chartVolumesByCategory', [c.volumesByCategory], c.layout.categoryVolumes.layout);
+        Plotly.newPlot('chartFrequencyByCategory', [c.expenseFrequency], c.layout.expenseFrequency.layout);
     };
 
     $scope.$watch( 'date', function () {
         $scope.charts.renewCharts( $scope.plotCharts );
     }, true);
+
+    $scope.$on('ExpenseCreated', function() {
+        $scope.charts.renewCharts( $scope.plotCharts );
+    });
+    $scope.$on('ExpenseDeleted', function(){
+        $scope.charts.renewCharts( $scope.plotCharts );
+    });
 
 };
