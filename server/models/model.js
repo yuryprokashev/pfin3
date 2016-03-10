@@ -16,7 +16,7 @@ module.exports = function( wagner ){
     // compile then into the models
     var Expense = mongoose.model( 'Expense', require( './expense.schema' ), 'expenses' );
 
-    Expense.aggPipelineDailyVolumes = function( user, monthIdString, obj, callback ) {
+    Expense.aggPipelineDailyVolumes = function( user, monthIdString, callback ) {
         // 1. Setup
 
         var month = MyDates.getMonth( monthIdString );
@@ -36,15 +36,16 @@ module.exports = function( wagner ){
                 console.log( err );
             }
             else {
-                obj['dailyVolumes'] = PlotlyTracer.makePlotlyTrace('dailyVolumes', result, monthIdString);
+                //obj['dailyVolumes'] = PlotlyTracer.makePlotlyTrace('dailyVolumes', result, monthIdString);
                 if( callback ) {
-                    callback();
+                    callback( result );
                 }
+                else { return result }
             }
         });
     };
 
-    Expense.aggPipelineMonthlySpentSpeed = function( user, monthIdString, obj, callback ) {
+    Expense.aggPipelineMonthlySpentSpeed = function( user, monthIdString, callback ) {
         // 1. Setup
         var month = MyDates.getMonth( monthIdString );
         var agg = [
@@ -59,15 +60,16 @@ module.exports = function( wagner ){
         Expense.aggregate( agg ).exec( function( err, result ){
             if( err ) { console.log( err ); }
             else {
-                obj['monthlySpentSpeed'] = PlotlyTracer.makePlotlyTrace('monthlySpentSpeed', result, monthIdString );
+                //obj['monthlySpentSpeed'] = PlotlyTracer.makePlotlyTrace('monthlySpentSpeed', result, monthIdString );
                 if( callback ) {
-                    callback();
+                    callback( result );
                 }
+                else { return result; }
             }
         });
     };
 
-    Expense.aggPipelineVolumesByCategory = function( user, monthIdString, obj, callback ) {
+    Expense.aggPipelineVolumesByCategory = function( user, monthIdString, callback ) {
         // 1. Setup
         var month = MyDates.getMonth( monthIdString );
         var agg = [
@@ -82,17 +84,18 @@ module.exports = function( wagner ){
         Expense.aggregate( agg ).exec( function( err, result ){
             if( err ) { console.log( err ); }
             else {
-                obj['volumesByCategory'] = PlotlyTracer.makePlotlyTrace('volumesByCategory', result, monthIdString );
+                //obj['volumesByCategory'] = PlotlyTracer.makePlotlyTrace('volumesByCategory', result, monthIdString );
                 //obj['volumesByCategory'] = result;
 
                 if( callback ) {
-                    callback();
+                    callback( result );
                 }
+                else { return result; }
             }
         });
     };
 
-    Expense.aggPipelineFrequencyByCategory = function( user, monthIdString, obj, callback ) {
+    Expense.aggPipelineFrequencyByCategory = function( user, monthIdString, callback ) {
         // 1. Setup
         var month = MyDates.getMonth( monthIdString );
         var agg = [
@@ -107,11 +110,11 @@ module.exports = function( wagner ){
         Expense.aggregate( agg ).exec( function( err, result ){
             if( err ) { console.log( err ); }
             else {
-                obj['expenseFrequency'] = PlotlyTracer.makePlotlyTrace('expenseFrequency', result, monthIdString );
-                //obj['expenseCount'] = result;
+                //obj['expenseFrequency'] = PlotlyTracer.makePlotlyTrace('expenseFrequency', result, monthIdString );
                 if( callback ) {
-                    callback();
+                    callback( result );
                 }
+                else { return result; }
             }
         });
     };
