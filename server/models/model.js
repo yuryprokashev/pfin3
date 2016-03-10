@@ -16,6 +16,14 @@ module.exports = function( wagner ){
     // compile then into the models
     var Expense = mongoose.model( 'Expense', require( './expense.schema' ), 'expenses' );
 
+    // Aggregation pipelines aka 'aggPipeline*'
+    // Each pipeline takes as args three things:
+    // 1) user object
+    // 2) monthIdString aka '20162' for March
+    // 3) callback function to be executed after aggregation is compeleted.
+    // callback is invoked and takes aggregation  pipeline 'result' array as argument
+    // so in callback one can do with the 'result' whatever he wants.
+
     Expense.aggPipelineDailyVolumes = function( user, monthIdString, callback ) {
         // 1. Setup
 
