@@ -82,7 +82,7 @@ module.exports = function( wagner ) {
         return trace;
     };
 
-    var expenseFrequencyTrace = function( arr, type, monthIdString ) {
+    var expenseFrequencyTrace = function( arr, monthIdString ) {
         // 1. Setup
         var trace = { values: [], labels: [], type: 'pie' };
         // 2. Logic
