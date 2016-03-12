@@ -56,6 +56,7 @@ module.exports = function( wagner ) {
     var monthlySpentSpeedTrace = function( arr, monthIdString ){
         // 1. Setup
         var trace = { x: [], y: [], type: 'scatter' };
+        //console.log(arr);
 
         // 2. Logic
         for( var i = 1; i <= MyDates.getDaysInSelectedMonth( monthIdString ); i++ ) {

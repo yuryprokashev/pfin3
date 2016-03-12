@@ -8,7 +8,7 @@ function s4() {
         .substring(1);
 };
 
-// function that assignes guid to newly created problem
+// function that assigns guid to newly created problem
 var guid = function () {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 };
