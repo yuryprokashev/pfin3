@@ -144,35 +144,20 @@ var routes = function( wagner ) {
 
                 if ( MyDates.monthIdIsValid( mId ) ) {
 
-                    //Expense.aggPipelineDailyVolumes( user, mId, charts, null);
-
                     Expense.aggPipelineDailyVolumes( user, mId, function success( result ){
                         charts['dailyVolumes'] = PlotlyTracer.makePlotlyTrace('dailyVolumes', result, mId);
                     });
 
-                    //Expense.aggPipelineVolumesByCategory( user, mId, charts, null );
-
                     Expense.aggPipelineVolumesByCategory( user, mId, function success( result ){
                         charts['volumesByCategory'] = PlotlyTracer.makePlotlyTrace('volumesByCategory', result, mId );
-                        //charts['volumesByCategory'] = result;
                     });
-
-                    //Expense.aggPipelineFrequencyByCategory( user, mId, charts, null );
 
                     Expense.aggPipelineFrequencyByCategory( user, mId, function success( result ){
                         charts['expenseFrequency'] = PlotlyTracer.makePlotlyTrace('expenseFrequency', result, mId );
-                        //charts['expenseFrequency'] = result;
                     });
-
-                    //Expense.aggPipelineMonthlySpentSpeed( user, mId, charts, function() {
-                    //    // 3. Return results
-                    //    res.json( charts );
-                    //} );
 
                     Expense.aggPipelineMonthlySpentSpeed( user, mId, function success( result ) {
                         charts['monthlySpentSpeed'] = PlotlyTracer.makePlotlyTrace('monthlySpentSpeed', result, mId );
-                        //charts['monthlySpentSpeed'] = result;
-                            // 3. Return results
 
                         res.json( charts );
                     } );
