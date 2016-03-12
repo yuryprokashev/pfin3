@@ -169,6 +169,46 @@ var routes = function( wagner ) {
         }
     }));
 
+    // TODO. api method for arbitrary quantity of guids generation and saving it to file.
+    api.get( '/generate/guid/:qty', function( req, res) {
+        var qty = req.params.qty;
+        var fs = require('fs');
+        var result = [];
+
+        for( var i = 0; i < qty; i++ ) {
+            result.push(require('./guid')());
+        };
+
+        var filename = 'guids' + Date.now();
+
+        fs.writeFile( filename, result.toString() , function(err) {
+            if(err) {
+                return console.log(err);
+            }
+            console.log("The file was saved!");
+        });
+        res.send(filename);
+    });
+
+    // TODO. api method for translating the strings to dates objects in expenses collection
+    api.get( '/transformdate', wagner.invoke( function( Expense ) {
+        return function( req, res ) {
+
+            Expense.find().exec( function( err, data ){
+                //var dates = [];
+                for(var i = 0; i < data.length; i++) {
+                    var newDate = Date.parse(data[i].date);
+                    Expense.update({_id: data[i]._id}, {date: newDate, createdAt: newDate}, function( err, raw ){
+                        if(err){ console.log(err);}
+                        else {
+                            console.log('raw response = ', raw);
+                        }
+                    })
+                }
+                res.send(data);
+            });
+        }
+    }));
 
     return api;
 };
