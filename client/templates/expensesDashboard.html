@@ -2,45 +2,23 @@
     <div class = "col-md-12">
         <div class="panel panel-info">
             <div class = "panel-heading">Daily Expenses volume in current month by day</div>
-            <div class = "panel-body">
-                <div id = "chartDailyVolumes"></div>
-            </div>
+            <daily-volumes id = "dailyVolumes" class = "panel-body"></daily-volumes>
+            <!--<div class = "panel-body">-->
+                <!--&lt;!&ndash;<div id = "dailyVolumes"></div>&ndash;&gt;-->
+
+            <!--</div>-->
         </div>
     </div>
     <div class = "col-md-12">
         <div class="panel panel-info">
             <div class = "panel-heading">You spent most volume to</div>
-            <div class = "panel-body">
-                <div id = "chartVolumesByCategory"></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-12">
-        <div class="panel panel-info">
-            <div class="panel-heading">You spent most frequently to</div>
-            <div class = "panel-body">
-                <div id = "chartFrequencyByCategory"></div>
-            </div>
+            <category-volumes id = "categoryVolumes" class = "panel-body"></category-volumes>
         </div>
     </div>
     <div class = "col-md-12">
-        <div class = "row">
-            <!--<div class = "col-md-6">-->
-                <!--<div class="panel panel-info">-->
-                    <!--<div class = "panel-heading">You spent most volume to</div>-->
-                    <!--<div class = "panel-body">-->
-                        <!--<div id = "chartVolumesByCategory"></div>-->
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
-            <!--<div class="col-md-6">-->
-                <!--<div class="panel panel-info">-->
-                    <!--<div class="panel-heading">You spent most frequently to</div>-->
-                    <!--<div class = "panel-body">-->
-                        <!--<div id = "chartFrequencyByCategory"></div>-->
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
+        <div class="panel panel-info">
+            <div class="panel-heading">You spent most frequently to</div>
+            <expense-frequency id = "expenseFrequency" class = "panel-body"></expense-frequency>
         </div>
     </div>
 </div>
