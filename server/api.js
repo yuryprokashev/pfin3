@@ -293,6 +293,12 @@ var routes = function( wagner ) {
         }
     }));
 
+    api.get( '/charts/meta', wagner.invoke( function( Config ) {
+        return function( req, res ){
+            res.json( Config.plotly );
+        }
+    }));
+
     // TODO. api method for arbitrary quantity of guids generation and saving it to file.
     api.get( '/generate/guid/:qty', function( req, res) {
         var qty = req.params.qty;
