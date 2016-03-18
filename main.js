@@ -4,14 +4,15 @@ var wagner = require( 'wagner-core' );
 // grab all dependencies needed and execute then with (wagner) call
 require('./server/dependencies' )( wagner );
 
+// grab all Mongoose models with wagner and execute them with (wagner) call
+require( './server/models/model' )( wagner );
+
 // grab and launch MyDates service
 require( './server/myDates' )( wagner );
 
 // grad and launch PlotlyTrace service
 require( './server/plotlyTracer' )( wagner );
 
-// grab all Mongoose models with wagner and execute them with (wagner) call
-require( './server/models/model' )( wagner );
 
 // get server object already configured from my 'server.js' file
 var server = require( './server' );
