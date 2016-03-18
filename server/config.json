@@ -13,8 +13,9 @@
     "expressSessionSecret": "building MEAN apps is exciting!!",
     "logoutURL": "/auth/logout"
   },
-  "plotly": {
-    "dailyVolumes": {
+  "plotly": [
+    {
+      "chartDiv": "dailyVolumes",
       "layout": {
         "height": 261,
         "margin": {
@@ -23,20 +24,22 @@
           "t": 20,
           "b": 25
         }
-      }
+      },
+      "traces":[
+        {
+          "x":[0],
+          "y":[0],
+          "type": "bar",
+          "name": "dailyVolumes",
+          "marker": {
+            "color": "rgba(50,171,96,1.0)"
+          }
+        },
+        {"x":[0], "y":[0], "type": "scatter", "name": "monthlySpentSpeed"}
+      ]
     },
-    "categoryVolumes": {
-      "layout":{
-        "height": 200,
-        "margin": {
-          "l": 5,
-          "r": 5,
-          "t": 5,
-          "b": 5
-        }
-      }
-    },
-    "expenseFrequency": {
+    {
+      "chartDiv": "categoryVolumes",
       "layout": {
         "height": 200,
         "margin": {
@@ -45,9 +48,27 @@
           "t": 5,
           "b": 5
         }
-      }
+      },
+      "traces": [
+        {"labels": ["cat1"], "values": [0], "type": "pie", "name": "categoryVolumes"}
+      ]
+    },
+    {
+      "chartDiv": "expenseFrequency",
+      "layout": {
+        "height": 200,
+        "margin": {
+          "l": 40,
+          "r": 10,
+          "t": 20,
+          "b": 25
+        }
+      },
+      "traces": [
+        {"x":["cat1"], "y":[0], "type":"bar", "name": "expenseFrequency", "orientation": "h"}
+      ]
     }
-  },
+  ],
   "express": {
     "serverPort": 3000
   }
