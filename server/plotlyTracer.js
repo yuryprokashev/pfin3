@@ -11,6 +11,7 @@ module.exports = function( wagner ) {
     s.makePlotlyTrace = function( traceName, arr, monthIdString ) {
         // 1. Setup
         var trace = {};
+        var inputTraces = Config.getChartTraces( chartName );
 
         // 2. Logic
         if( traceName === 'dailyVolumes' ) {
@@ -34,17 +35,19 @@ module.exports = function( wagner ) {
     };
 
     // helper functions
-    var dailyVolumesTrace = function( arr, monthIdString ) {
+    var dailyVolumesTrace = function( inputTrace, arr, monthIdString ) {
         // 1. Setup
-        var trace = { x: [], y: [], type: 'bar' };
+        inputTrace.x = [];
+        inputTrace.y = [];
+
         // 2. Logic
         for( var i = 1; i <= MyDates.getDaysInSelectedMonth( monthIdString ); i++ ) {
-            trace.x.push( i );
+            inputTrace.x.push( i );
 
-            if(!trace.y[i-1]) {
+            if(!inputTrace.y[i-1]) {
                 for( var j in arr ) {
-                    if( arr[j]._id === i){ trace.y[i-1] = arr[j]['dailyVolumes']; break; }
-                    else { trace.y[i-1] = 0; }
+                    if( arr[j]._id === i){ inputTrace.y[i-1] = arr[j]['dailyVolumes']; break; }
+                    else { inputTrace.y[i-1] = 0; }
                 }
             }
         };
@@ -53,47 +56,59 @@ module.exports = function( wagner ) {
         return trace;
     };
 
-    var monthlySpentSpeedTrace = function( arr, monthIdString ){
+    var monthlySpentSpeedTrace = function( inputTrace, arr, monthIdString ){
         // 1. Setup
-        var trace = { x: [], y: [], type: 'scatter' };
+        inputTrace.x = [];
+        inputTrace.y = [];
+
         //console.log(arr);
 
         // 2. Logic
         for( var i = 1; i <= MyDates.getDaysInSelectedMonth( monthIdString ); i++ ) {
-            trace.x.push( i );
-            trace.y[i-1] = arr[0]['monthlySpentSpeed'];
+            inputTrace.x.push( i );
+            inputTrace.y[i-1] = arr[0]['monthlySpentSpeed'];
         };
 
         // 3. Return result
-        return trace;
+        return inputTrace;
+        // myEmitter.emit('dailyVolumesPlotlyTraceReady', inputTrace);
     };
 
-    var volumesByCategoryTrace = function( arr, monthIdString ){
+    var volumesByCategoryTrace = function( inputTrace, arr, monthIdString ){
         // 1. Setup
-        var trace = { labels: [], values: [], type: 'pie' };
+        inputTrace.labels = [];
+        inputTrace.values = [];
+
         // 2. Logic
         //[{"_id":1,"categoryVolume":900},{"_id":2,"categoryVolume":90}]
 
-        for( var i = 0; i < arr.length; i++ ){
-            trace.labels[i] = arr[i]._id;
-            trace.values[i] = arr[i].categoryVolume;
+        for( var i = 0; i < arr.length; i++ ) {
+
+            //console.log(arr);
+            inputTrace.labels[i] = arr[i]._id;
+            //console.log(inputTrace.labels[i]);
+            inputTrace.values[i] = arr[i].categoryVolume;
         }
 
+        //console.log(inputTrace);
+
         // 3. Return result
-        return trace;
+        return inputTrace;
     };
 
-    var expenseFrequencyTrace = function( arr, monthIdString ) {
+    var expenseFrequencyTrace = function( inputTrace, arr, monthIdString ) {
         // 1. Setup
-        var trace = { values: [], labels: [], type: 'pie' };
+        inputTrace.x = [];
+        inputTrace.y = [];
         // 2. Logic
         for( var i = 0; i < arr.length; i++ ){
-            trace.labels[i] = arr[i]._id;
-            trace.values[i] = arr[i].expenseFrequency;
+            inputTrace.x[i] = arr[i]._id;
+            inputTrace.y[i] = arr[i].expenseFrequency;
         }
 
         // 3. Return result
-        return trace;
+        return inputTrace;
+        // myEmitter.emit('expenseFrequencyPlotlyTraceReady', inputTrace);
     };
 
     // register Service in wagner
