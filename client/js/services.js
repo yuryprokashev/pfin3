@@ -76,25 +76,45 @@ exports.$date = function () {
 };
 
 exports.$charts = function( $http, $date ) {
-    var s = {};
 
-    s.dailyVolumes = {};
-    s.monthlySpentSpeed = {};
-    s.volumesByCategory = {};
-    s.frequencyByCategory = {};
-    s.layout = {};
+    var s = {charts:[],layouts:[]};
 
-    s.renewCharts = function ( callback ) {
-        $http.get('/api/v1/charts/' + $date.getMonthId()).
-        then( function successCallback( res ) {
-            s.dailyVolumes = res.data['dailyVolumes'];
-            s.monthlySpentSpeed = res.data['monthlySpentSpeed'];
-            s.volumesByCategory = res.data['volumesByCategory'];
-            s.expenseFrequency = res.data['expenseFrequency'];
-            s.layout = res.data['layout'];
-            callback();
-        }, function errorCallback( res ){
-            console.log( res );
+    s.getLayouts = function( callback ) {
+        $http.get( '/api/v1/charts/meta' ).
+        then(
+            function successCallback( res ){
+                for( var i in res.data ) {
+                    s.charts[ i ] = { chartDiv: res.data[i].chartDiv, traces: res.data[i].traces };
+                    s.layouts[ res.data[i].chartDiv ] = res.data[i].layout;
+                }
+                //console.log(res.data);
+                //console.log(s.layouts);
+                //console.log(s.charts);
+                callback();
+            },
+            function errorCallBack( res ){
+            console.error('error in $charts.charts');
+            console.log(res);
+            }
+        );
+    };
+
+    s.reset = function() {
+        s.charts = [];
+    };
+
+    s.renewTrace = function( traceName, callback ) {
+
+        $http.get( '/api/v1/charts/' + traceName + '/'+ $date.getMonthId()).
+            then( function successCallback (res) {
+
+            //console.log(res.data);
+            //s.charts.push(res.data);
+            callback( res.data );
+
+        }, function errorCallback (res) {
+            console.error('error in $charts.renewTrace');
+            console.log(res);
         });
     };
 

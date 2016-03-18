@@ -137,22 +137,12 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
     $scope.charts = $charts;
     $scope.date = $date;
 
-    $scope.plotCharts = function() {
-        var c = $scope.charts;
-        Plotly.newPlot('chartDailyVolumes', [c.dailyVolumes, c.monthlySpentSpeed], c.layout.dailyVolumes.layout);
-        Plotly.newPlot('chartVolumesByCategory', [c.volumesByCategory], c.layout.categoryVolumes.layout);
-        Plotly.newPlot('chartFrequencyByCategory', [c.expenseFrequency], c.layout.expenseFrequency.layout);
-    };
-
-    $scope.$watch( 'date', function () {
-        $scope.charts.renewCharts( $scope.plotCharts );
-    }, true);
-
-    $scope.$on('ExpenseCreated', function() {
-        $scope.charts.renewCharts( $scope.plotCharts );
-    });
-    $scope.$on('ExpenseDeleted', function(){
-        $scope.charts.renewCharts( $scope.plotCharts );
+    // 1. SETUP STEP
+    $scope.charts.getLayouts( function() {
+        $scope.$emit('SetupReady');
     });
 
+    $scope.$watch('date.selectedDate', function(){
+        $scope.$emit('MonthChanged');
+    });
 };
