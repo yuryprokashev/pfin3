@@ -136,6 +136,8 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
 
     $scope.charts = $charts;
     $scope.date = $date;
+    var charts = $scope.charts.charts;
+    var layouts = $scope.charts.layouts;
 
     // 1. SETUP STEP
     $scope.charts.getLayouts( function() {
@@ -145,4 +147,28 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
     $scope.$watch('date.selectedDate', function(){
         $scope.$emit('MonthChanged');
     });
+
+    // 2. LOGIC. Chart creation and updates
+    $scope.createChart = function ( chartName ) {
+
+        var traces = charts.find( function( item ){
+            return item.chartDiv === chartName;
+        }).traces;
+
+        var layout = layouts[ chartName ];
+
+        if(chartName && layout && traces) {
+            Plotly.newPlot( chartName, traces, layout);
+        }
+        else {
+            console.log('chartDiv, layout or default does not exists for ' + charts[i]);
+        }
+    };
+    
+    $scope.redrawChart = function( chartName, element ) {
+        $scope.charts.renewTrace( chartName, function( data ){
+            element.data = data.traces;
+            Plotly.redraw(element);
+        });
+    };
 };
