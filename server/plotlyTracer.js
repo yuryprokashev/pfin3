@@ -97,6 +97,7 @@ module.exports = function( wagner ) {
         // 1. Setup
         inputTrace.labels = [];
         inputTrace.values = [];
+        inputTrace.marker.colors = [];
 
         // 2. Logic
         for( var i = 0; i < arr.length; i++ ) {
@@ -105,6 +106,7 @@ module.exports = function( wagner ) {
             inputTrace.labels[i] = arr[i]._id;
             //console.log(inputTrace.labels[i]);
             inputTrace.values[i] = arr[i].categoryVolume;
+            inputTrace.marker.colors[i] = arr[i].categoryColor;
         }
 
         // 3. Return result
@@ -117,8 +119,8 @@ module.exports = function( wagner ) {
         inputTrace.y = [];
         // 2. Logic
         for( var i = 0; i < arr.length; i++ ){
-            inputTrace.x[i] = arr[i]._id;
-            inputTrace.y[i] = arr[i].expenseFrequency;
+            inputTrace.x[i] = arr[i].expenseFrequency;
+            inputTrace.y[i] = arr[i]._id;
         }
 
         // 3. Return result

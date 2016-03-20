@@ -169,20 +169,19 @@ var routes = function( wagner ) {
                         ]
                     ],
                     categoryVolumes: [
-                        // [
-                        //     { $match: { user: user._id.toString() } },
-                        //     { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, category: 1 } },
-                        //     { $match: { month: month + 1 } },
-                        //     { $group: { _id: "$category", categoryVolume: { $sum: "$amount" } } },
-                        //     { $sort : { _id : 1 } }
-                        // ],
                         [
                             { $match: { user: user._id.toString() } },
-                            { $lookup: {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}},
+                            { $lookup:
+                                {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}
+                            },
                             { $unwind: "$categoryName"},
-                            { $project: { _id: 0, amount:1, date:1, month: {$month: "$date"}, "categoryName.name": 1}},
+                            { $project:
+                                { _id: 0, amount:1, date:1, month: {$month: "$date"}, "categoryName.name": 1, "categoryName.color": 1}
+                            },
                             { $match: {month: month + 1}},
-                            { $group: {_id: "$categoryName.name", categoryVolume: {$sum: "$amount"}}},
+                            { $group:
+                                {_id: "$categoryName.name", categoryVolume: {$sum: "$amount"}, categoryColor: { $first: "$categoryName.color"}}
+                            },
                             { $sort : { _id : 1 } }
                         ]
                     ],

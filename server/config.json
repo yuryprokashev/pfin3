@@ -41,7 +41,7 @@
     {
       "chartDiv": "categoryVolumes",
       "layout": {
-        "height": 200,
+        "height": 300,
         "margin": {
           "l": 5,
           "r": 5,
@@ -50,13 +50,24 @@
         }
       },
       "traces": [
-        {"labels": ["cat1"], "values": [0], "type": "pie", "name": "categoryVolumes"}
+        {
+          "labels": ["cat1"],
+          "values": [0],
+          "type": "pie",
+          "name": "categoryVolumes",
+          "marker": {
+            "colors":["#fff"]
+          },
+          "direction": "clockwise",
+          "hoverinfo": "label+percent",
+          "textinfo": "value"
+        }
       ]
     },
     {
       "chartDiv": "expenseFrequency",
       "layout": {
-        "height": 200,
+        "height": 300,
         "margin": {
           "l": 40,
           "r": 10,
@@ -65,7 +76,7 @@
         }
       },
       "traces": [
-        {"x":["cat1"], "y":[0], "type":"bar", "name": "expenseFrequency", "orientation": "h"}
+        {"x":[0], "y":["cat1"], "type":"bar", "name": "expenseFrequency", "orientation": "h"}
       ]
     }
   ],
