@@ -193,7 +193,7 @@ var routes = function( wagner ) {
                             { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, "categoryName.name": 1 } },
                             { $match: { month: month + 1 } },
                             { $group: { _id: "$categoryName.name", expenseFrequency: { $sum: 1 } } },
-                            { $sort : { _id : 1 } }
+                            { $sort : { expenseFrequency : 1 } }
                         ]
                     ]
                 };
