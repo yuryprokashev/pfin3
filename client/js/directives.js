@@ -1,4 +1,4 @@
-exports.expenseInputForm = function () {
+exports.expenseInputForm = function() {
 
     return {
         controller: 'ExpenseInputFormCtrl',
@@ -7,7 +7,7 @@ exports.expenseInputForm = function () {
 
 };
 
-exports.expenseList = function () {
+exports.expenseList = function() {
 
     return {
         controller: 'ExpenseListCtrl',
@@ -16,7 +16,7 @@ exports.expenseList = function () {
 
 };
 
-exports.expensesDashboard = function () {
+exports.expensesDashboard = function() {
 
     return {
         controller: 'ExpensesDashboardCtrl',

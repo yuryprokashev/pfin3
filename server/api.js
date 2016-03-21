@@ -209,78 +209,33 @@ var routes = function( wagner ) {
                         // Here we start several aggregation tasks, that are async.
                         // Once each of them finishes, it fires the "TraceReady" event with the result object in it.
                         Expense.aggregate(aggQueries[ chartName ][ q ]).exec(function (err, result) {
+                            // console.log('error in aggregation function = ' + err);
                             myEmitter.emit(chartName+'TraceReady', result);
                         });
                     }
 
                     // Here we get the trace, push it to 'traces' array and check, if we finished
                     // Once finished -> we send 'ChartReady' event
-
                     myEmitter.on(chartName+'TraceReady', function( trace ){
-                        // console.log('------------Trace is Ready------------');
-                        // console.log(trace);
                         rawTraces.push(trace);
-                        // console.log('rawTraces.length is now: '+ rawTraces.length);
-                        // console.log('--------------------------------------');
                         var plotlyTraces = [];
 
                         for( var i in rawTraces ) {
-
-                            // console.log('trace#'+i);
                             PlotlyTracer.makePlotlyTrace(chartName, rawTraces[i], mId, function(plotlyTrace) {
-                                // console.log('-------rawTraces before-------');
-                                // console.log(rawTraces.toString());
                                 plotlyTraces[i] = plotlyTrace;
-                                // console.log('plotlyTraces.length = ' + plotlyTraces.length);
                                 if( plotlyTraces.length === aggQueries[chartName].length) {
-                                    // console.log('-------rawTraces after-------')
-                                    // console.log(rawTraces.toString());
                                     myEmitter.emit(chartName+'ChartReady', plotlyTraces);
-                                    // console.log('--------------------------------------');
-                                    // console.log('Emitting ChartReady!');
                                 }
                             } );
-                            // console.log(rawTraces[i]);
                         }
-
-                        // myEmitter.emit(chartName+'ChartReady', plotlyTraces);
-
-                        // if( plotlyTraces.length === aggQueries[chartName].length) {
-                        //     console.log('------------Making Plotly Traces------------');
-                        //     for( var i in rawTraces ) {
-                        //
-                        //         console.log('trace#'+i);
-                        //         PlotlyTracer.makePlotlyTrace(chartName, rawTraces[i], mId, function(plotlyTrace) {
-                        //             console.log('-------rawTraces before-------');
-                        //             console.log(rawTraces.toString());
-                        //             plotlyTraces[i] = plotlyTrace;
-                        //             console.log('-------rawTraces after-------')
-                        //             console.log(rawTraces.toString());
-                        //             // myEmitter.emit(chartName+'ChartReady', rawTraces);
-                        //         } );
-                        //         console.log(rawTraces[i]);
-                        //     }
-                        //     console.log('--------------------------------------');
-                        //     console.log('Emitting ChartReady!');
-                        //     myEmitter.emit(chartName+'ChartReady', plotlyTraces);
-                        //
-                        // }
                     });
 
                     // Here we send a response, when Chart is ready.
                     myEmitter.once(chartName+'ChartReady', function( obj ){
-                        // console.log('------------Send Chart------------');
-                        // console.log('chart is ready');
                         charts.traces = obj;
                         rawTraces = [];
                         myEmitter.removeAllListeners(chartName+'TraceReady');
                         res.json(charts);
-                        // console.log(charts.traces);
-                        // console.log('--------------------------------------');
-                        // console.log('------------Listeners Remaining------------');
-                        // console.log(myEmitter.listeners(chartName+'TraceReady').toString());
-                        // console.log('--------------------------------------');
-
                     });
                 }
                 else {

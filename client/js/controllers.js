@@ -136,6 +136,7 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
 
     $scope.charts = $charts;
     $scope.date = $date;
+    
     var charts = $scope.charts.charts;
     var layouts = $scope.charts.layouts;
 
