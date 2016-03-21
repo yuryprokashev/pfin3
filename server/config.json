@@ -23,6 +23,10 @@
           "r": 10,
           "t": 20,
           "b": 25
+        },
+        "legend": {
+          "bordercolor": "#3366CC",
+          "yanchor": "bottom"
         }
       },
       "traces":[
@@ -32,21 +36,32 @@
           "type": "bar",
           "name": "dailyVolumes",
           "marker": {
-            "color": "rgba(50,171,96,1.0)"
-          }
+            "color": "#3366CC"
+          },
+          "showlegend": false
         },
-        {"x":[0], "y":[0], "type": "scatter", "name": "monthlySpentSpeed"}
+        {
+          "x":[0],
+          "y":[0],
+          "type": "scatter",
+          "name": "monthlySpentSpeed",
+          "marker": {
+            "color": "#FF9900",
+            "symbol": "0"
+          },
+          "showlegend": false
+        }
       ]
     },
     {
       "chartDiv": "categoryVolumes",
       "layout": {
-        "height": 300,
+        "height": 400,
         "margin": {
-          "l": 5,
-          "r": 5,
-          "t": 5,
-          "b": 5
+          "l": 25,
+          "r": 25,
+          "t": 75,
+          "b": 25
         }
       },
       "traces": [
@@ -60,7 +75,8 @@
           },
           "direction": "clockwise",
           "hoverinfo": "label+percent",
-          "textinfo": "value"
+          "textinfo": "value",
+          "showlegend": false
         }
       ]
     },
@@ -69,10 +85,10 @@
       "layout": {
         "height": 300,
         "margin": {
-          "l": 40,
-          "r": 10,
-          "t": 20,
-          "b": 25
+          "l": 120,
+          "r": 5,
+          "t": 5,
+          "b": 5
         }
       },
       "traces": [
