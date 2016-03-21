@@ -118,3 +118,10 @@ exports.expenseFrequency = function() {
         }
     }
 };
+
+exports.notLoggedIn = function() {
+    return {
+        require: "^?mainCtrl",
+        templateUrl: "/assets/templates/notLoggedIn.html"
+    }
+};
