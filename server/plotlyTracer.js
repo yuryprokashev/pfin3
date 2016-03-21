@@ -13,39 +13,53 @@ module.exports = function( wagner ) {
         var inputTraces = Config.getChartTraces( chartName );
 
         // 2. Logic
+        // > check if arr has any values in it
         // > daily Volumes CHART - 2 TRACES
         if( chartName === 'dailyVolumes' ) {
-            if (arr[0].dailyVolumes){
-                trace = dailyVolumesTrace( inputTraces[0], arr, monthIdString );
-            }
-            else if (arr[0].monthlySpentSpeed) {
-                trace = monthlySpentSpeedTrace( inputTraces[1], arr, monthIdString );
+            if (arr.length) {
+                if (arr[0].dailyVolumes) {
+                    trace = dailyVolumesTrace( inputTraces[0], arr, monthIdString );
+                }
+                else if (arr[0].monthlySpentSpeed) {
+                    trace = monthlySpentSpeedTrace( inputTraces[1], arr, monthIdString );
+                }
+                else {
+                    console.log('Wrong traceName in arr ' + arr[0].toString());
+                }
             }
             else {
-                console.log('Wrong traceName in arr ' + arr[0].toString());
+                    trace = {};
             }
         }
-
         // > categoryVolumes CHART - 1 TRACE
         else if ( chartName === 'categoryVolumes' ) {
-            if (arr[0].categoryVolume){
-                trace = volumesByCategoryTrace( inputTraces[0], arr, monthIdString );
+            if(arr.length) {
+                if (arr[0].categoryVolume){
+                    trace = volumesByCategoryTrace( inputTraces[0], arr, monthIdString );
+                }
+                else {
+                    console.log('Wrong traceName in arr ' + arr[0].toString());
+                }
             }
             else {
-                console.log('Wrong traceName in arr ' + arr[0].toString());
+                trace = {}
             }
         }
 
         // > expenseFrequency CHART - 1 TRACE
         else if (chartName === 'expenseFrequency' ) {
-            if (arr[0].expenseFrequency) {
-                trace = expenseFrequencyTrace( inputTraces[0], arr, monthIdString );
+            if(arr.length) {
+                if (arr[0].expenseFrequency) {
+                    trace = expenseFrequencyTrace( inputTraces[0], arr, monthIdString );
+                }
+                else {
+                    console.log('Wrong traceName in arr ' + arr[0].toString());
+                }
             }
             else {
-                console.log('Wrong traceName in arr ' + arr[0].toString());
+                trace = {};
             }
         }
-
         else {
             console.log('invalid chartName or traceName: ' + chartName + '-' + arr.toString());
         }
@@ -129,6 +143,7 @@ module.exports = function( wagner ) {
 
     // register Service in wagner
     wagner.factory( 'PlotlyTracer', function() { return s; } );
+
     // return Service.
     return s;
 };
