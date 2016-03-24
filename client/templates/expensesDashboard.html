@@ -1,20 +1,25 @@
-<div class = "row">
+<div class = "row" ng-show = "true">
     <div class = "col-md-12">
         <div class="panel panel-info">
             <div class = "panel-heading">Daily Expenses volume in current month by day</div>
-            <div daily-volumes class = "panel-body"></div>
+            <div daily-volumes class = "panel-body" ng-show = "user.user"></div>
         </div>
     </div>
     <div class = "col-md-12">
         <div class="panel panel-info">
             <div class = "panel-heading">You spent most volume to</div>
-            <div category-volumes class = "panel-body"></div>
+            <div category-volumes class = "panel-body" ng-show = "user.user"></div>
         </div>
     </div>
     <div class = "col-md-12">
         <div class="panel panel-info">
             <div class="panel-heading">You spent most frequently to</div>
-            <div expense-frequency class = "panel-body"></div>
+            <div expense-frequency class = "panel-body" ng-show = "user.user"></div>
         </div>
+    </div>
+</div>
+<div class = "row" ng-show = "false">
+    <div class = "col-md-12">
+        Loading Data...
     </div>
 </div>
