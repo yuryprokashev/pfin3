@@ -77,9 +77,10 @@ exports.$date = function () {
 
 exports.$charts = function( $http, $date ) {
 
-    var s = {charts:[],layouts:[]};
+    var s = {charts:[],layouts:[], isRequestInProgress: false};
 
     s.getLayouts = function( callback ) {
+        s.isRequestInProgress = true;
         $http.get( '/api/v1/charts/meta' ).
         then(
             function successCallback( res ){
@@ -91,6 +92,7 @@ exports.$charts = function( $http, $date ) {
                 //console.log(s.layouts);
                 //console.log(s.charts);
                 callback();
+                s.isRequestInProgress = false;
             },
             function errorCallBack( res ){
             console.error('error in $charts.charts');
@@ -104,14 +106,14 @@ exports.$charts = function( $http, $date ) {
     };
 
     s.renewTrace = function( traceName, callback ) {
-
+        s.isRequestInProgress = true;
         $http.get( '/api/v1/charts/' + traceName + '/'+ $date.getMonthId()).
             then( function successCallback (res) {
 
             //console.log(res.data);
             //s.charts.push(res.data);
             callback( res.data );
-
+            s.isRequestInProgress = false;
         }, function errorCallback (res) {
             console.error('error in $charts.renewTrace');
             console.log(res);
