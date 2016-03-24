@@ -32,8 +32,6 @@ client.config( function( $routeProvider ){
 
 });
 },{"./controllers.js":2,"./directives.js":3,"./services.js":4,"underscore":6}],2:[function(require,module,exports){
-// TODO. Write code for all controllers
-
 exports.mainCtrl = function( $scope, $user, $date ) {
     $scope.user = $user;
     $scope.date = $date;
@@ -44,7 +42,7 @@ exports.mainCtrl = function( $scope, $user, $date ) {
 
 };
 
-exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http ) {
+exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
 
     $scope.selectItem = function( array, id, item ) {
         $scope.obj[item] = id;
@@ -99,7 +97,7 @@ exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http
         //console.log($scope.obj);
         $http.post( '/api/v1/expenses', $scope.obj ).
         success( function( res ) {
-            $scope.expenseList.push(res.expense);
+            $scope.$emit('ExpenseCreated');
             $scope.reset();
         }).
         error(function (res) {
@@ -113,7 +111,7 @@ exports.ExpenseInputFormCtrl = function ( $scope, $expenses, $user, $date, $http
     }, 0);
 };
 
-exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
+exports.ExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.expenseList = [];
     $scope.date = $date;
@@ -123,10 +121,10 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
     };
 
     $scope.fillExpenseList = function () {
-        var year = $scope.date.selectedDate.getFullYear();
-        var month = $scope.date.selectedDate.getMonth();
 
-        $http.get( 'api/v1/expenses/' + year + month).
+        var mId = $scope.date.getMonthId();
+
+        $http.get( 'api/v1/expenses/' + mId).
         then(
             function successCallback (res) {
                 $scope.expenseList = res.data;
@@ -143,6 +141,7 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
         $http.delete('/api/v1/expenses/' + id).
             then(
             function successCallback(res) {
+                $scope.$emit('ExpenseDeleted');
                 var id = res.data._id;
                 for(var i in $scope.expenseList){
                     if($scope.expenseList[i]._id === id) {
@@ -157,410 +156,59 @@ exports.ExpenseListCtrl = function( $scope, $expenses, $date, $http ) {
         );
     };
 
-    $scope.$watch( 'date', function (newVal, oldVal ){
-        //console.log(oldVal);
-        //console.log(newVal);
-        $scope.reset();
+    $scope.$watch( 'date', function (){
         $scope.fillExpenseList();
     }, true);
 
-    $scope.fillExpenseList();
-
-};
-
-
-exports.ChartsViewCtrl = function ( $scope, $charts, $date, $user ) {
-
-    $scope.date = {};
-
-    $scope.$watch( 'date', function () {
-        $scope.chart1 = $charts.getChartForUserPerMonth('chart1', $user.user, $scope.date.month, $scope.date.year );
-        $scope.chart2 = $charts.getChartForUserPerMonth('chart2', $user.user, $scope.date.month, $scope.date.year );
-        $scope.chart3 = $charts.getChartForUserPerMonth('chart3', $user.user, $scope.date.month, $scope.date.year );
-        $scope.chart4 = $charts.getChartForUserPerMonth('chart4', $user.user, $scope.date.month, $scope.date.year );
+    $scope.$on('ExpenseCreated', function(){
+        $scope.fillExpenseList();
     });
 
-    // TODO. Get 4 charts to the scope from $charts service
-    $scope.date = $date.selectedDate;
-
 };
 
-exports.DateSelectorCtrl = function ( $scope, $date ) {
+exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
 
-    $scope.selection = $date.getDate();
+    $scope.charts = $charts;
+    $scope.date = $date;
+    var charts = $scope.charts.charts;
+    var layouts = $scope.charts.layouts;
 
-    $scope.changeDate = function( date ) {
-        $date.setDate( date );
+    // 1. SETUP STEP
+    $scope.charts.getLayouts( function() {
+        $scope.$emit('SetupReady');
+    });
+
+    $scope.$watch('date.selectedDate', function(){
+        $scope.$emit('MonthChanged');
+    });
+
+    // 2. LOGIC. Chart creation and updates
+    $scope.createChart = function ( chartName ) {
+
+        var traces = charts.find( function( item ){
+            return item.chartDiv === chartName;
+        }).traces;
+
+        var layout = layouts[ chartName ];
+
+        if(chartName && layout && traces) {
+            Plotly.newPlot( chartName, traces, layout);
+        }
+        else {
+            console.log('chartDiv, layout or default does not exists for ' + charts[i]);
+        }
     };
-
+    
+    $scope.redrawChart = function( chartName, element ) {
+        $scope.charts.renewTrace( chartName, function( data ){
+            element.data = data.traces;
+            Plotly.redraw(element);
+        });
+    };
 };
 
 },{}],3:[function(require,module,exports){
-//pf.directive('submitBtn', [ 'channels', function( channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/common/submitBtn.html",
-//        replace: false,
-//        scope: {
-//            objectToPost: "=",
-//            channelGroup: "="
-//        },
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//            el.on('click', function() {
-//                channels.publish( scope.channelGroup.save, scope.objectToPost);
-//            });
-//        }
-//    }
-//}]);
-//
-//pf.directive('multipleBtnsSelect', [ 'channels', function( channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/common/multipleBtnsSelect.html",
-//        replace: true,
-//        controller: ['$scope', '$log', function ( $scope, $log ) {
-//
-//            function select ( option, options ) {
-//                for ( var btn in options ) {
-//                    if ( options[ btn ].id === option ) {
-//                        options[ btn ].isSelected = true;
-//                    }
-//                    else {
-//                        options[ btn ].isSelected = false;
-//                    }
-//                }
-//            };
-//
-//            select( $scope.selectedId, $scope.optionsArray );
-//
-//            this.selectOption = function ( channel, args ) {
-//                $scope.selectedId = args.option.id;
-////                $log.warn($scope.selectedId);
-//                select( args.option.id, $scope.optionsArray );
-//                $scope.$apply();
-//            };
-//
-//            // I do it to make 'channelGroup' available in nested controller.
-//            this.channelGroup = $scope.channelGroup;
-//
-//            channels.subscribe( this.channelGroup.update, this.selectOption );
-//
-//        }],
-//
-//        scope: {
-//            channelGroup: "=",
-//            optionsArray: "=",
-//            selectedId: "=",
-//        },
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//
-//        }
-//    }
-//}]);
-//
-//pf.directive('btnInMultipleBtnsSelect', ['channels', function( channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/common/btnInMultipleBtnsSelect.html",
-//        restrict: 'E',
-//        replace: false,
-//        require: '^multipleBtnsSelect',
-//        scope: {
-//            option: "=",
-//            object: "="
-//        },
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//            el.on( 'click', function() {
-////                console.log(scope.option);
-//                channels.publish( controller.channelGroup.update, { option: scope.option });
-//            });
-//        }
-//    }
-//}]);
-//
-//pf.directive('deleteBtn', [ 'channels', function( channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/common/deleteBtn.html",
-//        replace: false,
-//        scope: {
-//            objectGuidToDelete: "=",
-//            channelGroup: "="
-//        },
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//            el.on('click', function() {
-//                channels.publish( scope.channelGroup.delete, { guid: scope.objectGuidToDelete } );
-//            });
-//        }
-//    }
-//}]);
-//
-//pf.directive('expenseAmountWithCurrency', [ 'channels', function( channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/common/expenseAmountWithCurrency.html",
-//        replace: false,
-//        controller: [ '$scope', '$log', 'expenses', function ( $scope, $log, expenses) {
-//            $scope.setCurrencyIcon = function ( id ) {
-//                return expenses.getCurrencyById( id ).className;
-//            };
-//
-//            $scope.formatAmount = function ( num ) {
-//                return numeral( num ).format( '0,0[.]00' );
-//            }
-//        }],
-//        scope: {
-//            expenseAmount: "=",
-//            currencyId: "="
-//        },
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//
-//
-//        }
-//    }
-//}]);
-//
-//pf.directive('expenseInputForm', [ 'expenses', 'channels', function( expenses, channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/expensesapp/expenseInputForm.html",
-//        replace: false,
-//        controller: ['$scope', '$log', function ( $scope, $log ) {
-//
-//            $scope.categories = expenses.getCategories();
-//
-//            $scope.currencies = expenses.getCurrencies();
-//
-//            $scope.allChannelGroups = channels.getChannelGroup();
-//
-//            var self = this;
-//
-//            this.create = function( channel, args ) {
-//                expenses.create( channel, args );
-//                $scope.newExpense = expenses.getEmpty();
-//                self.updateMultipleBtnSelectors();
-//            };
-//
-//            this.updateMultipleBtnSelectors = function () {
-//                var e = $scope.newExpense;
-//                var optionCurency = {
-//                    option: expenses.getCurrencyById( e.spentCurrencyId )
-//                };
-//                var optionCategory = {
-//                    option: expenses.getCategoryById( e.categoryId )
-//                };
-//                channels.publish( $scope.allChannelGroups.category.update, optionCategory );
-//                channels.publish( $scope.allChannelGroups.currency.update, optionCurency );
-//            };
-//
-//            this.updateCategoryName = function( channel, args ) {
-//                $scope.selectedCategoryName = expenses.getCategoryNameById( $scope.newExpense.categoryId );
-//                $scope.$apply();
-//            };
-//
-//            $scope.newExpense = expenses.getEmpty();
-//            this.updateMultipleBtnSelectors();
-//
-//            $scope.selectedCategoryName = expenses.getCategoryNameById( $scope.newExpense.categoryId );
-//
-//            channels.subscribe( $scope.allChannelGroups.expense.save, this.create );
-//
-//            channels.subscribe( $scope.allChannelGroups.category.update, this.updateCategoryName );
-//
-//        }],
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//
-//        }
-//    }
-//}]);
-//
-//pf.directive('expensesView', [ 'expenses', 'channels', function( expenses, channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/expensesapp/expensesView.html",
-//        replace: false,
-//        controller: ['$scope', '$log', function( $scope, $log ) {
-//            $scope.expenses = expenses.getAll();
-//
-//            this.channelGroup = channels.getChannelGroup( "expense" );
-//
-//            channels.subscribe( this.channelGroup.saved, function () {
-//                $scope.expenses = expenses.getAll();
-//            });
-//
-//            this.delete = function ( channel, args ) {
-//                expenses.delete( channel, args );
-//            }
-//
-//            channels.subscribe( this.channelGroup.delete, this.delete );
-//
-//            channels.subscribe( this.channelGroup.deleted, function () {
-//                $scope.expenses = expenses.getAll();
-//                $scope.$apply();
-//            });
-//        }],
-//        scope: {
-//        },
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//        }
-//    }
-//}]);
-//
-//pf.directive('oneExpenseView', [ 'channels', 'expenses', function( channels, expenses ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/expensesapp/oneExpenseView.html",
-//        replace: false,
-//        controller: [ '$scope', '$log', function( $scope, $log ){
-//            $scope.formatDate = function ( date ) {
-////                $log.debug('formatDate is called');
-//                return moment( date ).format( 'DD/MM/YYYY' );
-//            };
-//
-//            $scope.setCategoryName = function( id ) {
-//                return expenses.getCategoryNameById( id );
-//            };
-//
-//            $scope.channelGroup = channels.getChannelGroup( "expense" );
-//
-//        }],
-//        scope: {
-//            expenseObject: "=",
-//        },
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-//        }
-//    }
-//}]);
-//
-//pf.directive('chart1', [ 'charts', 'channels', function( charts, channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/chartsapp/chart1.html",
-//        replace: false,
-//        controller: ['$scope', '$log', function ( $scope, $log ) {
-//
-//            var myChannels = channels.getChannels( 'services', 'charts' );
-//
-//            $scope.chart1 = charts.getChart1();
-//
-////            $log.debug($scope.chart1);
-//            $scope.channelGroup = channels.getChannelGroup("charts").chart1;
-//
-//            channels.subscribe( myChannels.chart1Ready, function ( channel, args ) {
-//                $log.debug( args );
-//            });
-//
-//
-//        }],
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-////            console.log(attrs["$$element"][0].parentElement.clientHeight);
-////            console.log(attrs["$$element"][0].clientHeight);
-////            console.log(attrs["$$element"]);
-//
-//            Plotly.newPlot( "chart-1", scope.chart1, { height: 200, margin: { l: 40, r: 10, t: 20, b: 25 } } );
-//        }
-//
-//    }
-//}]);
-//
-//pf.directive('chart2', [ 'charts', 'channels', function( charts, channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/chartsapp/chart2.html",
-//        replace: false,
-//        controller: ['$scope', '$log', function ( $scope, $log ) {
-//
-//            $scope.chart2 = charts.getChart2();
-//
-////            $log.debug($scope.chart2);
-//            $scope.channelGroup = channels.getChannelGroup("charts").chart2;
-//
-//        }],
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-////            console.log(attrs["$$element"][0].parentElement.clientHeight);
-////            console.log(attrs["$$element"][0].clientHeight);
-////            console.log(attrs["$$element"]);
-//
-//            Plotly.newPlot( "chart-2", scope.chart2, { height: 200, margin: { l: 40, r: 10, t: 20, b: 25 } } );
-//        }
-//
-//    }
-//}]);
-//
-//pf.directive('chart3', [ 'charts', 'channels', function( charts, channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/chartsapp/chart3.html",
-//        replace: false,
-//        controller: ['$scope', '$log', function ( $scope, $log ) {
-//
-//            $scope.chart3 = charts.getChart3();
-//
-////            $log.debug($scope.chart3);
-//            $scope.channelGroup = channels.getChannelGroup("charts").chart3;
-//
-//        }],
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-////            console.log(attrs["$$element"][0].parentElement.clientHeight);
-////            console.log(attrs["$$element"][0].clientHeight);
-////            console.log(attrs["$$element"]);
-//
-//            Plotly.newPlot( "chart-3", scope.chart3, { height: 200, margin: { l: 5, r: 5, t: 5, b: 5 } } );
-//        }
-//
-//    }
-//}]);
-//
-//pf.directive('chart4', [ 'charts', 'channels', function( charts, channels ) {
-//
-//    return {
-//
-//        templateUrl: "/assets/js/apps/chartsapp/chart4.html",
-//        replace: false,
-//        controller: ['$scope', '$log', function ( $scope, $log ) {
-//
-//            $scope.chart4 = charts.getChart4();
-//
-////            $log.debug($scope.chart4);
-//            $scope.channelGroup = channels.getChannelGroup("charts").chart4;
-//
-//        }],
-//
-//        link: function ( scope, el, attrs, controller, transcludeFn ) {
-////            console.log(attrs["$$element"][0].parentElement.clientHeight);
-////            console.log(attrs["$$element"][0].clientHeight);
-////            console.log(attrs["$$element"]);
-//
-//            Plotly.newPlot( "chart-4", scope.chart4, { height: 200, margin: { l: 5, r: 5, t: 5, b: 5 } } );
-//        }
-//
-//    }
-//}]);
-
-// TODO. Write code for all directives between ==== bars, then delete all above directives
-// =========================
-exports.expenseInputForm = function () {
+exports.expenseInputForm = function() {
 
     return {
         controller: 'ExpenseInputFormCtrl',
@@ -569,7 +217,7 @@ exports.expenseInputForm = function () {
 
 };
 
-exports.expenseList = function () {
+exports.expenseList = function() {
 
     return {
         controller: 'ExpenseListCtrl',
@@ -578,84 +226,118 @@ exports.expenseList = function () {
 
 };
 
-exports.dateSelector = function () {
+exports.expensesDashboard = function() {
 
     return {
-        controller: 'DateSelectorCtrl',
-        templateUrl: '/assets/templates/dateSelector.html'
-    }
-};
-
-exports.chartsView = function () {
-
-    return {
-        controller: 'ChartsViewCtrl',
-        templateUrl: '/assets/templates/chart1.html'
+        controller: 'ExpensesDashboardCtrl',
+        templateUrl: '/assets/templates/expensesDashboard.html'
     }
 
 };
 
+exports.dailyVolumes = function() {
+    return {
+        require: "^?ExpensesDashboardCtrl",
+        template: '<div id = "dailyVolumes"></div>',
+        link: function ( scope, el, attrs ) {
 
-// =========================
+            var chartName = 'dailyVolumes';
+            var chartDiv = el[0].children[0];
+            
+            scope.$on( 'SetupReady', function () {
+                scope.createChart( chartName );
+                scope.redrawChart( chartName, chartDiv );
+
+                // >> when we change month, we re-draw charts
+                scope.$on('MonthChanged', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                // >> when user create Expense, we re-draw charts
+                scope.$on('ExpenseCreated', function(){
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                // >> when user delete Expense, we re-draw charts.
+                scope.$on('ExpenseDeleted', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+            });
+        }
+    }
+};
+
+exports.categoryVolumes = function() {
+    return {
+        require: "^?ExpensesDashboardCtrl",
+        template: '<div id = "categoryVolumes"></div>',
+        link: function ( scope, el, attrs ) {
+            var chartName = 'categoryVolumes';
+            var chartDiv = el[0].children[0];
+
+            scope.$on( 'SetupReady', function () {
+                scope.createChart( chartName );
+                scope.redrawChart( chartName, chartDiv );
+
+                // >> when we change month, we re-draw charts
+                scope.$on('MonthChanged', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                // >> when user create Expense, we re-draw charts
+                scope.$on('ExpenseCreated', function(){
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                // >> when user delete Expense, we re-draw charts.
+                scope.$on('ExpenseDeleted', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+            });
+        }
+    }
+};
+
+exports.expenseFrequency = function() {
+    return {
+        require: "^?ExpensesDashboardCtrl",
+        template: '<div id = "expenseFrequency"></div>',
+        link: function ( scope, el, attrs ) {
+            var chartName = 'expenseFrequency';
+            var chartDiv = el[0].children[0];
+
+            scope.$on( 'SetupReady', function () {
+                scope.createChart( chartName );
+                scope.redrawChart( chartName, chartDiv );
+
+                // >> when we change month, we re-draw charts
+                scope.$on('MonthChanged', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                // >> when user create Expense, we re-draw charts
+                scope.$on('ExpenseCreated', function(){
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                // >> when user delete Expense, we re-draw charts.
+                scope.$on('ExpenseDeleted', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+            });
+        }
+    }
+};
+
+exports.notLoggedIn = function() {
+    return {
+        require: "^?mainCtrl",
+        templateUrl: "/assets/templates/notLoggedIn.html"
+    }
+};
+
 },{}],4:[function(require,module,exports){
 var status = require( 'http-status' );
-
-// TODO. Write code for $expenses service, that goes via RESTful API to server and performs CRUD operations with expenses
-exports.$expenses = function( $http ) {
-
-    var categories, currencies;
-
-    // create empty service object
-    var s = {};
-
-
-    // service exposes the following API
-    s.getExpenseListByUserPerMonth = function( user, month, year ) {
-        var e = {};
-        // TODO. Code should go to server via RESTful API and get all expenses for given user, given month and year
-        return e;
-    };
-
-    s.deleteExpenseForUser = function ( expense, user ) {
-        // TODO. Code should delete expense object for given user via RESTful API and return { status: true } if success
-        return { status: true }
-
-    };
-
-
-    s.select = function ( type, id ) {
-        var array;
-
-        if( type === 'category' ){
-            array = categories;
-        }
-        else if( type === 'currency' ){
-            array = currencies;
-        };
-
-        selectItem( array, id );
-
-        return array;
-    };
-
-
-    // returns service object with API
-    return s;
-};
-
-// TODO. Write code for $charts service, that goes via RESTful API to server and gets charts data
-exports.$charts = function( $http ) {
-
-    // create empty service object
-    var s = {};
-
-    // service exposes the following API
-    s.getChartForUserPerMonth = function( chartName, user, month, year ) {
-        // TODO. Code should get chart data from server for given chart name, user, given month and year.
-    };
-
-    return s;
-};
 
 exports.$user = function( $http ) {
     var s = {};
@@ -676,17 +358,25 @@ exports.$user = function( $http ) {
     return s;
 };
 
-// Get moment.js package to deal with months easily
-
-//var moment = require( 'moment' );
-
 exports.$date = function () {
 
     var s = {};
 
-    var d = new Date();
+    //var d = new Date();
 
-    s.selectedDate = new Date(d.getFullYear(), d.getMonth());
+    //s.selectedDate = new Date(d.getFullYear(), d.getMonth());
+    s.selectedDate = new Date();
+
+    s.getMonthId = function () {
+        var result =  undefined;
+
+        var year = this.selectedDate.getFullYear();
+        var month = this.selectedDate.getMonth();
+
+        result = year.toString() + month.toString();
+
+        return result;
+    };
 
     s.months = [];
 
@@ -721,6 +411,52 @@ exports.$date = function () {
     s.setDate = function( date ) {
         s.selectedDate = date;
     };
+    return s;
+};
+
+exports.$charts = function( $http, $date ) {
+
+    var s = {charts:[],layouts:[]};
+
+    s.getLayouts = function( callback ) {
+        $http.get( '/api/v1/charts/meta' ).
+        then(
+            function successCallback( res ){
+                for( var i in res.data ) {
+                    s.charts[ i ] = { chartDiv: res.data[i].chartDiv, traces: res.data[i].traces };
+                    s.layouts[ res.data[i].chartDiv ] = res.data[i].layout;
+                }
+                //console.log(res.data);
+                //console.log(s.layouts);
+                //console.log(s.charts);
+                callback();
+            },
+            function errorCallBack( res ){
+            console.error('error in $charts.charts');
+            console.log(res);
+            }
+        );
+    };
+
+    s.reset = function() {
+        s.charts = [];
+    };
+
+    s.renewTrace = function( traceName, callback ) {
+
+        $http.get( '/api/v1/charts/' + traceName + '/'+ $date.getMonthId()).
+            then( function successCallback (res) {
+
+            //console.log(res.data);
+            //s.charts.push(res.data);
+            callback( res.data );
+
+        }, function errorCallback (res) {
+            console.error('error in $charts.renewTrace');
+            console.log(res);
+        });
+    };
+
     return s;
 };
 },{"http-status":5}],5:[function(require,module,exports){
