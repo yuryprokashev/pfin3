@@ -17,21 +17,21 @@
             </div>
 
             <!-- Currency -->
-            <div class = "col-md-6">
-                <div class = "form-group input-group-sm">
-                    <div class = "btn-group btn-group-justified">
-                        <div class = "btn-group" ng-repeat = "cr in currencies">
-                            <button id = "currency-option-{{ cr._id }}"
-                                    type = "button"
-                                    class = "btn {{ cr.className }}"
-                                    ng-class = "cr.isSelected ? 'btn-primary' : 'btn-default'"
-                                    ng-click = "selectItem( currencies, cr._id, 'currency' )"
-                            ></button>
-                        </div>
-                    </div>
-                    <input class = "sr-only" type = "text" name = "currency" ng-model = "obj.currency"/>
-                </div>
-            </div>
+            <!--<div class = "col-md-6">-->
+                <!--<div class = "form-group input-group-sm">-->
+                    <!--<div class = "btn-group btn-group-justified">-->
+                        <!--<div class = "btn-group" ng-repeat = "cr in currencies">-->
+                            <!--<button id = "currency-option-{{ cr._id }}"-->
+                                    <!--type = "button"-->
+                                    <!--class = "btn {{ cr.className }}"-->
+                                    <!--ng-class = "cr.isSelected ? 'btn-primary' : 'btn-default'"-->
+                                    <!--ng-click = "selectItem( currencies, cr._id, 'currency' )"-->
+                            <!--&gt;</button>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <!--<input class = "sr-only" type = "text" name = "currency" ng-model = "obj.currency"/>-->
+                <!--</div>-->
+            <!--</div>-->
 
             <!-- Amount -->
             <div class = "col-md-12">
@@ -48,29 +48,29 @@
                 </div>
             </div>
 
-            <!-- 5 most frequent categories -->
-            <div class = "col-md-12">
-                <div class = "form-group input-group-sm">
-                    <label class = "sr-only" for categories>5 Most Frequent Categories</label>
-                    <div class = "btn-group btn-group-justified">
-                        <div class = "btn-group" ng-repeat = "ct in categories">
-                            <button class = "btn {{ ct.className }}"
-                                    type = "button"
-                                    ng-class = "ct.isSelected ? 'btn-primary' : 'btn-default'"
-                                    ng-click = "selectItem( categories, ct._id, 'category' )"
-                            ></button>
-                        </div>
-                    </div>
-                    <input id = "category-input"
-                           class = "sr-only"
-                           type = "text"
-                           name = "category"
-                           ng-model = "obj.category"/>
-                </div>
-                <div class = "form-group">
-                    <p>{{obj.category.name}}</p>
-                </div>
-            </div>
+            <!--&lt;!&ndash; Сategories &ndash;&gt;-->
+            <!--<div class = "col-md-12">-->
+                <!--<div class = "form-group input-group-sm">-->
+                    <!--<label class = "sr-only" for categories>5 Most Frequent Categories</label>-->
+                    <!--<div class = "btn-group btn-group-justified">-->
+                        <!--<div class = "btn-group" ng-repeat = "ct in categories">-->
+                            <!--<button class = "btn {{ ct.className }}"-->
+                                    <!--type = "button"-->
+                                    <!--ng-class = "ct.isSelected ? 'btn-primary' : 'btn-default'"-->
+                                    <!--ng-click = "selectItem( categories, ct._id, 'category' )"-->
+                            <!--&gt;</button>-->
+                        <!--</div>-->
+                    <!--</div>-->
+                    <!--<input id = "category-input"-->
+                           <!--class = "sr-only"-->
+                           <!--type = "text"-->
+                           <!--name = "category"-->
+                           <!--ng-model = "obj.category"/>-->
+                <!--</div>-->
+                <!--<div class = "form-group">-->
+                    <!--<p>{{obj.category.name}}</p>-->
+                <!--</div>-->
+            <!--</div>-->
 
             <!-- Text Description -->
             <div class = "col-md-12">

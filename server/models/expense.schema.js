@@ -11,7 +11,7 @@ var expenseSchema = new mongoose.Schema( {
     description: { type: String, required: false },
     
     //category: Category.categorySchema,
-    category: { type: Number, ref: 'Category' },
+    category: { type: Number, ref: 'Category', default: 1 },
 
     date: { type: Date, required: true },
     
@@ -20,7 +20,7 @@ var expenseSchema = new mongoose.Schema( {
     amount: { type: Number, required: true },
     
     //currency: Currency.currencySchema,
-    currency: { type: Number, ref: 'Currency' },
+    currency: { type: Number, ref: 'Currency', default: 1 },
 
     user: { type: String, ref: 'User' },
     
@@ -28,7 +28,7 @@ var expenseSchema = new mongoose.Schema( {
 
     labels: {
         isDeleted: { type: Boolean, required: true, default: false },
-        isConfirmed: { type: Boolean },
+        isConfirmed: { type: Boolean, required: true, default: false },
         // isRejected: { type: Boolean }
     }
 });

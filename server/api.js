@@ -48,7 +48,7 @@ var routes = function( wagner ) {
                     where( 'date' ).gte( new Date( year, month, 1)).lte( new Date( year, nextMonth, 0 )).
                     where( 'labels.isDeleted' ).equals( false ).
                     where( 'labels.isConfirmed' ).equals( true ).
-                    populate( 'category currency' ).
+                    // populate( 'category currency' ).
                     sort('-date').
                     exec( function (err, result){
                         if(err) { res.send(err); }
@@ -70,16 +70,19 @@ var routes = function( wagner ) {
                 _id: require( './guid' )(),
                 date: e.date,
                 amount: e.amount,
-                currency: e.currency,
-                category: e.category,
+                // currency: e.currency,
+                // category: e.category,
                 description: e.description,
-                user: e.user
+                user: e.user,
+                labels: {
+                    isConfirmed: true
+                }
             },
             function( err, result ){
                 if( err ){ return console.error( err ) }
                 Expense.find().
                 where('_id').equals( result._id).
-                populate('currency category').
+                // populate('currency category').
                     exec( function ( err, result ) {
                     if(err) { res.send (err); }
                     if(!result) { res.send('No results found'); }
