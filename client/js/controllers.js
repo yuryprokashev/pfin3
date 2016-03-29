@@ -173,3 +173,72 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
         });
     };
 };
+
+exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
+
+    $scope.recommendedExpenseList = [];
+    $scope.date = $date;
+
+    $scope.reset = function() {
+        $scope.recommendedExpenseList = [];
+    };
+
+    $scope.fillExpenseList = function () {
+
+        $http.get( '/api/v1/recommend/expenses' ).
+        then(
+            function successCallback (res) {
+                $scope.recommendedExpenseList = res.data.recommendations;
+                console.log($scope.recommendedExpenseList);
+            },
+            function errorCallback (res) {
+                console.error(res);
+            }
+        );
+    };
+
+
+    $scope.delete = function( id ) {
+        $http.delete('/api/v1/recommend/expenses/' + id).
+        then(
+            function successCallback(res) {
+                $scope.$emit('RecommendedExpenseDeleted');
+                var id = res.data._id;
+                for(var i in $scope.recommendedExpenseList){
+                    if($scope.recommendedExpenseList[i]._id === id) {
+                        $scope.recommendedExpenseList.splice( i, 1 );
+                        break;
+                    }
+                }
+            },
+            function errorCallback( res ) {
+                console.error( res );
+            }
+        );
+    };
+
+    $scope.$watch( 'date', function () {
+        $scope.fillExpenseList();
+    }, true);
+
+    $scope.$on( "RecommendedExpenseConfirmed", function (){
+        $scope.fillExpenseList();
+    })
+
+    $scope.confirm = function( id ) {
+        console.log('this recommendation is confirmed: '+ id);
+        var obj = $scope.recommendedExpenseList.find( function(item){
+            return item._id === id;
+        });
+
+        $http.post( '/api/v1/recommend/expenses', obj ).
+        success( function( res ) {
+            $scope.$emit('RecommendedExpenseConfirmed');
+            console.log(res);
+        }).
+        error(function (res) {
+            console.log( res );
+        });
+    }
+
+};

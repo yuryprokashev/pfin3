@@ -11,7 +11,7 @@ exports.expenseList = function() {
 
     return {
         controller: 'ExpenseListCtrl',
-        templateUrl: '/assets/templates/expenseList.html'
+        templateUrl: '/assets/templates/expensesList.html'
     }
 
 };

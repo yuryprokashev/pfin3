@@ -26,8 +26,11 @@ client.config( function( $routeProvider ){
         when ('/', {
         templateUrl: 'assets/templates/main.html'
     }).
-        when ('/expenses', {
+        when ('/dashboard', {
         templateUrl: 'assets/templates/expensesApp.html'
+    }).
+    when ('/list', {
+        templateUrl: 'assets/templates/expensesListApp.html'
     });
 
 });
@@ -170,6 +173,7 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
 
     $scope.charts = $charts;
     $scope.date = $date;
+    
     var charts = $scope.charts.charts;
     var layouts = $scope.charts.layouts;
 
@@ -207,6 +211,75 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
     };
 };
 
+exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
+
+    $scope.recommendedExpenseList = [];
+    $scope.date = $date;
+
+    $scope.reset = function() {
+        $scope.recommendedExpenseList = [];
+    };
+
+    $scope.fillExpenseList = function () {
+
+        $http.get( '/api/v1/recommend/expenses' ).
+        then(
+            function successCallback (res) {
+                $scope.recommendedExpenseList = res.data.recommendations;
+                console.log($scope.recommendedExpenseList);
+            },
+            function errorCallback (res) {
+                console.error(res);
+            }
+        );
+    };
+
+
+    $scope.delete = function( id ) {
+        $http.delete('/api/v1/recommend/expenses/' + id).
+        then(
+            function successCallback(res) {
+                $scope.$emit('RecommendedExpenseDeleted');
+                var id = res.data._id;
+                for(var i in $scope.recommendedExpenseList){
+                    if($scope.recommendedExpenseList[i]._id === id) {
+                        $scope.recommendedExpenseList.splice( i, 1 );
+                        break;
+                    }
+                }
+            },
+            function errorCallback( res ) {
+                console.error( res );
+            }
+        );
+    };
+
+    $scope.$watch( 'date', function () {
+        $scope.fillExpenseList();
+    }, true);
+
+    $scope.$on( "RecommendedExpenseConfirmed", function (){
+        $scope.fillExpenseList();
+    })
+
+    $scope.confirm = function( id ) {
+        console.log('this recommendation is confirmed: '+ id);
+        var obj = $scope.recommendedExpenseList.find( function(item){
+            return item._id === id;
+        });
+
+        $http.post( '/api/v1/recommend/expenses', obj ).
+        success( function( res ) {
+            $scope.$emit('RecommendedExpenseConfirmed');
+            console.log(res);
+        }).
+        error(function (res) {
+            console.log( res );
+        });
+    }
+
+};
+
 },{}],3:[function(require,module,exports){
 exports.expenseInputForm = function() {
 
@@ -221,7 +294,7 @@ exports.expenseList = function() {
 
     return {
         controller: 'ExpenseListCtrl',
-        templateUrl: '/assets/templates/expenseList.html'
+        templateUrl: '/assets/templates/expensesList.html'
     }
 
 };
@@ -336,6 +409,21 @@ exports.notLoggedIn = function() {
     }
 };
 
+exports.monthSelector = function() {
+    return {
+        require: "^?mainCtrl",
+        templateUrl: "/assets/templates/monthSelector.html"
+    }
+};
+
+exports.recommendedExpensesList = function() {
+    return {
+        require: ["^?ExpenseInputForm"],
+        controller: "RecommendedExpenseListCtrl",
+        templateUrl: "/assets/templates/recommendedExpensesList.html"
+    }
+}
+
 },{}],4:[function(require,module,exports){
 var status = require( 'http-status' );
 
@@ -416,9 +504,10 @@ exports.$date = function () {
 
 exports.$charts = function( $http, $date ) {
 
-    var s = {charts:[],layouts:[]};
+    var s = {charts:[],layouts:[], isRequestInProgress: false};
 
     s.getLayouts = function( callback ) {
+        s.isRequestInProgress = true;
         $http.get( '/api/v1/charts/meta' ).
         then(
             function successCallback( res ){
@@ -430,6 +519,7 @@ exports.$charts = function( $http, $date ) {
                 //console.log(s.layouts);
                 //console.log(s.charts);
                 callback();
+                s.isRequestInProgress = false;
             },
             function errorCallBack( res ){
             console.error('error in $charts.charts');
@@ -443,14 +533,14 @@ exports.$charts = function( $http, $date ) {
     };
 
     s.renewTrace = function( traceName, callback ) {
-
+        s.isRequestInProgress = true;
         $http.get( '/api/v1/charts/' + traceName + '/'+ $date.getMonthId()).
             then( function successCallback (res) {
 
             //console.log(res.data);
             //s.charts.push(res.data);
             callback( res.data );
-
+            s.isRequestInProgress = false;
         }, function errorCallback (res) {
             console.error('error in $charts.renewTrace');
             console.log(res);

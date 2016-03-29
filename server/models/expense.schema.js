@@ -21,7 +21,16 @@ var expenseSchema = new mongoose.Schema( {
     
     //currency: Currency.currencySchema,
     currency: { type: Number, ref: 'Currency' },
-    user: { type: String, ref: 'User' }
+
+    user: { type: String, ref: 'User' },
+    
+    // isDeleted: { type: Boolean, required: true, default: false }
+
+    labels: {
+        isDeleted: { type: Boolean, required: true, default: false },
+        isConfirmed: { type: Boolean },
+        // isRejected: { type: Boolean }
+    }
 });
 
 expenseSchema.set( 'toObject', { virtuals: true });
