@@ -1,0 +1,16 @@
+<div class = "row">
+    <div class = "col-md-12">
+        <div class = "btn-toolbar" role = "toolbar" aria-label="...">
+            <div class = "btn-group" role = "group" aria-label="...">
+                <div class = "btn-group"
+                     ng-repeat = "month in date.months track by $index">
+                    <button class = "btn btn-sm"
+                            ng-class = "month.isSelected ? 'btn-primary' : 'btn-default'"
+                            ng-click = "selectMonth( $event, month )">
+                        {{ month | date : 'MMM-yy' : '+0300' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

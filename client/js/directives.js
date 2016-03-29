@@ -125,3 +125,18 @@ exports.notLoggedIn = function() {
         templateUrl: "/assets/templates/notLoggedIn.html"
     }
 };
+
+exports.monthSelector = function() {
+    return {
+        require: "^?mainCtrl",
+        templateUrl: "/assets/templates/monthSelector.html"
+    }
+};
+
+exports.recommendedExpensesList = function() {
+    return {
+        require: ["^?ExpenseInputForm"],
+        controller: "RecommendedExpenseListCtrl",
+        templateUrl: "/assets/templates/recommendedExpensesList.html"
+    }
+}
