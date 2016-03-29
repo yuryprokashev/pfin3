@@ -1,5 +1,5 @@
 <ul class = "list-group">
-    <p ng-show = "!expenseList.length && user.user">Welcome, {{user.public.name.givenName}}. You haven't posted anything in current month. Post your expenses in the form above.</p>
+    <p ng-show = "!expenseList.length && user.user">Welcome, {{user.user.public.name.givenName}}. You haven't posted anything in current month. Post your expenses in the form above.</p>
     <li ng-show = "expenseList.length && user.user"
         class="list-group-item"
         ng-repeat = "e in expenseList">

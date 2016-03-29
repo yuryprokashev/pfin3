@@ -25,8 +25,11 @@ client.config( function( $routeProvider ){
         when ('/', {
         templateUrl: 'assets/templates/main.html'
     }).
-        when ('/expenses', {
+        when ('/dashboard', {
         templateUrl: 'assets/templates/expensesApp.html'
+    }).
+    when ('/list', {
+        templateUrl: 'assets/templates/expensesListApp.html'
     });
 
 });

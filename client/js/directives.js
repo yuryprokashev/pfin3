@@ -11,7 +11,7 @@ exports.expenseList = function() {
 
     return {
         controller: 'ExpenseListCtrl',
-        templateUrl: '/assets/templates/expenseList.html'
+        templateUrl: '/assets/templates/expensesList.html'
     }
 
 };
@@ -125,3 +125,18 @@ exports.notLoggedIn = function() {
         templateUrl: "/assets/templates/notLoggedIn.html"
     }
 };
+
+exports.monthSelector = function() {
+    return {
+        require: "^?mainCtrl",
+        templateUrl: "/assets/templates/monthSelector.html"
+    }
+};
+
+exports.recommendedExpensesList = function() {
+    return {
+        require: ["^?ExpenseInputForm"],
+        controller: "RecommendedExpenseListCtrl",
+        templateUrl: "/assets/templates/recommendedExpensesList.html"
+    }
+}

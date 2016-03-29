@@ -46,7 +46,9 @@ var routes = function( wagner ) {
                     Expense.find().
                     where( 'user' ).equals( req.user._id ).
                     where( 'date' ).gte( new Date( year, month, 1)).lte( new Date( year, nextMonth, 0 )).
-                    populate( 'category currency' ).
+                    where( 'labels.isDeleted' ).equals( false ).
+                    where( 'labels.isConfirmed' ).equals( true ).
+                    // populate( 'category currency' ).
                     sort('-date').
                     exec( function (err, result){
                         if(err) { res.send(err); }
@@ -68,16 +70,19 @@ var routes = function( wagner ) {
                 _id: require( './guid' )(),
                 date: e.date,
                 amount: e.amount,
-                currency: e.currency,
-                category: e.category,
+                // currency: e.currency,
+                // category: e.category,
                 description: e.description,
-                user: e.user
+                user: e.user,
+                labels: {
+                    isConfirmed: true
+                }
             },
             function( err, result ){
                 if( err ){ return console.error( err ) }
                 Expense.find().
                 where('_id').equals( result._id).
-                populate('currency category').
+                // populate('currency category').
                     exec( function ( err, result ) {
                     if(err) { res.send (err); }
                     if(!result) { res.send('No results found'); }
@@ -90,9 +95,70 @@ var routes = function( wagner ) {
     api.delete( '/expenses/:id', wagner.invoke( function( Expense ){
         return function (req, res) {
             var _id = req.params.id;
-            Expense.findByIdAndRemove( _id, function deleteCallback ( err ) {
+
+            Expense.findByIdAndUpdate( _id, { $set: {
+                "labels.isDeleted": true,
+                "labels.isConfirmed": false }
+            }, { new: true }, function  deleteCalllback ( err, result ) {
                 if (err) { res.json(err) }
-                res.json({ _id: _id, status: true });
+                res.json({ _id: _id, expense: result, status: true });
+            });
+        }
+    }));
+
+    api.get( '/recommend/expenses', wagner.invoke( function( Expense ) {
+        return function( req, res ) {
+            // > go to Expense model and take recommended expenses (isConfirmed = false, isRejected = false)
+            var user = req.user;
+            var result = {recommendations: {}};
+            if (!user) { res.json({ error: "Please, log in" }); }
+            else {
+                var today = new Date();
+                var aWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+                Expense.find().
+                where( 'user' ).equals( user._id ).
+                where( 'date' ).equals( aWeekAgo ).
+                where( 'labels.isDeleted' ).equals( false ).
+                where( 'labels.isConfirmed' ).equals( false ).
+                populate( 'category currency' ).
+                sort('-date').
+                exec( function (err, data ){
+                    if( err ) { res.send(err); }
+                    else {
+                        result.recommendations = data;
+                        res.json( result ); }
+                });
+            }
+        }
+    }));
+
+    api.post( '/recommend/expenses', wagner.invoke( function( Expense ) {
+        return function( req, res ) {
+            var e = req.body;
+            // console.log(e);
+
+            Expense.findByIdAndUpdate( e._id,
+                { $set: {
+                    "labels.isConfirmed": true,
+                    "amount": e.amount,
+                    "description": e.description }
+                }, { new: true }, function  confirmCalllback ( err, result ) {
+                if (err) { res.json(err) }
+                res.json({ _id: e._id, expense: result, status: true });
+            });
+
+        }
+    }));
+
+    api.delete( '/recommend/expenses/:id', wagner.invoke( function( Expense ){
+        return function( req, res ) {
+            var _id = req.params.id;
+
+            Expense.findByIdAndUpdate( _id, { $set: {
+                "labels.isDeleted": true
+            } }, { new: true }, function  deleteCalllback ( err, result ) {
+                if (err) { res.json(err) }
+                res.json({ _id: _id, expense: result, status: true });
             });
         }
     }));
@@ -153,7 +219,7 @@ var routes = function( wagner ) {
                     // 'dailyVolumes', 'categoryVolumes' and 'expenseFrequency' is 'chartName' parameter passed in api
                     dailyVolumes: [
                         [
-                            { $match: { user: user._id.toString() } },
+                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false}, { "labels.isConfirmed": true} ] } },
                             { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
                             { $match: { month: month + 1 } },
                             { $project: { amount: 1, day: { $dayOfMonth: "$date" } } },
@@ -161,7 +227,7 @@ var routes = function( wagner ) {
                             { $sort: { _id: 1 } }
                         ],
                         [
-                            { $match: { user: user._id.toString() } },
+                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false} ] } },
                             { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
                             { $match: { month: month + 1 } },
                             { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
@@ -170,7 +236,7 @@ var routes = function( wagner ) {
                     ],
                     categoryVolumes: [
                         [
-                            { $match: { user: user._id.toString() } },
+                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false }, { "labels.isConfirmed": true} ] } },
                             { $lookup:
                                 {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}
                             },
@@ -187,7 +253,7 @@ var routes = function( wagner ) {
                     ],
                     expenseFrequency: [
                         [
-                            { $match: { user: user._id.toString() } },
+                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false }, { "labels.isConfirmed": true} ] } },
                             { $lookup: {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}},
                             { $unwind: "$categoryName"},
                             { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, "categoryName.name": 1 } },
