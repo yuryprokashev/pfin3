@@ -62,8 +62,8 @@ exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
     $scope.reset = function () {
         $scope.obj = {
             date: $date.selectedDate,
-            category: 1,
-            currency: 1,
+            // category: 1,
+            // currency: 1,
             amount: undefined,
             description: ''
         };
@@ -75,25 +75,25 @@ exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
     $scope.categories = undefined;
 
     // Code should get categories array from the server via RESTful API
-    $http.get( '/api/v1/common/categories' ).
-    then( function (res) {
-        $scope.categories = res.data.categories;
-        $scope.selectItem( $scope.categories, $scope.categories[0]._id, $scope.obj.category );
-        $scope.obj.category = $scope.categories[0]._id;
-    }, function (res) {
-        console.log('server error');
-        console.log(res);
-    });
+    // $http.get( '/api/v1/common/categories' ).
+    // then( function (res) {
+    //     $scope.categories = res.data.categories;
+    //     $scope.selectItem( $scope.categories, $scope.categories[0]._id, $scope.obj.category );
+    //     $scope.obj.category = $scope.categories[0]._id;
+    // }, function (res) {
+    //     console.log('server error');
+    //     console.log(res);
+    // });
 
-    $http.get( '/api/v1/common/currencies' ).
-    then( function (res) {
-        $scope.currencies = res.data.currencies;
-        $scope.selectItem( $scope.currencies, $scope.currencies[0]._id, $scope.obj.currency );
-        $scope.obj.currency = $scope.currencies[0]._id;
-    }, function (res) {
-        console.log('server error');
-        console.log(res);
-    });
+    // $http.get( '/api/v1/common/currencies' ).
+    // then( function (res) {
+    //     $scope.currencies = res.data.currencies;
+    //     $scope.selectItem( $scope.currencies, $scope.currencies[0]._id, $scope.obj.currency );
+    //     $scope.obj.currency = $scope.currencies[0]._id;
+    // }, function (res) {
+    //     console.log('server error');
+    //     console.log(res);
+    // });
 
     $scope.post = function() {
         $scope.obj.user = $user.user._id;
