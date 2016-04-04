@@ -18,8 +18,7 @@ var routes = function( wagner ) {
 
     api.use( bodyparser.json() );
 
-    // api routes
-
+    // API for User data
     api.get( '/me', function ( req, res ) {
         if(!req.user) {
             return res.status( status.UNAUTHORIZED ).json( { error: 'not logged in' });
@@ -28,6 +27,10 @@ var routes = function( wagner ) {
         res.json( { user: req.user } );
     });
 
+
+    // API for CRUD operations with Expense facts
+
+    // api that gets all expenses for given user and specified monthId.
     api.get( '/expenses/:monthId', wagner.invoke( function( Expense ) {
         return function( req, res ){
             var user = req.user;
@@ -61,6 +64,7 @@ var routes = function( wagner ) {
         }
     }));
 
+    // api that posts new expense
     api.post( '/expenses', wagner.invoke( function( Expense ) {
         return function( req, res ) {
             var e = req.body;
@@ -92,6 +96,7 @@ var routes = function( wagner ) {
         }
     }));
 
+    // api that marks expense with isDeleted flag (->true)
     api.delete( '/expenses/:id', wagner.invoke( function( Expense ){
         return function (req, res) {
             var _id = req.params.id;
@@ -106,6 +111,10 @@ var routes = function( wagner ) {
         }
     }));
 
+
+    // API for CRUD operations with Recommended Expenses
+
+    // api that gets all recommended expenses for given user. Only recommendations are fetched.
     api.get( '/recommend/expenses', wagner.invoke( function( Expense ) {
         return function( req, res ) {
             // > go to Expense model and take recommended expenses (isConfirmed = false, isRejected = false)
@@ -132,10 +141,10 @@ var routes = function( wagner ) {
         }
     }));
 
+    // api that confirms recommended expense and make it factual.
     api.post( '/recommend/expenses', wagner.invoke( function( Expense ) {
         return function( req, res ) {
             var e = req.body;
-            // console.log(e);
 
             Expense.findByIdAndUpdate( e._id,
                 { $set: {
@@ -146,10 +155,10 @@ var routes = function( wagner ) {
                 if (err) { res.json(err) }
                 res.json({ _id: e._id, expense: result, status: true });
             });
-
         }
     }));
 
+    // api that reject recommended expense as deleted.
     api.delete( '/recommend/expenses/:id', wagner.invoke( function( Expense ){
         return function( req, res ) {
             var _id = req.params.id;
@@ -163,6 +172,9 @@ var routes = function( wagner ) {
         }
     }));
 
+
+    // API to get Common data (references for Category and Currency)
+    // api to get currencies and categories references
     api.get( '/common/:name', wagner.invoke( function( Category, Currency ){
         return function( req, res ){
 
@@ -202,6 +214,10 @@ var routes = function( wagner ) {
         }
     }));
 
+
+
+    // API to get charts data for dashboard
+    // api to get specific chart data (chartName) for specific month (monthId)
     api.get( '/charts/:chartName/:monthId', wagner.invoke( function( Expense, Category, MyDates, Config, PlotlyTracer ) {
 
         return function( req, res ){
@@ -313,13 +329,17 @@ var routes = function( wagner ) {
         }
     }));
 
+    // api to get default data for charts.
     api.get( '/charts/meta', wagner.invoke( function( Config ) {
         return function( req, res ){
             res.json( Config.plotly );
         }
     }));
 
-    // TODO. api method for arbitrary quantity of guids generation and saving it to file.
+
+    // API commands for internal use
+
+    // api method for arbitrary quantity of guids generation and saving it to file.
     api.get( '/generate/guid/:qty', function( req, res) {
         var qty = req.params.qty;
         var fs = require('fs');
@@ -340,7 +360,7 @@ var routes = function( wagner ) {
         res.send(filename);
     });
 
-    // TODO. api method for translating the strings to dates objects in expenses collection
+    // api method for translating the strings to dates objects in expenses collection
     api.get( '/transformdate', wagner.invoke( function( Expense ) {
         return function( req, res ) {
 
