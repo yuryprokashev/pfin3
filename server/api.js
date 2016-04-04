@@ -360,6 +360,89 @@ var routes = function( wagner ) {
         }
     }));
 
+
+    // API to provide guid generation to external systems.
+    api.get( '/guid', function (req,res) {
+        res.format = "application/json";
+        res.json({ guid: require('./guid')() });
+    });
+
+
+    // API for exprec server
+
+    // api to fetch all user expenses as input data for exprec server
+    api.get( '/exprec/expenses', wagner.invoke( function( Expense ){
+        return function( req, res ) {
+            // TODO. Return ALL expenses for given user.
+            var user = req.user;
+            var result = { inputData: {}} ;
+            if (!user) { res.json({ error: "Please, log in" }); }
+            else {
+                Expense.find().
+                where( 'user' ).equals( user._id ).
+                populate( 'category currency' ).
+                sort('-date').
+                exec( function (err, data ){
+                    if( err ) { res.send(err); }
+                    else {
+                        result.inputData = data;
+                        res.json( result ); }
+                });
+            }
+        }
+    }));
+
+    /* api to save recommendations, send by exprec server into DB */
+    api.post( '/exprec/expenses', wagner.invoke( function( Expense ) {
+        return function( req, res ) {
+            var recs = req.body.recommendations;
+            // request body should contain recommendations in array, so here we can iterate over and create new expenses
+
+            for( var idx in recs ) {
+                Expense.create({
+                        _id: require( './guid' )(),
+                        date: recs[ idx ].date,
+                        amount: recs[ idx ].amount,
+                        // currency: e.currency,
+                        // category: e.category,
+                        description: recs[ idx ].description,
+                        user: recs.user,
+                        labels: {
+                            isConfirmed: false,
+                            isDeleted: false
+                        }
+                    },
+                    function( err, result ){
+                        if( err ){ return console.error( err ) }
+                        Expense.find().
+                        where('_id').equals( result._id).
+                        exec( function ( err, result ) {
+                            if(err) { res.send (err); }
+                            if(!result) { res.send('No results found'); }
+                            else{ res.json( { expense: result[ 0 ] } ); }
+                        });
+                    }
+                );
+            }
+        }
+    }));
+
+    api.delete( '/exprec/expenses', wagner.invoke( function( Expense ){
+        return function (req, res ) {
+             // we get an array of expenses guids to delete from DB in body.trash
+            var trash = req.body.trash;
+
+            for( var idx in trash ) {
+                Expense.findByIdAndUpdate( trash[ idx ], { $set: {
+                    "labels.isDeleted": true
+                } }, { new: true }, function  deleteCalllback ( err, result ) {
+                    if (err) { res.json(err) }
+                    res.json({ _id: _id, expense: result, status: true });
+                });
+            }
+        }
+    }));
+
     return api;
 };
 
