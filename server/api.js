@@ -122,11 +122,8 @@ var routes = function( wagner ) {
             var result = {recommendations: {}};
             if (!user) { res.json({ error: "Please, log in" }); }
             else {
-                var today = new Date();
-                var aWeekAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
                 Expense.find().
                 where( 'user' ).equals( user._id ).
-                where( 'date' ).equals( aWeekAgo ).
                 where( 'labels.isDeleted' ).equals( false ).
                 where( 'labels.isConfirmed' ).equals( false ).
                 populate( 'category currency' ).
@@ -202,7 +199,7 @@ var routes = function( wagner ) {
             if( isModel ) {
                 model.find().exec(function( err, data ){
 
-                    if( err ) { res.send(err); };
+                    if( err ) { res.send(err) }
 
                     if( data ) {
                         results[ name ] = data;
@@ -391,15 +388,16 @@ var routes = function( wagner ) {
     // API for exprec server
 
     // api to fetch all user expenses as input data for exprec server
-    api.get( '/exprec/expenses', wagner.invoke( function( Expense ){
+    api.get( '/exprec/expenses/', wagner.invoke( function( Expense ){
         return function( req, res ) {
             // TODO. Return ALL expenses for given user.
-            var user = req.user;
+            var user = req.query.user;
+            console.log(user);
             var result = { inputData: {}} ;
             if (!user) { res.json({ error: "Please, log in" }); }
             else {
                 Expense.find().
-                where( 'user' ).equals( user._id ).
+                where( 'user' ).equals( user ).
                 populate( 'category currency' ).
                 sort('-date').
                 exec( function (err, data ){
@@ -417,6 +415,7 @@ var routes = function( wagner ) {
         return function( req, res ) {
             var recs = req.body.recommendations;
             // request body should contain recommendations in array, so here we can iterate over and create new expenses
+            // console.log(recs);
 
             for( var idx in recs ) {
                 Expense.create({
