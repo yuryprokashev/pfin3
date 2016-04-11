@@ -29,6 +29,7 @@ var expenseSchema = new mongoose.Schema( {
     labels: {
         isDeleted: { type: Boolean, required: true, default: false },
         isConfirmed: { type: Boolean, required: true, default: false },
+        isDefault: { type: Boolean, required: true, default: false }
         // isRejected: { type: Boolean }
     }
 });

@@ -3,6 +3,10 @@ var bodyparser = require( 'body-parser' );
 var express = require( 'express' );
 var status = require( 'http-status' );
 var _ = require( 'underscore' );
+var http = require('axios').create({
+    baseURL: 'http://localhost:5000',
+    timeout: 5000
+});
 const EventEmitter = require('events');
 const util = require('util');
 
@@ -114,28 +118,251 @@ var routes = function( wagner ) {
 
     // API for CRUD operations with Recommended Expenses
 
-    // api that gets all recommended expenses for given user. Only recommendations are fetched.
-    api.get( '/recommend/expenses', wagner.invoke( function( Expense ) {
-        return function( req, res ) {
-            // > go to Expense model and take recommended expenses (isConfirmed = false, isRejected = false)
-            var user = req.user;
-            var result = {recommendations: {}};
-            if (!user) { res.json({ error: "Please, log in" }); }
+    var userHasExpenses = function(user, Expense){
+
+        myEmitter.once(user._id + 'SeeRecommendationList', function(){
+            if(!user) {
+                myEmitter.emit('UserNotExists');
+            }
             else {
-                Expense.find().
-                where( 'user' ).equals( user._id ).
-                where( 'labels.isDeleted' ).equals( false ).
-                where( 'labels.isConfirmed' ).equals( false ).
-                populate( 'category currency' ).
-                sort('-date').
-                exec( function (err, data ){
-                    if( err ) { res.send(err); }
+                Expense.find().where('user').equals(user._id).
+                where('labels.isDeleted').equals(false).
+                where('labels.isConfirmed').equals(true).
+                exec(function(err, userExpenses){
+                    if(err) { console.log(err) }
+                    if(!userExpenses){
+                        console.log(user._id + 'HasNOExpenses');
+                        myEmitter.emit(user._id + 'HasNOExpenses', false);
+                    }
                     else {
-                        result.recommendations = data;
-                        res.json( result ); }
+                        console.log(user._id + 'HasExpenses');
+                        myEmitter.emit(user._id + 'HasExpenses', userExpenses);
+                    }
                 });
             }
+        });
+    };
+
+    var userHasRecommendations = function(user, Expense) {
+        myEmitter.once(user._id + 'HasExpenses', function(userExpenses){
+            Expense.find().where('user').equals(user._id).
+            where('labels.isDeleted').equals(false).
+            where('labels.isConfirmed').equals(false).
+            exec(function(err, data){
+                // console.log(data);
+                // console.log(!data.length);
+                if(err) { console.log(err) }
+                if(!data.length) {
+                    console.log(user._id + 'HasNORecommendations');
+                    myEmitter.emit(user._id + 'HasNORecommendations', userExpenses);
+                }
+                else {
+                    console.log(user._id + 'HasRecommendations');
+                    myEmitter.emit(user._id + 'HasRecommendations', data);
+                }
+            });
+        });
+    };
+    
+    var userGotRecommendationsToday = function(user) {
+
+        myEmitter.once(user._id + 'HasNORecommendations', function(userExpenses){
+            var today = new Date();
+            console.log(today.getDate());
+            var lastUpdate = user.lastRecommendationSent;
+            console.log(lastUpdate.getDate());
+            if(today.getFullYear() == lastUpdate.getFullYear() &&
+                today.getMonth() == lastUpdate.getMonth() &&
+                today.getDate() == lastUpdate.getDate()) {
+                console.log(user._id + 'HasNewRecsToday');
+                myEmitter.emit(user._id + 'HasNewRecsToday');
+            }
+            else {
+                console.log(user._id + 'HasNONewRecsToday');
+                myEmitter.emit(user._id + 'HasNONewRecsToday', userExpenses);
+            }
+        });
+    };
+
+    var askExprecForNewRecommendations = function(user, User, Expense) {
+        myEmitter.once(user._id + 'HasNONewRecsToday', function(userExpenses){
+            // console.log(userExpenses);
+            http.get('/recommend', {
+                    params: {
+                        input: JSON.stringify(userExpenses)
+                    }
+                })
+                .then(function (response) {
+                    var today = new Date();
+                    var recs = response.data.recommendations;
+                    var recommendations = [];
+                    console.log(recs.length);
+
+                    for( var idx in recs ) {
+                        // console.log(recs[idx]);
+                        Expense.create(
+                            {
+                                _id: require( './guid' )(),
+                                date: today,
+                                amount: recs[ idx ].amount,
+                                description: recs[ idx ].description,
+                                user: user._id,
+                                labels: {
+                                    isConfirmed: false,
+                                    isDeleted: false,
+                                    isDefault: false
+                                }
+                            },
+                            function( err, result ){
+                                // if( err ){ console.log( err ) }
+                                // console.log(result);
+                                recommendations.push(result);
+
+                                if(recommendations.length === recs.length) {
+                                    console.log(user._id + 'NewRecsReady');
+                                    myEmitter.emit(user._id + 'NewRecsReady', recommendations);
+                                }
+                            }
+                        );
+                    }
+
+                    User.findByIdAndUpdate( user._id,
+                        { $set: { "lastRecommendationSent": today } },
+                        { new: true },
+                        function  success ( err, result ) {
+                            if (err) { console.log(err) }
+                        }
+                    );
+                }).catch(function (response) {
+                console.log(response);
+            });
+        });
+    };
+
+    var clearListeners = function(user) {
+        var allListenerNames =
+            [
+                user._id + 'NewRecsError',
+                user._id + 'NewRecsReady',
+                user._id + 'HasNewRecsToday',
+                user._id + 'HasNONewRecsToday',
+                user._id + 'HasRecommendations',
+                user._id + 'HasNORecommendations',
+                user._id + 'HasExpenses',
+                user._id + 'HasNOExpenses',
+                user._id + 'SeeRecommendationList',
+                'UserNotExists'
+            ];
+        for(var i in allListenerNames) {
+            myEmitter.removeAllListeners(allListenerNames[i]);
         }
+    };
+
+    var sendResponse = function(user, res, Expense) {
+        var result = { recommendations: [] };
+
+        myEmitter.once('UserNotExists', function(){
+            console.log('UserNotExists');
+            res.json({error: 'Please Log In'});
+        });
+
+        // No expenses found (new user). -> Send him default
+        myEmitter.once(user._id + 'HasNOExpenses', function(obj){
+            Expense.find().
+            where('labels.isDefault').equals(true).
+            exec(function(err, data) {
+                result.recommendations = data;
+                console.log(result);
+                res.json(result);
+                clearListeners(user);
+            });
+        });
+
+        // User has recommendations, that are not yet confirmed or rejected -> send him those recommendations
+        myEmitter.once(user._id + 'HasRecommendations', function (obj) {
+            result.recommendations = obj;
+            console.log(result);
+            res.json(result);
+            clearListeners(user);
+        });
+
+        // User has already got recommendations today -> send him empty list
+        myEmitter.once(user._id + 'HasNewRecsToday', function(){
+            console.log(result);
+            res.json(result);
+            clearListeners(user);
+        });
+
+        // pfin got the new recommendations from exprec -> send them to User.
+        myEmitter.once(user._id + 'NewRecsReady', function(obj){
+            result.recommendations = obj;
+            console.log(result);
+            res.json(result);
+            clearListeners(user);
+        });
+
+        // pfin got the error from exprec for some reason -> send error to User
+        myEmitter.once(user._id + 'NewRecsError', function (obj) {
+            result.error = obj;
+            console.log(result);
+            res.json(result);
+            clearListeners(user);
+        });
+    };
+
+    var countAllListeners = function(user){
+        var allListenerNames = [
+            user._id + 'NewRecsError',
+            user._id + 'NewRecsReady',
+            user._id + 'HasNewRecsToday',
+            user._id + 'HasNONewRecsToday',
+            user._id + 'HasRecommendations',
+            user._id + 'HasNORecommendations',
+            user._id + 'HasExpenses',
+            user._id + 'HasNOExpenses',
+            user._id + 'SeeRecommendationList',
+            'UserNotExists'];
+        var errata = [];
+
+        for(var i in allListenerNames){
+            if(myEmitter.listenerCount(allListenerNames[i]) > 0) {
+                errata.push(allListenerNames[i]);
+            }
+        }
+
+        if(errata.length) {
+            console.log('errata');
+            console.log(errata);
+        }
+        return errata.length;
+    };
+
+    api.get( '/recommend/expenses', wagner.invoke( function ( Expense, User ) {
+        return function(req, res) {
+
+            var user = req.user;
+            if(!user){
+                myEmitter.emit('UserNotExists');
+            }
+            else {
+                // console.log(req.user._id);
+                // console.log('myEmitter has ' + countAllListeners(user));
+
+                // Create functions that listen for my events.
+                sendResponse(user, res, Expense);
+
+                userHasExpenses(user, Expense);
+
+                userHasRecommendations(user, Expense);
+
+                userGotRecommendationsToday(user);
+
+                askExprecForNewRecommendations(user, User, Expense);
+
+                // Fire event, that starts the flow.
+                myEmitter.emit(user._id + 'SeeRecommendationList');
+            }
+        };
     }));
 
     // api that confirms recommended expense and make it factual.
@@ -210,7 +437,6 @@ var routes = function( wagner ) {
             }
         }
     }));
-
 
 
     // API to get charts data for dashboard
@@ -335,7 +561,6 @@ var routes = function( wagner ) {
 
 
     // API commands for internal use
-
     // api method for arbitrary quantity of guids generation and saving it to file.
     api.get( '/generate/guid/:qty', function( req, res) {
         var qty = req.params.qty;
@@ -383,84 +608,6 @@ var routes = function( wagner ) {
         res.format = "application/json";
         res.json({ guid: require('./guid')() });
     });
-
-
-    // API for exprec server
-
-    // api to fetch all user expenses as input data for exprec server
-    api.get( '/exprec/expenses/', wagner.invoke( function( Expense ){
-        return function( req, res ) {
-            // TODO. Return ALL expenses for given user.
-            var user = req.query.user;
-            console.log(user);
-            var result = { inputData: {}} ;
-            if (!user) { res.json({ error: "Please, log in" }); }
-            else {
-                Expense.find().
-                where( 'user' ).equals( user ).
-                populate( 'category currency' ).
-                sort('-date').
-                exec( function (err, data ){
-                    if( err ) { res.send(err); }
-                    else {
-                        result.inputData = data;
-                        res.json( result ); }
-                });
-            }
-        }
-    }));
-
-    /* api to save recommendations, send by exprec server into DB */
-    api.post( '/exprec/expenses', wagner.invoke( function( Expense ) {
-        return function( req, res ) {
-            var recs = req.body.recommendations;
-            // request body should contain recommendations in array, so here we can iterate over and create new expenses
-            // console.log(recs);
-
-            for( var idx in recs ) {
-                Expense.create({
-                        _id: require( './guid' )(),
-                        date: recs[ idx ].date,
-                        amount: recs[ idx ].amount,
-                        // currency: e.currency,
-                        // category: e.category,
-                        description: recs[ idx ].description,
-                        user: recs.user,
-                        labels: {
-                            isConfirmed: false,
-                            isDeleted: false
-                        }
-                    },
-                    function( err, result ){
-                        if( err ){ return console.error( err ) }
-                        Expense.find().
-                        where('_id').equals( result._id).
-                        exec( function ( err, result ) {
-                            if(err) { res.send (err); }
-                            if(!result) { res.send('No results found'); }
-                            else{ res.json( { expense: result[ 0 ] } ); }
-                        });
-                    }
-                );
-            }
-        }
-    }));
-
-    api.delete( '/exprec/expenses', wagner.invoke( function( Expense ){
-        return function (req, res ) {
-             // we get an array of expenses guids to delete from DB in body.trash
-            var trash = req.body.trash;
-
-            for( var idx in trash ) {
-                Expense.findByIdAndUpdate( trash[ idx ], { $set: {
-                    "labels.isDeleted": true
-                } }, { new: true }, function  deleteCalllback ( err, result ) {
-                    if (err) { res.json(err) }
-                    res.json({ _id: _id, expense: result, status: true });
-                });
-            }
-        }
-    }));
 
     return api;
 };

@@ -51,6 +51,10 @@ var userSchema = new mongoose.Schema( {
             required: true,
             default: Date.now
         }
+    },
+
+    lastRecommendationSent: {
+        type: Date
     }
 });
 
