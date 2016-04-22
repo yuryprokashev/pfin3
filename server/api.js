@@ -44,23 +44,28 @@ var routes = function( wagner ) {
                 var mId = req.params.monthId;
 
                 if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
-                    var year = mId.substring(0,4);
                     var month = mId.length === 6 ? mId.substring(4,6) : mId.substring(4,5);
-                    var nextMonth = Number(month) + 1;
+                    // var agg = [
+                    //     {$match: {user: user._id.toString(), "labels.isDeleted": false}},
+                    //     {$project: {_id:1, amount:1, description:1, date:1, labels:1, month: {$month: "$date"}}},
+                    //     {$match: {month: Number(month) + 1}},
+                    //     {$project: { _id:1, amount:1, description:1, labels:1, day: {$dayOfMonth: "$date"}}},
+                    //     {$group: {_id:"$day", dayTotal: {$sum: "$amount"}, dayCount:{$eq:{"labels.isConfirmed": false, $sum: 1}}, expenses: {$push:{_id:"$_id", amount:"$amount", description:"$description", labels: "$labels"}}}},
+                    //     {$sort: {_id: 1}}
+                    // ];
 
-                    //console.log(req.user);
+                    var agg = [
+                        {$match: {user: user._id.toString(), "labels.isDeleted": false}},
+                        {$project: {_id:1, amount:1, description:1, date:1, labels:1, month: {$month: "$date"}, isRecommended: {$cond:{if:{$eq:["$labels.isConfirmed",true]}, then:0, else:1}}}},
+                        {$match: {month: Number(month) + 1}},
+                        {$project: { _id:1, amount:1, description:1, labels:1, day: {$dayOfMonth: "$date"}, isRecommended: "$isRecommended"}},
+                        {$group: {_id:"$day", dayTotal: {$sum: "$amount"}, dayCount: {$sum:"$isRecommended"}, expenses: {$push:{_id:"$_id", amount:"$amount", description:"$description", labels: "$labels"}}}},
+                        {$sort: {_id: 1}}
+                    ];
 
-                    Expense.find().
-                    where( 'user' ).equals( req.user._id ).
-                    where( 'date' ).gte( new Date( year, month, 1)).lte( new Date( year, nextMonth, 0 )).
-                    where( 'labels.isDeleted' ).equals( false ).
-                    where( 'labels.isConfirmed' ).equals( true ).
-                    // populate( 'category currency' ).
-                    sort('-date').
-                    exec( function (err, result){
-                        if(err) { res.send(err); }
-                        if(!result) { res.send('No results found'); }
-                        else { res.json(result); }
+                    Expense.aggregate(agg).exec( function(err, result){
+                        if(err) { console.log(err) }
+                        res.json(result);
                     });
                 }
                 else { console.error('wrong monthId length is passed to api'); }
