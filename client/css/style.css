@@ -1,0 +1,153 @@
+.my-form {
+    margin-bottom: 0em;
+}
+.col-cal, .col-cal .panel-body, .col-cal .panel-body .list-group-item {
+    /*padding-left: 3px;*/
+    /*padding-right: 3px;*/
+    /*padding-top: 5px;*/
+    /*padding-bottom: 5px;*/
+    padding: 8px 3px 8px 3px;
+
+}
+
+.col-cal .panel-body .list-group-item p {
+    margin-bottom: 0px;
+}
+
+.col-cal .panel-body {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    /*height: 225px;*/
+    height: 14em;
+}
+
+.cal-panel {
+    margin-left: -9em;
+    margin-right: -9em;
+}
+
+.truncate-ellipsis {
+    white-space: nowrap;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/*Bubbles*/
+/* General CSS Setup */
+
+/* CSS talk bubble */
+.talk-bubble {
+    display: block;
+    position: absolute;
+    left: 15em;
+    top: -4em;
+    width: 14em;
+    height: auto;
+    background-color: white;
+    z-index: 2;
+}
+.border{
+    border: 1px solid #666;
+}
+.round{
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+}
+
+/* Right triangle, left side slightly down */
+.tri-right.border.left-in:before {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: -1em;
+    right: auto;
+    top: 3.05em;
+    bottom: auto;
+    border: 0.5em solid;
+    border-color: #666 #666 transparent transparent;
+}
+.tri-right.left-in:after{
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: -0.78em;
+    right: auto;
+    top: 3.15em;
+    bottom: auto;
+    border: 0.5em solid;
+    border-color: white white transparent transparent;
+}
+
+.talk-bubble .panel-primary {
+    margin: 0px 0px 8px 0px;
+    border-bottom-color: white;
+    border: none;
+    z-index: 1;
+}
+
+.talk-bubble .panel-heading {
+    padding: 9px 15px 8px 15px;
+    border: none;
+    /*border-bottom-color: white;*/
+}
+
+.talk-bubble .panel-body {
+    height: auto;
+    padding: 3px 15px 3px 15px;
+    border: none;
+    /*border-bottom-color: white;*/
+
+}
+
+.buttons-panel {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.round-up {
+    border-radius: 9px 9px 0px 0px;
+    -webkit-border-radius: 9px 9px 0px 0px;
+    -moz-border-radius: 9px 9px 0px 0px;
+}
+
+
+/* talk bubble contents */
+.talktext{
+    padding: 1em;
+    text-align: left;
+    line-height: 1.5em;
+}
+.talktext p{
+    /* remove webkit p margins */
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: 0em;
+}
+
+.input-xs {
+    display: inline-block;
+    padding: 0px;
+    height: 14px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+    font-size: 10px;
+
+}
+
+textarea {
+    resize: none;
+}
+
+.new-recommendations-badge {
+    display: block;
+    position: absolute;
+    left: 10em;
+    top: 1.5em;
+    width: 14em;
+    height: auto;
+    background-color: transparent;
+    z-index: 3;
+}
