@@ -374,6 +374,7 @@ var routes = function( wagner ) {
     api.post( '/recommend/expenses', wagner.invoke( function( Expense ) {
         return function( req, res ) {
             var e = req.body;
+            // console.log(e);
 
             Expense.findByIdAndUpdate( e._id,
                 { $set: {
@@ -381,7 +382,10 @@ var routes = function( wagner ) {
                     "amount": e.amount,
                     "description": e.description }
                 }, { new: true }, function  confirmCalllback ( err, result ) {
-                if (err) { res.json(err) }
+                if (err) {
+                    console.log('error');
+                    console.error(err);
+                }
                 res.json({ _id: e._id, expense: result, status: true });
             });
         }

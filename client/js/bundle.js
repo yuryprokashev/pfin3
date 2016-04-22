@@ -117,21 +117,97 @@ exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
 exports.ExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.expenseList = [];
+
     $scope.date = $date;
 
     $scope.reset = function() {
         $scope.expenseList = [];
     };
 
+    $scope.getTotalPerDay = function( date ) {
+
+        function isSameDate(value) {
+            return Number(value._id) === Number(day);
+        };
+
+        if(!date) {
+            return null;
+        }
+        else {
+            var day = date.getDate();
+            var result = $scope.expenseList.filter(isSameDate);
+            if(!result.length) {
+                return 0;
+            }
+            else {
+                return result[0].dayTotal;
+            }
+        }
+    };
+
+    $scope.getExpensesForDate = function( date ) {
+
+        function isSameDate(value) {
+            return Number(value._id) === Number(day);
+        };
+
+        if(!date) {
+            return null;
+        }
+        else {
+            var day = date.getDate();
+            var result = $scope.expenseList.filter(isSameDate);
+            if(!result.length) {
+                return 0;
+            }
+            else {
+                // console.log(result[0].expenses);
+                return result[0].expenses;
+            }
+        }
+    };
+    
+    $scope.getRecommendationsCount = function( date ) {
+        function isSameDate(value) {
+            return Number(value._id) === Number(day);
+        };
+
+        if(!date) {
+            return null;
+        }
+        else {
+            var day = date.getDate();
+            var result = $scope.expenseList.filter(isSameDate);
+            if(!result.length) {
+                return 0;
+            }
+            else {
+                // console.log(result[0].expenses);
+                return result[0].dayCount;
+            }
+        }
+    };
+
+    $scope.isWeekend = function(date) {
+        if(date) {
+            if(date.getDay() === 0 || date.getDay() === 6) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    };
+
     $scope.fillExpenseList = function () {
 
         var mId = $scope.date.getMonthId();
 
-        $http.get( 'api/v1/expenses/' + mId).
+        $http.get( '/api/v1/expenses/' + mId).
         then(
             function successCallback (res) {
                 $scope.expenseList = res.data;
-                //console.log($scope.expenseList);
+                $scope.cells = $date.getCells();
             },
             function errorCallback (res) {
                 console.error(res);
@@ -139,19 +215,18 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         );
     };
 
-
     $scope.delete = function( id ) {
         $http.delete('/api/v1/expenses/' + id).
             then(
             function successCallback(res) {
                 $scope.$emit('ExpenseDeleted');
-                var id = res.data._id;
-                for(var i in $scope.expenseList){
-                    if($scope.expenseList[i]._id === id) {
-                        $scope.expenseList.splice( i, 1 );
-                        break;
-                    }
-                }
+                // var id = res.data._id;
+                // for(var i in $scope.expenseList){
+                //     if($scope.expenseList[i]._id === id) {
+                //         $scope.expenseList.splice( i, 1 );
+                //         break;
+                //     }
+                // }
             },
             function errorCallback( res ) {
                 console.error( res );
@@ -159,13 +234,48 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         );
     };
 
+    $scope.reject = function( id ) {
+        $http.delete('/api/v1/recommend/expenses/' + id).
+            then(
+            function (res) {
+                console.log(res.data);
+                $scope.$emit('ExpenseRejected', res.data._id);
+
+            }
+        )
+    };
+
+    $scope.confirm = function ( obj ) {
+        $http.post('/api/v1/recommend/expenses', obj).
+            then(
+            function( res ) {
+                console.log(res.data);
+                $scope.$emit('ExpenseConfirmed', res.data._id);
+            }
+        )
+    }
+
     $scope.$watch( 'date', function (){
         $scope.fillExpenseList();
     }, true);
 
     $scope.$on('ExpenseCreated', function(){
+        $scope.reset();
         $scope.fillExpenseList();
     });
+    $scope.$on('ExpenseConfirmed', function () {
+        $scope.reset();
+        $scope.fillExpenseList();
+    });
+    $scope.$on('ExpenseRejected', function () {
+        $scope.reset();
+        $scope.fillExpenseList();
+    });
+    $scope.$on('ExpenseDeleted', function () {
+        $scope.reset();
+        $scope.fillExpenseList();
+    });
+
 
 };
 
@@ -215,6 +325,7 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.recommendedExpenseList = [];
     $scope.date = $date;
+    $scope.isLoading = false;
 
     $scope.reset = function() {
         $scope.recommendedExpenseList = [];
@@ -222,11 +333,14 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.fillExpenseList = function () {
 
+        $scope.isLoading = true;
+
         $http.get( '/api/v1/recommend/expenses' ).
         then(
             function successCallback (res) {
                 $scope.recommendedExpenseList = res.data.recommendations;
-                console.log($scope.recommendedExpenseList);
+                // console.log($scope.recommendedExpenseList);
+                $scope.isLoading = false;
             },
             function errorCallback (res) {
                 console.error(res);
@@ -456,12 +570,11 @@ exports.$date = function () {
     s.selectedDate = new Date();
 
     s.getMonthId = function () {
-        var result =  undefined;
 
         var year = this.selectedDate.getFullYear();
         var month = this.selectedDate.getMonth();
 
-        result = year.toString() + month.toString();
+        var result = year.toString() + month.toString();
 
         return result;
     };
@@ -490,6 +603,7 @@ exports.$date = function () {
     s.selectMonth = function( month ) {
         s.months = createMonths( month );
         s.selectedDate = s.months[5];
+        console.log(s.getDayOfWeekOfFirstDayInMonth());
     };
 
     s.getDate = function () {
@@ -499,6 +613,183 @@ exports.$date = function () {
     s.setDate = function( date ) {
         s.selectedDate = date;
     };
+
+    s.getDayOfWeekOfFirstDayInMonth = function(){
+        var firstDay = new Date(s.selectedDate);
+        firstDay.setDate(1);
+        return firstDay.getDay();
+    };
+
+    s.getFirstDayPosition = function() {
+        var result = { cell:0, index: 0 };
+        var start = s.getDayOfWeekOfFirstDayInMonth();
+        if(start <= 1) {
+            result.cell = 1;
+            if(start === 0) {
+                result.index = 1;
+            }
+            else if(start === 1) {
+                result.index = 2;
+            }
+        }
+        else if( start <= 4) {
+            result.cell = 2;
+            if(start === 2) {
+                result.index = 0;
+            }
+            else if(start === 3) {
+                result.index = 1;
+            }
+            else if(start === 4) {
+                result.index = 2;
+            }
+        }
+        else if( start <= 6) {
+            result.cell = 3;
+            if(start === 5) {
+                result.index = 0;
+            }
+            else if(start === 6) {
+                result.index = 1;
+            }
+        }
+        return result;
+    };
+
+    // var cells = [
+    //     { id: 1, cell: [ {date: null}, {date: new Date("2016-04-01")}, {date: new Date("2016-04-02")} ] },
+    //     { id: 2, cell: [ {date: new Date("2016-04-03")}, {date: new Date("2016-04-04")}, {date: new Date("2016-04-05")} ] },
+    //     { id: 3, cell: [ {date: new Date("2016-04-06")}, {date: new Date("2016-04-07")}, {date: null} ] },
+    //     { id: 4, cell: [ {date: null}, {date: new Date("2016-04-08")}, {date: new Date("2016-04-09")} ] },
+    //     { id: 5, cell: [ {date: new Date("2016-04-10")}, {date: new Date("2016-04-11")}, {date: new Date("2016-04-12")} ] },
+    //     { id: 6, cell: [ {date: new Date("2016-04-13")}, {date: new Date("2016-04-14")}, {date: null} ] },
+    // ];
+
+    s.getMonth = function( monthIdString ) {
+        return monthIdString.length === 6 ? Number(monthIdString.substring(4,6)) : Number(monthIdString.substring(4,5));
+    };
+
+    s.getYear = function( monthIdString ) {
+        return Number(monthIdString.substring(0, 4));
+    };
+
+    s.daysInMonth = function( monthIdString ) {
+        // gets 'month' as string, e.g. '20161'
+        // returns number of calendar days in this month. Takes leap year into account.
+        // 1. Setup.
+        var number = 30;
+        var month = s.getMonth( monthIdString );
+        var year = s.getYear(monthIdString);
+
+        // 2. Logic.
+        if (month % 2 === 0 || month === 0) {
+            number = 31;
+        }
+        else if (month === 1) {
+            if (year % 4 === 0){
+                number = 29;
+            }
+            else {
+                number = 28;
+            }
+        }
+        else if (month % 2 === 1 && month !== 1){
+            number = 30;
+        }
+        // 3. Return result.
+        return number;
+    };
+
+    var Cell = function(id, array){
+        this.id = id;
+        this.cell = array;
+    };
+
+    Cell.prototype = {
+
+    };
+
+    var Day = function(date) {
+        this.date = date;
+    }
+
+    s.getCells = function() {
+
+        var createDates = function(dates) {
+            for(var i = 1; i <= s.daysInMonth(s.getMonthId()); i++) {
+                dates.push(new Date(s.selectedDate.getFullYear(), s.selectedDate.getMonth(), i));
+            }
+            return dates;
+        };
+
+        var appendNullsBeforeAndAfter = function(dates) {
+            var nullsBeforeNumber = dates[0].getDay();
+            for (var i = 0; i < nullsBeforeNumber; i++){
+                dates.splice(0,0, null);
+            }
+
+            var nullsAfterNumber = 5*7 - dates.length;
+
+            for (var i = 0; i < nullsAfterNumber; i++) {
+                dates.splice(dates.length, 0, null);
+            }
+            return dates;
+        };
+
+        var splitToRowsAndAppendNullsForEachRow = function(dates) {
+            for(var i = 1; i <= 4; i++){
+                dates.splice(i*7 + 2*(i-1), 0, null, null);
+            }
+            dates.splice(0,0,null);
+            dates.splice(dates.length, 0, null);
+            return dates;
+        };
+
+        var putDatesToCells = function (dates) {
+            var cells = [];
+            for(var i = 1; i <= 15; i++){
+                var cell = new Cell(i,[]);
+                for(var j = 1; j <= 3; j++) {
+                    var day = new Day(null);
+                    cell.cell.push(day);
+                }
+                cells.push(cell);
+            }
+            // console.log(cells);
+            for(var n in cells) {
+                for (var d in cells[n].cell) {
+                    // console.log(cells[n].cell[d]);
+                    var index = 3 * (cells[n].id - 1) + Number(d);
+                    // console.log(index);
+                    // console.log(dates[index]);
+                    // console.log(cells[n].cell[d].date);
+                    cells[n].cell[d].date = dates[index];
+                    // console.log(cells[n].cell[d].date);
+                    // console.log('---------------------');
+                }
+            }
+            return cells;
+            // console.log(cells);
+        };
+
+        var createDatesForBootstrapGrid = function () {
+            var dates = [];
+            createDates(dates);
+            appendNullsBeforeAndAfter(dates);
+            splitToRowsAndAppendNullsForEachRow(dates);
+            // console.log(dates);
+            // console.log(dates.length);
+            var result = putDatesToCells(dates);
+            // console.log(cells);
+            return result;
+        };
+
+        var result = createDatesForBootstrapGrid();
+
+        return result;
+    };
+
+    
     return s;
 };
 

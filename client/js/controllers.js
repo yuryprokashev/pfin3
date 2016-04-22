@@ -288,6 +288,7 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.recommendedExpenseList = [];
     $scope.date = $date;
+    $scope.isLoading = false;
 
     $scope.reset = function() {
         $scope.recommendedExpenseList = [];
@@ -295,11 +296,14 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
 
     $scope.fillExpenseList = function () {
 
+        $scope.isLoading = true;
+
         $http.get( '/api/v1/recommend/expenses' ).
         then(
             function successCallback (res) {
                 $scope.recommendedExpenseList = res.data.recommendations;
-                console.log($scope.recommendedExpenseList);
+                // console.log($scope.recommendedExpenseList);
+                $scope.isLoading = false;
             },
             function errorCallback (res) {
                 console.error(res);
