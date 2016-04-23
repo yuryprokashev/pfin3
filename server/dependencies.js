@@ -6,7 +6,7 @@ function dependencies( wagner ) {
     var fs = require( 'fs' );
     // now I register Config service, that reads content of the JSON and returns it as object
     wagner.factory( 'Config', function() {
-        var s = JSON.parse( fs.readFileSync( './server/config.json' ).toString() );
+        var s = JSON.parse( fs.readFileSync( './server/config_prod.json' ).toString() );
 
         // findItem looks for query in s.arr
         // query obj is in format [ queryKey, 'queryValue']
