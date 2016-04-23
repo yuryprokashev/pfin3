@@ -3,10 +3,7 @@ var bodyparser = require( 'body-parser' );
 var express = require( 'express' );
 var status = require( 'http-status' );
 var _ = require( 'underscore' );
-var http = require('axios').create({
-    baseURL: 'http://localhost:5000',
-    timeout: 5000
-});
+
 const EventEmitter = require('events');
 const util = require('util');
 
@@ -17,6 +14,12 @@ util.inherits( MyEmitter, EventEmitter );
 const myEmitter = new MyEmitter();
 
 var routes = function( wagner ) {
+
+    var Config = wagner.invoke(function(Config){return Config});
+    var http = require('axios').create({
+        baseURL: Config.exprec.hostURL,
+        timeout: Config.exprec.timeout
+    });
 
     var api = express.Router();
 
@@ -240,6 +243,7 @@ var routes = function( wagner ) {
                     );
                 }).catch(function (response) {
                 console.log(response);
+                myEmitter.emit(user._id + 'NewRecsReady', {error: response.errno});
             });
         });
     };

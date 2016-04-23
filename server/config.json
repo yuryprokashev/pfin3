@@ -98,5 +98,9 @@
   ],
   "express": {
     "serverPort": 3000
+  },
+  "exprec": {
+    "hostURL": "http://localhost:5000",
+    "timeout": 5000
   }
 }

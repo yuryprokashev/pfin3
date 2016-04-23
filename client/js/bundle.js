@@ -321,11 +321,12 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
     };
 };
 
-exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
+exports.RecommendedExpenseListCtrl = function( $scope, $date, $http, $error ) {
 
     $scope.recommendedExpenseList = [];
     $scope.date = $date;
     $scope.isLoading = false;
+    $scope.error = { errorMsg: "", isError: false };
 
     $scope.reset = function() {
         $scope.recommendedExpenseList = [];
@@ -338,12 +339,19 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http ) {
         $http.get( '/api/v1/recommend/expenses' ).
         then(
             function successCallback (res) {
-                $scope.recommendedExpenseList = res.data.recommendations;
-                // console.log($scope.recommendedExpenseList);
-                $scope.isLoading = false;
+                console.log(res);
+                if(res.data.recommendations.error) {
+                    $scope.error.isError = true;
+                    $scope.error.errorMsg = $error.translate(res.data.recommendations.error);
+                    $scope.isLoading = false;
+                }
+                else {
+                    $scope.recommendedExpenseList = res.data.recommendations;
+                    $scope.isLoading = false;
+                }
             },
             function errorCallback (res) {
-                console.error(res);
+                console.log(res);
             }
         );
     };
@@ -838,6 +846,19 @@ exports.$charts = function( $http, $date ) {
         });
     };
 
+    return s;
+};
+
+exports.$error = function() {
+    var s = {};
+    var errorReference = {
+        EHOSTUNREACH: "Service in unreachable for the moment. We know about the problem and will fix it soon.",
+        ECONNREFUSED: "Service does not accept connections now. We know about the problems, and will fix it soon"
+    }
+
+    s.translate = function(errorCode) {
+        return errorReference[errorCode];
+    }
     return s;
 };
 },{"http-status":5}],5:[function(require,module,exports){

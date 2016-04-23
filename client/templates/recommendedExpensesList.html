@@ -52,23 +52,20 @@
                     </div>
             </form>
         </div>
-        <div class = "list-group" ng-show = "!recommendedExpenseList.length && !isLoading">
+        <div class = "list-group" ng-show = "!recommendedExpenseList.length && !isLoading && !error.isError">
             <div class = "list-group-item">
                 <p>We can't guess your expenses for today anymore.</p>
                 <p>If you have spent more today, you can enter it in the form above.</p>
             </div>
         </div>
         <div class = "list-group" ng-show = "isLoading">
-            <!--<div class = "list-group-item">-->
-                <!--<p class="list-group-item-text text-center">-->
-                    <!--<i class="fa fa-spinner fa-pulse fa-3x fa-fw margin-bottom list-group-item-text text-center"></i>-->
-                    <!--<span class="sr-only">Loading...</span>-->
-                <!--</p>-->
-            <!--</div>-->
             <p class="text-center">
                 <i class="fa fa-spinner fa-pulse fa-3x fa-fw margin-bottom list-group-item-text text-center"></i>
                 <span class="sr-only">Loading...</span>
             </p>
+        </div>
+        <div class = "list-group" ng-show = "error.isError">
+            <p>{{ error.errorMsg }}</p>
         </div>
 
     </div>

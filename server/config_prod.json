@@ -98,5 +98,9 @@
   ],
   "express": {
     "serverPort": 80
+  },
+  "exprec": {
+    "hostURL": "http://ec2-54-194-81-191.eu-west-1.compute.amazonaws.com:80",
+    "timeout": 5000
   }
 }
