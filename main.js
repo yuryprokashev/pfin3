@@ -26,7 +26,6 @@ var port = wagner.invoke( function(Config) { return Config }).express.serverPort
 // start listening to port
 server.listen( port );
 
-
 console.log("Personal Finance Server started!");
 
 
