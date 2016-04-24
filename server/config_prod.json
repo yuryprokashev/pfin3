@@ -1,6 +1,6 @@
 {
   "db": {
-    "dbURL": "mongodb://ec2-54-229-108-38.eu-west-1.compute.amazonaws.com:27017/pfin"
+    "dbURL": "mongodb://pfdb.edufun.me:27017/pfin"
   },
   "passport": {
     "GOOGLE_CLIENT_ID": "746362895265-vh9obqfi1vph4u18ue0q04tl8dg4c3p5.apps.googleusercontent.com",
@@ -100,7 +100,7 @@
     "serverPort": 80
   },
   "exprec": {
-    "hostURL": "http://ec2-54-194-81-191.eu-west-1.compute.amazonaws.com:80",
+    "hostURL": "http://exprec.edufun.me:80",
     "timeout": 5000
   }
 }

@@ -304,11 +304,18 @@ exports.$error = function() {
     var s = {};
     var errorReference = {
         EHOSTUNREACH: "Service in unreachable for the moment. We know about the problem and will fix it soon.",
-        ECONNREFUSED: "Service does not accept connections now. We know about the problem and will fix it soon"
+        ECONNREFUSED: "Service does not accept connections now. We know about the problem and will fix it soon."
     }
 
     s.translate = function(errorCode) {
-        return errorReference[errorCode];
+        var result = errorReference[errorCode];
+        if(!result){
+            console.log(errorCode);
+            return "Unknown error. We know about the problem and will fix it soon."
+        }
+        else {
+            return result;
+        }
     }
     return s;
 };
