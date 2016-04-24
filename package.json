@@ -20,7 +20,6 @@
     "mocha": "^2.4.5"
   },
   "dependencies": {
-    "axios": "^0.9.1",
     "body-parser": "^1.15.0",
     "ejs": "^2.4.1",
     "express": "^4.13.4",
@@ -30,6 +29,7 @@
     "mongoose": "^4.3.7",
     "passport": "^0.3.2",
     "passport-google-oauth20": "^1.0.0",
+    "popsicle": "^5.0.1",
     "underscore": "^1.8.3",
     "wagner-core": "^0.2.0"
   }

@@ -13,8 +13,8 @@ require( './server/myDates' )( wagner );
 // grad and launch PlotlyTrace service
 require( './server/plotlyTracer' )( wagner );
 
-// grab and launch apiToRecommender service
-require( './server/apiToRecommender' )( wagner );
+// // grab and launch apiToRecommender service
+// require( './server/apiToRecommender' )( wagner );
 
 // get server object already configured from my 'server.js' file
 var server = require( './server' );

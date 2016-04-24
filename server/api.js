@@ -15,12 +15,6 @@ const myEmitter = new MyEmitter();
 
 var routes = function( wagner ) {
 
-    var Config = wagner.invoke(function(Config){return Config});
-    var http = require('axios').create({
-        baseURL: Config.exprec.hostURL,
-        timeout: Config.exprec.timeout
-    });
-
     var api = express.Router();
 
     api.use( bodyparser.json() );
@@ -136,6 +130,7 @@ var routes = function( wagner ) {
                 Expense.find().where('user').equals(user._id).
                 where('labels.isDeleted').equals(false).
                 where('labels.isConfirmed').equals(true).
+                where('date').gte(new Date("2016-04-11T00:00:00+0300")).
                 exec(function(err, userExpenses){
                     if(err) { console.log(err) }
                     if(!userExpenses){
@@ -233,13 +228,24 @@ var routes = function( wagner ) {
             //                 }
             //             );
             //         }
-            http.post('/recommend',
-                {
-                    input: JSON.stringify(userExpenses)
-                })
-                .then(function (response) {
+            // console.log('HERE IS WHAT I SENT TO EXPREC SERVER');
+            // console.log(JSON.stringify(userExpenses));
+            var Config = wagner.invoke(function(Config){return Config});
+            var http = require('popsicle');
+            http.request({
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                url: Config.exprec.hostURL.concat('/recommend'),
+                timeout: Config.exprec.timeout,
+                body: JSON.stringify({input: userExpenses})
+            }).
+            then(function (response) {
+                if( response.status === 200 ) {
+                    console.log(response.body);
                     var today = new Date();
-                    var recs = response.data.recommendations;
+                    var recs = response.body.recommendations;
                     var recommendations = [];
                     console.log(recs.length);
 
@@ -278,9 +284,13 @@ var routes = function( wagner ) {
                             if (err) { console.log(err) }
                         }
                     );
-                }).catch(function (response) {
-                console.log(response);
-                myEmitter.emit(user._id + 'NewRecsReady', {error: response.errno});
+                }
+
+                else {
+                    console.log('response status is not 200');
+                    console.log(response);
+                    myEmitter.emit(user._id + 'NewRecsReady', {error: response.errno});
+                }
             });
         });
     };
