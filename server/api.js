@@ -195,10 +195,47 @@ var routes = function( wagner ) {
     var askExprecForNewRecommendations = function(user, User, Expense) {
         myEmitter.once(user._id + 'HasNONewRecsToday', function(userExpenses){
             // console.log(userExpenses);
-            http.get('/recommend', {
-                    params: {
-                        input: JSON.stringify(userExpenses)
-                    }
+            // http.get('/recommend', {
+            //         params: {
+            //             input: JSON.stringify(userExpenses)
+            //         }
+            //     })
+            //     .then(function (response) {
+            //         var today = new Date();
+            //         var recs = response.data.recommendations;
+            //         var recommendations = [];
+            //         console.log(recs.length);
+            //
+            //         for( var idx in recs ) {
+            //             // console.log(recs[idx]);
+            //             Expense.create(
+            //                 {
+            //                     _id: require( './guid' )(),
+            //                     date: today,
+            //                     amount: recs[ idx ].amount,
+            //                     description: recs[ idx ].description,
+            //                     user: user._id,
+            //                     labels: {
+            //                         isConfirmed: false,
+            //                         isDeleted: false,
+            //                         isDefault: false
+            //                     }
+            //                 },
+            //                 function( err, result ){
+            //                     // if( err ){ console.log( err ) }
+            //                     // console.log(result);
+            //                     recommendations.push(result);
+            //
+            //                     if(recommendations.length === recs.length) {
+            //                         console.log(user._id + 'NewRecsReady');
+            //                         myEmitter.emit(user._id + 'NewRecsReady', recommendations);
+            //                     }
+            //                 }
+            //             );
+            //         }
+            http.post('/recommend',
+                {
+                    input: JSON.stringify(userExpenses)
                 })
                 .then(function (response) {
                     var today = new Date();
