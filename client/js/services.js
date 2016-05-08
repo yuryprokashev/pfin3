@@ -169,12 +169,16 @@ exports.$date = function () {
         this.date = date;
     };
 
-    s.getCells = function() {
+    s.getCells = function( day ) {
+
+        console.log(day);
+        
+        var date = day.date;
 
         var createDates = function(dates) {
             // outputs the array of dates for each day in currently selected month
             for(var i = 1; i <= s.daysInMonth(s.getMonthId()); i++) {
-                var dUTCSec = Date.UTC(s.selectedDate.getFullYear(), s.selectedDate.getMonth(), i);
+                var dUTCSec = Date.UTC(date.getFullYear(), date.getMonth(), i);
                 var dUTCDate = new Date(dUTCSec);
                 dates.push(dUTCDate);
             }
@@ -272,7 +276,6 @@ exports.$date = function () {
 
         return result;
     };
-
     
     return s;
 };

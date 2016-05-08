@@ -6,10 +6,11 @@
     <div class = "panel-body">
         <div class = "list-group">
             <!-- Total spent per day widget -->
-            <p>Total Spent: {{ getTotalPerDay( day.date ) }}</p>
+            <p class = "text-muted">Spent: {{ getTotalPerDay( day.date ) | number : 0 }}</p>
+            <p class = "text-primary">Planned: {{ 0 | number : 0 }}</p>
 
             <!-- expenses list start -->
-            <expense-calendar-day-item class = "list-group-item small"
+            <expense-calendar-day-item class = "list-group-item"
                                        ng-repeat = "e in getExpensesForDate( day.date ) track by $index"
                                        ng-mouseleave = "e.labels.isFormShown = false"
                                        ext-e = "e"

@@ -31,6 +31,7 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
     $scope.newExpense = {};
     $scope.expenseFormPositions = [];
     $scope.selectedDay = {date: new Date()};
+    $scope.months = [];
     
     // METHODS
     $scope.createNewExpenseObject = function(args){
@@ -56,7 +57,8 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
 
     $scope.fillExpenseList = function (success) {
 
-        var mId = $scope.date.getMonthId();
+        // var mId = $scope.date.getMonthId();
+        var mId = getMonthId();
 
         $http.get( '/api/v1/expenses/' + mId).
         then(
@@ -64,7 +66,8 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
                 $scope.expenseList = res.data;
 
                 // addIsFormShownLabel();
-                $scope.cells = $date.getCells();
+                $scope.cells = [];
+                $scope.cells = $date.getCells($scope.selectedDay);
                 if(success) {
                     success();
                 }
@@ -74,25 +77,36 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
             }
         );
     };
+
+    var getMonthId = function () {
+
+        var year = $scope.selectedDay.date.getFullYear();
+        var month = $scope.selectedDay.date.getMonth();
+
+        var result = year.toString() + month.toString();
+
+        return result;
+    };
+
+    function createMonths ( origin ) {
+        //console.log(origin);
+        var result = [];
+        // make a list of 11 months, with start month in the middle
+        for( var i = -5 ; i <= 5; i++ ){
+            var m = new Date(origin.getFullYear(), origin.getMonth());
+
+            m.setMonth( origin.getMonth() + i );
+
+            m.isSelected = false;
+            result.push(m);
+        }
+        // make central month 'Selected'
+        result[5].isSelected = true;
+        return result;
+    };
+
     $scope.resetExpenseList = function() {
         $scope.expenseList = [];
-    };
-    
-    $scope.findExpenseFormPositionById = function(id) {
-        var e = {};
-        var positions = $scope.expenseFormPositions;
-        var result = positions.find(function (item) {
-            return item._id == id;
-        });
-        if (result) {
-            // console.log(result);
-            e = result.popup;
-            return e;
-        }
-        if (!e) {
-            console.log('No expenses found for id = ' + id);
-            return null;
-        }
     };
 
     $scope.findExpenseById = function(id) {
@@ -132,22 +146,16 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
     };
     
     $scope.selectDay = function( day ) {
-        // console.log('selectDay start');
-
         $scope.$broadcast('DeselectAllDays');
-
         if(day) {
             $scope.selectedDay = day;
         }
-        // console.log($scope.selectedDay);
         $scope.$broadcast('DaySelected', {day: $scope.selectedDay});
-
     };
 
     // EVENT LISTENERS
     $scope.$on('UserDefined', function () {
         $scope.resetNewExpenseForm();
-
     });
     $scope.$on('ExpenseCreated', function(event, args){
         // var expense = args.expense;
@@ -167,20 +175,27 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
         $scope.resetExpenseList();
         $scope.fillExpenseList();
     });
-
     $scope.$on('ExpenseFormViewRequest', function (event, args) {
         // console.log('expense form view request for id: ' + args.expense._id);
         $scope.showForm(args.expense);
     });
-
     $scope.$on('DaySelectionRequest', function (event, args) {
-        // console.log('day selection request from expenseCalendar directive');
         $scope.selectDay(args.day);
+    });
+    $scope.$on('MonthSelectionRequest', function (event, args) {
+        $scope.$broadcast('DeselectAllDays');
+        $scope.selectedDay.date.setMonth(args.month);
+        $scope.months = createMonths($scope.selectedDay.date);
+        $scope.resetExpenseList();
+        $scope.fillExpenseList(function() {
+            $scope.$emit('DaySelectionRequest', {day: $scope.selectedDay});
+        });
     });
 
     // MAIN
     $user.getUser(function success () {
         $scope.$emit('UserDefined');
+        $scope.$emit('MonthSelectionRequest', {month: $scope.selectedDay.date.getMonth()});
     });
 
 };
@@ -301,9 +316,9 @@ exports.ExpensesCalendarCtrl = function( $scope, $http ) {
     };
 
     // EVENT LISTENERS
-    $scope.$watch( 'date', function (){
-        $scope.fillExpenseList();
-    }, true);
+    // $scope.$watch( 'date', function (){
+    //     $scope.fillExpenseList();
+    // }, true);
     $scope.$on('ExpenseCreateRequest', function(event, args){
         var e = $scope.createNewExpenseObject({
             user: $scope.user._id,
@@ -316,19 +331,11 @@ exports.ExpensesCalendarCtrl = function( $scope, $http ) {
         $scope.post(e);
     });
     $scope.$on('ExpenseConfirmRequest', function(event, args){
-        // console.log('expense confirm request intercepted');
         $scope.confirmExpense(args.expense);
     });
     $scope.$on('ExpenseDeleteRequest', function(event, args){
-        // console.log('expense delete request intercepted');
         $scope.deleteExpense(args._id);
     });
-    // $scope.$on('ExpenseFormViewRequest', function (event, args) {
-    //     console.log('expense form view request for id: ' + args.expense._id);
-    //     $scope.showForm(args.expense);
-    // });
-
-
 };
 
 exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
@@ -447,7 +454,7 @@ exports.RecommendedExpensesListCtrl = function( $scope, $date, $http, $error ) {
 
     $scope.$watch( 'date', function () {
         $scope.resetRecommendedExpenseList();
-        $scope.fillExpenseList();
+        $scope.fillRecommendedExpenseList();
     }, true);
 
     $scope.$on( "RecommendedExpenseConfirmed", function (){

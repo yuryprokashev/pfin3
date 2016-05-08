@@ -18,7 +18,7 @@ exports.expensesCalendar = function() {
             // console.log(el[0]);
             scope.emitDaySelectionRequest = function(day) {
                 scope.$emit('DaySelectionRequest', {day: day});
-            }
+            };
 
             // scope.emitDaySelectionRequest();
         }
@@ -40,23 +40,25 @@ exports.expenseCalendarDay = function() {
         templateUrl: '/assets/templates/expenseCalendarDay.html',
         link: function ( scope, el, attrs, controllers ) {
             // 1. Day is not selected by default, unless it is equal to selected day.
-            if(scope.day.date) {
-                if(scope.selectedDay.date.getDate() === scope.day.date.getDate()) {
-                    scope.isSelected = true;
+
+            scope.$watch('day.date', function(newV, oldV){
+                if(scope.day.date) {
+                    if(scope.selectedDay.date.getDate() === scope.day.date.getDate()) {
+                        scope.isSelected = true;
+                    }
+                    else {
+                        scope.isSelected = false;
+                    }
                 }
-                else {
-                    scope.isSelected = false;
-                }
-            }
+            });
 
             // 2. Listen to 'DaySelected' event
-            scope.$on('DaySelected', function (event, args){
-                // console.log('this is expenseCalendarDay directive - Day is Selected');
+            scope.$on('DaySelected', function (event, args) {
                 if(scope.day.date) {
                     if(args.day.date.getDate() === scope.day.date.getDate()) {
                         scope.isSelected = true;
+                        console.log('day is selected');
                     }
-                    // console.log(args.day.date.getDate() === scope.day.date.getDate());
                 }
             });
 
@@ -64,12 +66,6 @@ exports.expenseCalendarDay = function() {
             scope.$on('DeselectAllDays', function () {
                 scope.isSelected = false;
             });
-
-            // console.log('calendar day created');
-            // console.log('expenseCalendarDay directive');
-            // console.log(scope);
-            // console.log(el[0]);
-            // console.log(scope);
         }
     }
 };
@@ -262,21 +258,27 @@ exports.expenseFrequency = function() {
 
 exports.notLoggedIn = function() {
     return {
-        require: ["^ExpensesCalendarAppCtrl"],
+        // require: ["ExpensesCalendarAppCtrl"],
         templateUrl: "/assets/templates/notLoggedIn.html"
     }
 };
 
 exports.monthSelector = function() {
     return {
-        require: ["^ExpensesCalendarAppCtrl"],
-        templateUrl: "/assets/templates/monthSelector.html"
+        // require: ["ExpensesCalendarAppCtrl"],
+        templateUrl: "/assets/templates/monthSelector.html",
+        link: function (scope, el, attrs, controllers) {
+            scope.emitMonthSelectionRequest = function(event, month) {
+                event.target.blur();
+                scope.$emit("MonthSelectionRequest", {month: month});
+            }
+        }
     }
 };
 
 exports.recommendedExpensesList = function() {
     return {
-        require: ["^ExpensesCalendarAppCtrl"],
+        // require: ["ExpensesCalendarAppCtrl"],
         controller: "RecommendedExpensesListCtrl",
         templateUrl: "/assets/templates/recommendedExpensesList.html"
     }

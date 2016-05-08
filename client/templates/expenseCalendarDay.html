@@ -8,7 +8,8 @@
         <div class = "panel-body">
             <div class = "list-group">
                 <!-- Total spent per day widget -->
-                <p>Total Spent: {{ getTotalPerDay( day.date ) }}</p>
+                <p class = "text-muted small">Spent: {{ getTotalPerDay( day.date ) | number : 0 }}</p>
+                <p class = "text-primary small">Planned: {{ 0 | number : 0 }}</p>
 
                 <!-- expenses list start -->
                 <expense-calendar-day-item class = "list-group-item small"
@@ -18,13 +19,9 @@
                                            id = "{{e._id}}">
                 </expense-calendar-day-item>
 
-                <!--<expense-calendar-day-item ng-repeat = "e in getExpensesForDate( day.date ).slice(0,3) track by $index"-->
-                                           <!--ext-e = "e">-->
-                <!--</expense-calendar-day-item>-->
-
                 <!-- block with 'N more' link -->
-                <div class = "list-group-item" ng-show = "getExpensesForDate( day.date ).length > 3">
-                    <a type="button" ng-click="">{{ getExpensesForDate( day.date ).length - 3}} more</a>
+                <div class = "list-group-item small" ng-show = "getExpensesForDate( day.date ).length > 3">
+                    <p class="text-danger"><strong>{{ getExpensesForDate( day.date ).length - 3}} more</strong></p>
                 </div>
             </div>
         </div>
