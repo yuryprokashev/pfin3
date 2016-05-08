@@ -1,0 +1,32 @@
+<!--<div class = "col-md-4 col-cal small">-->
+    <div class = "panel"
+         ng-class = "{'panel-primary': isSelected, 'panel-info': isWeekend( day.date ) && !isSelected, 'panel-default': !isWeekend( day.date ) && !isSelected }">
+        <div class = "panel-heading truncate-ellipsis">{{ day.date | date: 'EEE d' }}</div>
+        <div class = "new-recommendations-badge">
+            <span class="badge progress-bar-danger" ng-show = "getRecommendationsCount(day.date)>0">{{ getRecommendationsCount( day.date) }}</span>
+        </div>
+        <div class = "panel-body">
+            <div class = "list-group">
+                <!-- Total spent per day widget -->
+                <p>Total Spent: {{ getTotalPerDay( day.date ) }}</p>
+
+                <!-- expenses list start -->
+                <expense-calendar-day-item class = "list-group-item small"
+                                           ng-repeat = "e in getExpensesForDate( day.date ).slice(0,3) track by $index"
+                                           ng-mouseleave = "e.labels.isFormShown = false"
+                                           ext-e = "e"
+                                           id = "{{e._id}}">
+                </expense-calendar-day-item>
+
+                <!--<expense-calendar-day-item ng-repeat = "e in getExpensesForDate( day.date ).slice(0,3) track by $index"-->
+                                           <!--ext-e = "e">-->
+                <!--</expense-calendar-day-item>-->
+
+                <!-- block with 'N more' link -->
+                <div class = "list-group-item" ng-show = "getExpensesForDate( day.date ).length > 3">
+                    <a type="button" ng-click="">{{ getExpensesForDate( day.date ).length - 3}} more</a>
+                </div>
+            </div>
+        </div>
+    </div>
+<!--</div>-->

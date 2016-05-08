@@ -74,19 +74,19 @@ var routes = function( wagner ) {
     api.post( '/expenses', wagner.invoke( function( Expense ) {
         return function( req, res ) {
             var e = req.body;
-            //console.log(e);
+            // console.log(e);
+
+            if(e._id) {
+
+            }
 
             Expense.create({
                 _id: require( './guid' )(),
                 date: e.date,
                 amount: e.amount,
-                // currency: e.currency,
-                // category: e.category,
                 description: e.description,
                 user: e.user,
-                labels: {
-                    isConfirmed: true
-                }
+                labels: e.labels
             },
             function( err, result ){
                 if( err ){ return console.error( err ) }
@@ -189,47 +189,6 @@ var routes = function( wagner ) {
 
     var askExprecForNewRecommendations = function(user, User, Expense) {
         myEmitter.once(user._id + 'HasNONewRecsToday', function(userExpenses){
-            // console.log(userExpenses);
-            // http.get('/recommend', {
-            //         params: {
-            //             input: JSON.stringify(userExpenses)
-            //         }
-            //     })
-            //     .then(function (response) {
-            //         var today = new Date();
-            //         var recs = response.data.recommendations;
-            //         var recommendations = [];
-            //         console.log(recs.length);
-            //
-            //         for( var idx in recs ) {
-            //             // console.log(recs[idx]);
-            //             Expense.create(
-            //                 {
-            //                     _id: require( './guid' )(),
-            //                     date: today,
-            //                     amount: recs[ idx ].amount,
-            //                     description: recs[ idx ].description,
-            //                     user: user._id,
-            //                     labels: {
-            //                         isConfirmed: false,
-            //                         isDeleted: false,
-            //                         isDefault: false
-            //                     }
-            //                 },
-            //                 function( err, result ){
-            //                     // if( err ){ console.log( err ) }
-            //                     // console.log(result);
-            //                     recommendations.push(result);
-            //
-            //                     if(recommendations.length === recs.length) {
-            //                         console.log(user._id + 'NewRecsReady');
-            //                         myEmitter.emit(user._id + 'NewRecsReady', recommendations);
-            //                     }
-            //                 }
-            //             );
-            //         }
-            // console.log('HERE IS WHAT I SENT TO EXPREC SERVER');
-            // console.log(JSON.stringify(userExpenses));
             var Config = wagner.invoke(function(Config){return Config});
             var http = require('popsicle');
             http.request({
@@ -429,7 +388,7 @@ var routes = function( wagner ) {
 
             Expense.findByIdAndUpdate( e._id,
                 { $set: {
-                    "labels.isConfirmed": true,
+                    "labels": e.labels,
                     "amount": e.amount,
                     "description": e.description }
                 }, { new: true }, function  confirmCalllback ( err, result ) {
@@ -443,18 +402,18 @@ var routes = function( wagner ) {
     }));
 
     // api that reject recommended expense as deleted.
-    api.delete( '/recommend/expenses/:id', wagner.invoke( function( Expense ){
-        return function( req, res ) {
-            var _id = req.params.id;
-
-            Expense.findByIdAndUpdate( _id, { $set: {
-                "labels.isDeleted": true
-            } }, { new: true }, function  deleteCalllback ( err, result ) {
-                if (err) { res.json(err) }
-                res.json({ _id: _id, expense: result, status: true });
-            });
-        }
-    }));
+    // api.delete( '/recommend/expenses/:id', wagner.invoke( function( Expense ){
+    //     return function( req, res ) {
+    //         var _id = req.params.id;
+    //
+    //         Expense.findByIdAndUpdate( _id, { $set: {
+    //             "labels.isDeleted": true
+    //         } }, { new: true }, function  deleteCalllback ( err, result ) {
+    //             if (err) { res.json(err) }
+    //             res.json({ _id: _id, expense: result, status: true });
+    //         });
+    //     }
+    // }));
 
 
     // API to get Common data (references for Category and Currency)
@@ -646,11 +605,24 @@ var routes = function( wagner ) {
     api.get( '/transformdate', wagner.invoke( function( Expense ) {
         return function( req, res ) {
 
+            // console.log(qty);
+
             Expense.find().exec( function( err, data ){
                 //var dates = [];
                 for(var i = 0; i < data.length; i++) {
-                    var newDate = Date.parse(data[i].date);
-                    Expense.update({_id: data[i]._id}, {date: newDate, createdAt: newDate}, function( err, raw ){
+                    // console.log(data[i].date);
+                    var newDateValue = Date.parse(data[i].date);
+                    console.log(newDateValue);
+                    // console.log(typeof newDate);
+                    Expense.update({_id: data[i]._id}, {
+                        date: new Date(newDateValue),
+                        createdAt: new Date(newDateValue),
+                        labels: {
+                            isConfirmed: true,
+                            isDeleted:false,
+                            isDefault: false
+                        }
+                    }, function( err, raw ){
                         if(err){ console.log(err);}
                         else {
                             console.log('raw response = ', raw);

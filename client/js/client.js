@@ -29,7 +29,7 @@ client.config( function( $routeProvider ){
         templateUrl: 'assets/templates/expensesApp.html'
     }).
     when ('/list', {
-        templateUrl: 'assets/templates/expensesListApp.html'
+        templateUrl: 'assets/templates/expensesCalendarApp.html'
     });
 
 });

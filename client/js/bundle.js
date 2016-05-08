@@ -30,78 +30,133 @@ client.config( function( $routeProvider ){
         templateUrl: 'assets/templates/expensesApp.html'
     }).
     when ('/list', {
-        templateUrl: 'assets/templates/expensesListApp.html'
+        templateUrl: 'assets/templates/expensesCalendarApp.html'
     });
 
 });
 },{"./controllers.js":2,"./directives.js":3,"./services.js":4,"underscore":6}],2:[function(require,module,exports){
-exports.mainCtrl = function( $scope, $user, $date ) {
-    $scope.user = $user;
+exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
+
+    // MODEL
+    var Expense = function(args) {
+        if(!args.user) {
+            console.error('Expense created with undefined user');
+            console.log(args.user);
+        }
+        else {
+            this.user = args.user;
+        }
+
+        this.date = args.date || $date.selectedDate;
+        this.amount = args.amount;
+        this.description = args.description;
+        if(!args.labels) {
+            this.labels = {isConfirmed: true, isDeleted: false, isDefault: false};
+        }
+        else {
+            this.labels = args.labels;
+        }
+    };
+    Expense.prototype = {
+
+    };
+
+    $scope.user = {};
     $scope.date = $date;
+    $scope.cells = [];
+    $scope.expenseList = [];
+    $scope.newExpense = {};
+    $scope.expenseFormPositions = [];
+    $scope.selectedDay = {date: new Date()};
+    
+    // METHODS
+    $scope.createNewExpenseObject = function(args){
+        return new Expense(args);
+    };
+
     $scope.selectMonth = function( event, month ) {
         event.target.blur();
         $scope.date.selectMonth( month );
     };
 
-};
+    $scope.resetNewExpenseForm = function () {
+        $scope.user = $user.user;
+        // console.log($scope.user);
+        $scope.newExpense = $scope.createNewExpenseObject({
+            user: $scope.user._id,
+            date: null,
+            amount: null,
+            description: null,
+            labels: null
+        });
+    };
 
-exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
+    $scope.fillExpenseList = function (success) {
 
-    $scope.selectItem = function( array, id, item ) {
-        $scope.obj[item] = id;
-        for( var i in array ) {
-            if( array[ i ]._id === id ) {
-                array[ i ].isSelected = true;
+        var mId = $scope.date.getMonthId();
+
+        $http.get( '/api/v1/expenses/' + mId).
+        then(
+            function successCallback (res) {
+                $scope.expenseList = res.data;
+
+                // addIsFormShownLabel();
+                $scope.cells = $date.getCells();
+                if(success) {
+                    success();
+                }
+            },
+            function errorCallback (res) {
+                console.error(res);
             }
-            else {
-                array[ i ].isSelected = false;
-            }
+        );
+    };
+    $scope.resetExpenseList = function() {
+        $scope.expenseList = [];
+    };
+    
+    $scope.findExpenseFormPositionById = function(id) {
+        var e = {};
+        var positions = $scope.expenseFormPositions;
+        var result = positions.find(function (item) {
+            return item._id == id;
+        });
+        if (result) {
+            // console.log(result);
+            e = result.popup;
+            return e;
+        }
+        if (!e) {
+            console.log('No expenses found for id = ' + id);
+            return null;
         }
     };
 
-    $scope.reset = function () {
-        $scope.obj = {
-            date: $date.selectedDate,
-            // category: 1,
-            // currency: 1,
-            amount: undefined,
-            description: ''
-        };
+    $scope.findExpenseById = function(id) {
+        var e = {};
+        var days = $scope.expenseList;
+        for( var i in days ){
+            var result = days[i].expenses.find( function(item){
+                return item._id == id;
+            });
+            if(result) {
+                e = result;
+                return e;
+            }
+        }
+        if(!e) {
+            console.log('No expenses found for id = ' + id);
+        }
     };
 
-    $scope.reset();
-
-    $scope.currencies = undefined;
-    $scope.categories = undefined;
-
-    // Code should get categories array from the server via RESTful API
-    // $http.get( '/api/v1/common/categories' ).
-    // then( function (res) {
-    //     $scope.categories = res.data.categories;
-    //     $scope.selectItem( $scope.categories, $scope.categories[0]._id, $scope.obj.category );
-    //     $scope.obj.category = $scope.categories[0]._id;
-    // }, function (res) {
-    //     console.log('server error');
-    //     console.log(res);
-    // });
-
-    // $http.get( '/api/v1/common/currencies' ).
-    // then( function (res) {
-    //     $scope.currencies = res.data.currencies;
-    //     $scope.selectItem( $scope.currencies, $scope.currencies[0]._id, $scope.obj.currency );
-    //     $scope.obj.currency = $scope.currencies[0]._id;
-    // }, function (res) {
-    //     console.log('server error');
-    //     console.log(res);
-    // });
-
-    $scope.post = function() {
-        $scope.obj.user = $user.user._id;
-        //console.log($scope.obj);
-        $http.post( '/api/v1/expenses', $scope.obj ).
+    $scope.post = function( expense, callback ) {
+        // console.log('posting expense');
+        $http.post( '/api/v1/expenses', expense ).
         success( function( res ) {
-            $scope.$emit('ExpenseCreated');
-            $scope.reset();
+            $scope.$emit('ExpenseCreated', {expense: res.expense});
+            if(callback) {
+                callback(res.expense);
+            }
         }).
         error(function (res) {
             console.log( res );
@@ -109,22 +164,80 @@ exports.ExpenseInputFormCtrl = function ( $scope, $user, $date, $http ) {
         });
     };
 
-    setTimeout( function() {
-        $scope.$emit('ExpenseInputFormCtrl');
-    }, 0);
-};
+    $scope.showForm = function (expense) {
+        expense.labels.isFormShown = true;
+    };
+    
+    $scope.selectDay = function( day ) {
+        // console.log('selectDay start');
 
-exports.ExpenseListCtrl = function( $scope, $date, $http ) {
+        $scope.$broadcast('DeselectAllDays');
 
-    $scope.expenseList = [];
+        if(day) {
+            $scope.selectedDay = day;
+        }
+        // console.log($scope.selectedDay);
+        $scope.$broadcast('DaySelected', {day: $scope.selectedDay});
 
-    $scope.date = $date;
-
-    $scope.reset = function() {
-        $scope.expenseList = [];
     };
 
+    // EVENT LISTENERS
+    $scope.$on('UserDefined', function () {
+        $scope.resetNewExpenseForm();
+
+    });
+    $scope.$on('ExpenseCreated', function(event, args){
+        // var expense = args.expense;
+        // console.log(args.expense._id);
+        $scope.resetExpenseList();
+        $scope.fillExpenseList(function() {
+            var e = $scope.findExpenseById(args.expense._id);
+            // e.labels.isFormShown = true;
+            $scope.$emit('ExpenseFormViewRequest', {expense: e});
+        });
+    });
+    $scope.$on('ExpenseConfirmed', function () {
+        $scope.resetExpenseList();
+        $scope.fillExpenseList();
+    });
+    $scope.$on('ExpenseDeleted', function () {
+        $scope.resetExpenseList();
+        $scope.fillExpenseList();
+    });
+
+    $scope.$on('ExpenseFormViewRequest', function (event, args) {
+        // console.log('expense form view request for id: ' + args.expense._id);
+        $scope.showForm(args.expense);
+    });
+
+    $scope.$on('DaySelectionRequest', function (event, args) {
+        // console.log('day selection request from expenseCalendar directive');
+        $scope.selectDay(args.day);
+    });
+
+    // MAIN
+    $user.getUser(function success () {
+        $scope.$emit('UserDefined');
+    });
+
+};
+
+exports.ExpenseInputFormCtrl = function ( $scope ) {
+
+    $scope.$on('ExpenseCreated', function(){
+        $scope.resetNewExpenseForm();
+    });
+
+};
+
+exports.ExpensesCalendarCtrl = function( $scope, $http ) {
+
+    // VIEW FUNCTIONS (FUNCTIONS THAT CALCULATE DATA FOR VIEW)
     $scope.getTotalPerDay = function( date ) {
+        // console.log(date);
+        if(!(date instanceof Date)) {
+            // console.log("you passed input of wrong type. Please, pass 'Date' object.");
+        }
 
         function isSameDate(value) {
             return Number(value._id) === Number(day);
@@ -135,6 +248,7 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         }
         else {
             var day = date.getDate();
+            // console.log('day from data is ' + day);
             var result = $scope.expenseList.filter(isSameDate);
             if(!result.length) {
                 return 0;
@@ -144,7 +258,6 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
             }
         }
     };
-
     $scope.getExpensesForDate = function( date ) {
 
         function isSameDate(value) {
@@ -166,7 +279,6 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
             }
         }
     };
-    
     $scope.getRecommendationsCount = function( date ) {
         function isSameDate(value) {
             return Number(value._id) === Number(day);
@@ -187,7 +299,6 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
             }
         }
     };
-
     $scope.isWeekend = function(date) {
         if(date) {
             if(date.getDay() === 0 || date.getDay() === 6) {
@@ -199,34 +310,21 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         }
     };
 
-    $scope.fillExpenseList = function () {
-
-        var mId = $scope.date.getMonthId();
-
-        $http.get( '/api/v1/expenses/' + mId).
+    // SERVER REQUEST SENDERS
+    $scope.confirmExpense = function ( obj ) {
+        $http.post('/api/v1/recommend/expenses', obj).
         then(
-            function successCallback (res) {
-                $scope.expenseList = res.data;
-                $scope.cells = $date.getCells();
-            },
-            function errorCallback (res) {
-                console.error(res);
+            function( res ) {
+                // console.log(res.data);
+                $scope.$emit('ExpenseConfirmed', res.data._id);
             }
-        );
+        )
     };
-
-    $scope.delete = function( id ) {
+    $scope.deleteExpense = function( id ) {
         $http.delete('/api/v1/expenses/' + id).
-            then(
+        then(
             function successCallback(res) {
                 $scope.$emit('ExpenseDeleted');
-                // var id = res.data._id;
-                // for(var i in $scope.expenseList){
-                //     if($scope.expenseList[i]._id === id) {
-                //         $scope.expenseList.splice( i, 1 );
-                //         break;
-                //     }
-                // }
             },
             function errorCallback( res ) {
                 console.error( res );
@@ -234,47 +332,38 @@ exports.ExpenseListCtrl = function( $scope, $date, $http ) {
         );
     };
 
-    $scope.reject = function( id ) {
-        $http.delete('/api/v1/recommend/expenses/' + id).
-            then(
-            function (res) {
-                console.log(res.data);
-                $scope.$emit('ExpenseRejected', res.data._id);
-
-            }
-        )
+    // UI EVENT EMITTERS
+    $scope.emitExpenseCreateRequest = function (event, day) {
+        $scope.$emit('ExpenseCreateRequest', {date: day.date});
     };
 
-    $scope.confirm = function ( obj ) {
-        $http.post('/api/v1/recommend/expenses', obj).
-            then(
-            function( res ) {
-                console.log(res.data);
-                $scope.$emit('ExpenseConfirmed', res.data._id);
-            }
-        )
-    }
-
+    // EVENT LISTENERS
     $scope.$watch( 'date', function (){
         $scope.fillExpenseList();
     }, true);
+    $scope.$on('ExpenseCreateRequest', function(event, args){
+        var e = $scope.createNewExpenseObject({
+            user: $scope.user._id,
+            date: args.date,
+            amount: 0,
+            description: 'New expense',
+            labels: {isConfirmed: false, isDeleted:false, isDefault: false}
+        });
 
-    $scope.$on('ExpenseCreated', function(){
-        $scope.reset();
-        $scope.fillExpenseList();
+        $scope.post(e);
     });
-    $scope.$on('ExpenseConfirmed', function () {
-        $scope.reset();
-        $scope.fillExpenseList();
+    $scope.$on('ExpenseConfirmRequest', function(event, args){
+        // console.log('expense confirm request intercepted');
+        $scope.confirmExpense(args.expense);
     });
-    $scope.$on('ExpenseRejected', function () {
-        $scope.reset();
-        $scope.fillExpenseList();
+    $scope.$on('ExpenseDeleteRequest', function(event, args){
+        // console.log('expense delete request intercepted');
+        $scope.deleteExpense(args._id);
     });
-    $scope.$on('ExpenseDeleted', function () {
-        $scope.reset();
-        $scope.fillExpenseList();
-    });
+    // $scope.$on('ExpenseFormViewRequest', function (event, args) {
+    //     console.log('expense form view request for id: ' + args.expense._id);
+    //     $scope.showForm(args.expense);
+    // });
 
 
 };
@@ -321,25 +410,28 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
     };
 };
 
-exports.RecommendedExpenseListCtrl = function( $scope, $date, $http, $error ) {
+exports.RecommendedExpensesListCtrl = function( $scope, $date, $http, $error ) {
 
     $scope.recommendedExpenseList = [];
+
     $scope.date = $date;
+
     $scope.isLoading = false;
+
     $scope.error = { errorMsg: "", isError: false };
 
-    $scope.reset = function() {
+    $scope.resetRecommendedExpenseList = function() {
         $scope.recommendedExpenseList = [];
     };
 
-    $scope.fillExpenseList = function () {
+    $scope.fillRecommendedExpenseList = function () {
 
         $scope.isLoading = true;
 
         $http.get( '/api/v1/recommend/expenses' ).
         then(
             function successCallback (res) {
-                console.log(res);
+                // console.log(res);
                 if(res.data.recommendations.error) {
                     $scope.error.isError = true;
                     $scope.error.errorMsg = $error.translate(res.data.recommendations.error);
@@ -356,7 +448,21 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http, $error ) {
         );
     };
 
+    $scope.confirm = function( id ) {
+        console.log('this recommendation is confirmed: '+ id);
+        var obj = $scope.recommendedExpenseList.find( function(item){
+            return item._id === id;
+        });
 
+        $http.post( '/api/v1/recommend/expenses', obj ).
+        success( function( res ) {
+            $scope.$emit('RecommendedExpenseConfirmed');
+            console.log(res);
+        }).
+        error(function (res) {
+            console.log( res );
+        });
+    }
     $scope.delete = function( id ) {
         $http.delete('/api/v1/recommend/expenses/' + id).
         then(
@@ -377,28 +483,14 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http, $error ) {
     };
 
     $scope.$watch( 'date', function () {
+        $scope.resetRecommendedExpenseList();
         $scope.fillExpenseList();
     }, true);
 
     $scope.$on( "RecommendedExpenseConfirmed", function (){
-        $scope.fillExpenseList();
-    })
-
-    $scope.confirm = function( id ) {
-        console.log('this recommendation is confirmed: '+ id);
-        var obj = $scope.recommendedExpenseList.find( function(item){
-            return item._id === id;
-        });
-
-        $http.post( '/api/v1/recommend/expenses', obj ).
-        success( function( res ) {
-            $scope.$emit('RecommendedExpenseConfirmed');
-            console.log(res);
-        }).
-        error(function (res) {
-            console.log( res );
-        });
-    }
+        $scope.resetRecommendedExpenseList();
+        $scope.fillRecommendedExpenseList();
+    });
 
 };
 
@@ -406,25 +498,165 @@ exports.RecommendedExpenseListCtrl = function( $scope, $date, $http, $error ) {
 exports.expenseInputForm = function() {
 
     return {
-        controller: 'ExpenseInputFormCtrl',
+        controller: "ExpenseInputFormCtrl",
         templateUrl: '/assets/templates/expenseInputForm.html'
     }
 
 };
 
-exports.expenseList = function() {
+exports.expensesCalendar = function() {
 
     return {
-        controller: 'ExpenseListCtrl',
-        templateUrl: '/assets/templates/expensesList.html'
+        controller: "ExpensesCalendarCtrl",
+        templateUrl: '/assets/templates/expensesCalendar.html',
+        link: function (scope, el, attrs, controllers) {
+            // console.log('expensesCalendar directive');
+            // console.log(scope);
+            // console.log(el[0]);
+            scope.emitDaySelectionRequest = function(day) {
+                scope.$emit('DaySelectionRequest', {day: day});
+            }
+
+            // scope.emitDaySelectionRequest();
+        }
     }
 
 };
 
+exports.expenseCalendarDay = function() {
+    return {
+        require: ["^?expensesCalendar"],
+        scope: {
+            day: "=extDay",
+            getTotalPerDay: "&extGetTotalPerDay",
+            getExpensesForDate: "&extGetExpensesForDate",
+            getRecommendationsCount: "&extGetRecommendationsCount",
+            isWeekend: "&extIsWeekend",
+            selectedDay: "=extSelectedDay"
+        },
+        templateUrl: '/assets/templates/expenseCalendarDay.html',
+        link: function ( scope, el, attrs, controllers ) {
+            // 1. Day is not selected by default, unless it is equal to selected day.
+            if(scope.day.date) {
+                if(scope.selectedDay.date.getDate() === scope.day.date.getDate()) {
+                    scope.isSelected = true;
+                }
+                else {
+                    scope.isSelected = false;
+                }
+            }
+
+            // 2. Listen to 'DaySelected' event
+            scope.$on('DaySelected', function (event, args){
+                // console.log('this is expenseCalendarDay directive - Day is Selected');
+                if(scope.day.date) {
+                    if(args.day.date.getDate() === scope.day.date.getDate()) {
+                        scope.isSelected = true;
+                    }
+                    // console.log(args.day.date.getDate() === scope.day.date.getDate());
+                }
+            });
+
+            // 3. Listen to 'DeselectAllDays' event
+            scope.$on('DeselectAllDays', function () {
+                scope.isSelected = false;
+            });
+
+            // console.log('calendar day created');
+            // console.log('expenseCalendarDay directive');
+            // console.log(scope);
+            // console.log(el[0]);
+            // console.log(scope);
+        }
+    }
+};
+
+exports.expenseCalendarDayItem = function() {
+    return {
+        require: ["^?expensesCalendar"],
+        templateUrl: "/assets/templates/expenseCalendarDayItem.html",
+        scope: {
+            e: "=extE"
+        },
+        link: {
+            post: function (scope, el, attrs, controllers) {
+                // 1. Expense item HTML uses ng-style to position the expense pop-up form relative to the expense item ->
+                // -> Calculate this position foe each expense item and store it in each item's scope.
+                scope.popup = {
+                    position: {
+                        left: 0,
+                        top: 0
+                    }
+                };
+                var r = el[0].getBoundingClientRect();
+                scope.popup.position.left = r.width + 14;
+                scope.popup.position.top = -25;
+
+                // 2. Expense item HTML uses 'emitExpenseFormViewRequest' function. -> Make it available in each item scope.
+                scope.emitExpenseFormViewRequest = function( event, expense ) {
+                    scope.$emit("ExpenseFormViewRequest", {expense: expense});
+                };
+
+                // 3. Expense popup form is hidden by default -> Make it hidden.
+                if(!scope.e.labels.isFormShown) {
+                    scope.e.labels.isFormShown = false;
+                }
+            }
+        }
+    }
+};
+
+exports.expenseCalendarDayItemForm = function() {
+    return {
+        require: ["^?expensesCalendar"],
+        templateUrl: "/assets/templates/expenseCalendarDayItemForm.html",
+        scope: {
+            e: "=extE"
+        },
+        link: function (scope, el, attrs, controllers) {
+            // 1. Expense pop-up HTML uses  'emitExpenseConfirmRequest' function. -> Make it available in each form scope.
+            scope.emitExpenseConfirmRequest = function(expense) {
+                scope.$emit('ExpenseConfirmRequest', {expense: expense});
+            };
+            // 2. Expense pop-up HTML uses 'emitExpenseDeleteRequest' function. -> Make it available in each form scope.
+            scope.emitExpenseDeleteRequest = function ( id ) {
+                scope.$emit('ExpenseDeleteRequest', {_id: id});
+            };
+        }
+    }
+};
+
+exports.expenseCalendarSelectedDay = function() {
+    return {
+        require: ["^?expensesCalendar"],
+        scope: {
+            day: "=extDay",
+            getTotalPerDay: "&extGetTotalPerDay",
+            getExpensesForDate: "&extGetExpensesForDate",
+            getRecommendationsCount: "&extGetRecommendationsCount",
+            isWeekend: "&extIsWeekend"
+        },
+        templateUrl: '/assets/templates/expenseCalendarSelectedDay.html',
+        link: function ( scope, el, attrs, controllers ) {
+
+            // 1. Listen to 'DaySelected' event
+            scope.$on('DaySelected', function (event, args){
+                // console.log('this is expenseCalendarSelectedDay directive');
+                // console.log(args);
+            });
+            // console.log('expenseCalendarDay directive');
+            // console.log(scope);
+            // console.log(el[0]);
+            // console.log(scope);
+        }
+    }
+};
+
+
 exports.expensesDashboard = function() {
 
     return {
-        controller: 'ExpensesDashboardCtrl',
+        controller: "ExpensesDashboardCtrl",
         templateUrl: '/assets/templates/expensesDashboard.html'
     }
 
@@ -432,7 +664,7 @@ exports.expensesDashboard = function() {
 
 exports.dailyVolumes = function() {
     return {
-        require: "^?ExpensesDashboardCtrl",
+        require: "^expensesDashboard",
         template: '<div id = "dailyVolumes"></div>',
         link: function ( scope, el, attrs ) {
 
@@ -464,7 +696,7 @@ exports.dailyVolumes = function() {
 
 exports.categoryVolumes = function() {
     return {
-        require: "^?ExpensesDashboardCtrl",
+        require: "^expensesDashboard",
         template: '<div id = "categoryVolumes"></div>',
         link: function ( scope, el, attrs ) {
             var chartName = 'categoryVolumes';
@@ -495,9 +727,9 @@ exports.categoryVolumes = function() {
 
 exports.expenseFrequency = function() {
     return {
-        require: "^?ExpensesDashboardCtrl",
+        require: "^expensesDashboard",
         template: '<div id = "expenseFrequency"></div>',
-        link: function ( scope, el, attrs ) {
+        link: function ( scope, el, attrs, controllers ) {
             var chartName = 'expenseFrequency';
             var chartDiv = el[0].children[0];
 
@@ -519,6 +751,7 @@ exports.expenseFrequency = function() {
                 scope.$on('ExpenseDeleted', function() {
                     scope.redrawChart( chartName, chartDiv );
                 });
+                console.log(controllers);
             });
         }
     }
@@ -526,36 +759,40 @@ exports.expenseFrequency = function() {
 
 exports.notLoggedIn = function() {
     return {
-        require: "^?mainCtrl",
+        require: ["^ExpensesCalendarAppCtrl"],
         templateUrl: "/assets/templates/notLoggedIn.html"
     }
 };
 
 exports.monthSelector = function() {
     return {
-        require: "^?mainCtrl",
+        require: ["^ExpensesCalendarAppCtrl"],
         templateUrl: "/assets/templates/monthSelector.html"
     }
 };
 
 exports.recommendedExpensesList = function() {
     return {
-        require: ["^?ExpenseInputForm"],
-        controller: "RecommendedExpenseListCtrl",
+        require: ["^ExpensesCalendarAppCtrl"],
+        controller: "RecommendedExpensesListCtrl",
         templateUrl: "/assets/templates/recommendedExpensesList.html"
     }
-}
+};
+
+
 
 },{}],4:[function(require,module,exports){
 var status = require( 'http-status' );
 
 exports.$user = function( $http ) {
-    var s = {};
-    s.getUser = function() {
+    var s = {user:{}};
+    s.getUser = function(callback) {
         $http.
         get('/api/v1/me').
         success( function( data ) {
             s.user = data.user;
+            callback();
+            // console.log(s.user);
         }).
         error( function( data, status ) {
             if( status === status.UNAUTHORIZED ) {
@@ -563,7 +800,7 @@ exports.$user = function( $http ) {
             }
         });
     };
-    s.getUser();
+    // s.getUser();
     setInterval(s.getUser, 60 * 60 * 1000);
     return s;
 };
@@ -611,7 +848,7 @@ exports.$date = function () {
     s.selectMonth = function( month ) {
         s.months = createMonths( month );
         s.selectedDate = s.months[5];
-        console.log(s.getDayOfWeekOfFirstDayInMonth());
+        // console.log(s.getDayOfWeekOfFirstDayInMonth());
     };
 
     s.getDate = function () {
@@ -664,15 +901,6 @@ exports.$date = function () {
         return result;
     };
 
-    // var cells = [
-    //     { id: 1, cell: [ {date: null}, {date: new Date("2016-04-01")}, {date: new Date("2016-04-02")} ] },
-    //     { id: 2, cell: [ {date: new Date("2016-04-03")}, {date: new Date("2016-04-04")}, {date: new Date("2016-04-05")} ] },
-    //     { id: 3, cell: [ {date: new Date("2016-04-06")}, {date: new Date("2016-04-07")}, {date: null} ] },
-    //     { id: 4, cell: [ {date: null}, {date: new Date("2016-04-08")}, {date: new Date("2016-04-09")} ] },
-    //     { id: 5, cell: [ {date: new Date("2016-04-10")}, {date: new Date("2016-04-11")}, {date: new Date("2016-04-12")} ] },
-    //     { id: 6, cell: [ {date: new Date("2016-04-13")}, {date: new Date("2016-04-14")}, {date: null} ] },
-    // ];
-
     s.getMonth = function( monthIdString ) {
         return monthIdString.length === 6 ? Number(monthIdString.substring(4,6)) : Number(monthIdString.substring(4,5));
     };
@@ -719,18 +947,26 @@ exports.$date = function () {
 
     var Day = function(date) {
         this.date = date;
-    }
+    };
 
     s.getCells = function() {
 
         var createDates = function(dates) {
+            // outputs the array of dates for each day in currently selected month
             for(var i = 1; i <= s.daysInMonth(s.getMonthId()); i++) {
-                dates.push(new Date(s.selectedDate.getFullYear(), s.selectedDate.getMonth(), i));
+                var dUTCSec = Date.UTC(s.selectedDate.getFullYear(), s.selectedDate.getMonth(), i);
+                var dUTCDate = new Date(dUTCSec);
+                dates.push(dUTCDate);
             }
+            // console.log(dates);
             return dates;
         };
 
         var appendNullsBeforeAndAfter = function(dates) {
+            // we need to fit the dates to 5x7 visual grid of calendar days.
+            // it means, week starts at Sunday, but 1st day of the month is Saturday ->
+            // we need to put empty days before 1st day of the month end empty days after last day of the month ->
+            // so we put nulls before and after in our 'dates' array.
             var nullsBeforeNumber = dates[0].getDay();
             for (var i = 0; i < nullsBeforeNumber; i++){
                 dates.splice(0,0, null);
@@ -745,7 +981,18 @@ exports.$date = function () {
         };
 
         var splitToRowsAndAppendNullsForEachRow = function(dates) {
-            for(var i = 1; i <= 4; i++){
+            // since the bootstrap grid, we created for calendar has 9 cells per calendar row, when we need only 7 ->
+            // we need to put null before and null after each row
+
+            // console.log(dates.length);
+            var rows = 0;
+            if(dates.length/7 > 5) {
+                rows = 6;
+            }
+            else {
+                rows = 5;
+            };
+            for(var i = 1; i < rows; i++){
                 dates.splice(i*7 + 2*(i-1), 0, null, null);
             }
             dates.splice(0,0,null);
@@ -755,7 +1002,16 @@ exports.$date = function () {
 
         var putDatesToCells = function (dates) {
             var cells = [];
-            for(var i = 1; i <= 15; i++){
+
+            var cellBlocks = 0;
+            if(dates.length/7 > 5) {
+                cellBlocks = 18;
+            }
+            else {
+                cellBlocks = 15;
+            };
+
+            for(var i = 1; i <= cellBlocks; i++){
                 var cell = new Cell(i,[]);
                 for(var j = 1; j <= 3; j++) {
                     var day = new Day(null);

@@ -22,8 +22,8 @@
 }
 
 .cal-panel {
-    margin-left: -9em;
-    margin-right: -9em;
+    margin-left: -8em;
+    margin-right: -8em;
 }
 
 .truncate-ellipsis {
@@ -40,17 +40,19 @@
 .talk-bubble {
     display: block;
     position: absolute;
-    left: 15em;
-    top: -4em;
+    /*left: 15em;*/
+    /*top: -4em;*/
+    left: 0;
+    top: 0;
     width: 14em;
     height: auto;
     background-color: white;
-    z-index: 2;
+    z-index: 3;
 }
-.border{
+.border {
     border: 1px solid #666;
 }
-.round{
+.round-10 {
     border-radius: 10px;
     -webkit-border-radius: 10px;
     -moz-border-radius: 10px;
@@ -64,43 +66,52 @@
     height: 0;
     left: -1em;
     right: auto;
-    top: 3.05em;
+    top: 4.0em;
     bottom: auto;
     border: 0.5em solid;
     border-color: #666 #666 transparent transparent;
+    z-index: 4;
 }
 .tri-right.left-in:after{
     content: ' ';
     position: absolute;
     width: 0;
     height: 0;
-    left: -0.78em;
+    left: -0.7em;
+    /*left: -0.5em;*/
     right: auto;
-    top: 3.15em;
+    top: 4.12em;
     bottom: auto;
-    border: 0.5em solid;
+    border: 0.4em solid;
     border-color: white white transparent transparent;
+    z-index: 4;
+
 }
 
-.talk-bubble .panel-primary {
-    margin: 0px 0px 8px 0px;
-    border-bottom-color: white;
+/*Classes for expense pop up in calendar*/
+.talk-bubble .panel {
+    margin-bottom: 0px;
     border: none;
-    z-index: 1;
+    background-color: transparent;
+    border-radius: 0px;
 }
 
-.talk-bubble .panel-heading {
-    padding: 9px 15px 8px 15px;
-    border: none;
-    /*border-bottom-color: white;*/
+.talk-bubble .panel .panel-heading {
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+}
+
+.talk-bubble .panel .panel-body {
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
 }
 
 .talk-bubble .panel-body {
     height: auto;
-    padding: 3px 15px 3px 15px;
-    border: none;
-    /*border-bottom-color: white;*/
+}
 
+.talk-bubble .form-group {
+    margin-bottom: 5px;
 }
 
 .buttons-panel {
@@ -108,7 +119,35 @@
     padding-bottom: 5px;
 }
 
-.round-up {
+.buttons-panel button {
+    width: 4em;
+}
+
+.form-control.short {
+    width: 65%;
+}
+
+
+.form-control.expense-pop-up{
+    border-radius: 0px;
+    padding-left: 5px;
+}
+
+.form-control.expense-pop-up.input-primary {
+    background-color: #337AB7;
+    color: white;
+}
+/*End of classes for expense pop-up in calendar*/
+
+
+
+.round-9-down {
+    border-radius: 0px 0px 9px 9px;
+    -webkit-border-radius: 0px 0px 9px 9px;
+    -moz-border-radius: 0px 0px 9px 9px;
+}
+
+.round-9-up {
     border-radius: 9px 9px 0px 0px;
     -webkit-border-radius: 9px 9px 0px 0px;
     -moz-border-radius: 9px 9px 0px 0px;
@@ -144,10 +183,22 @@ textarea {
 .new-recommendations-badge {
     display: block;
     position: absolute;
-    left: 10em;
-    top: 1.5em;
-    width: 14em;
+    width: auto;
     height: auto;
     background-color: transparent;
-    z-index: 3;
+    z-index: 2;
+}
+
+expense-calendar-day .new-recommendations-badge {
+    left: 7.5em;
+    top: 1.5em;
+}
+
+expense-calendar-selected-day .new-recommendations-badge {
+    left: 17.5em;
+    top: 1em;
+}
+
+.red{
+    border-color: red;
 }

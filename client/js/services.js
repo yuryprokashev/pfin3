@@ -1,12 +1,14 @@
 var status = require( 'http-status' );
 
 exports.$user = function( $http ) {
-    var s = {};
-    s.getUser = function() {
+    var s = {user:{}};
+    s.getUser = function(callback) {
         $http.
         get('/api/v1/me').
         success( function( data ) {
             s.user = data.user;
+            callback();
+            // console.log(s.user);
         }).
         error( function( data, status ) {
             if( status === status.UNAUTHORIZED ) {
@@ -14,7 +16,7 @@ exports.$user = function( $http ) {
             }
         });
     };
-    s.getUser();
+    // s.getUser();
     setInterval(s.getUser, 60 * 60 * 1000);
     return s;
 };
@@ -62,7 +64,11 @@ exports.$date = function () {
     s.selectMonth = function( month ) {
         s.months = createMonths( month );
         s.selectedDate = s.months[5];
-        console.log(s.getDayOfWeekOfFirstDayInMonth());
+        var today = new Date();
+        if(today.getMonth() !== month) {
+            
+        }
+        // console.log(s.getDayOfWeekOfFirstDayInMonth());
     };
 
     s.getDate = function () {
@@ -115,15 +121,6 @@ exports.$date = function () {
         return result;
     };
 
-    // var cells = [
-    //     { id: 1, cell: [ {date: null}, {date: new Date("2016-04-01")}, {date: new Date("2016-04-02")} ] },
-    //     { id: 2, cell: [ {date: new Date("2016-04-03")}, {date: new Date("2016-04-04")}, {date: new Date("2016-04-05")} ] },
-    //     { id: 3, cell: [ {date: new Date("2016-04-06")}, {date: new Date("2016-04-07")}, {date: null} ] },
-    //     { id: 4, cell: [ {date: null}, {date: new Date("2016-04-08")}, {date: new Date("2016-04-09")} ] },
-    //     { id: 5, cell: [ {date: new Date("2016-04-10")}, {date: new Date("2016-04-11")}, {date: new Date("2016-04-12")} ] },
-    //     { id: 6, cell: [ {date: new Date("2016-04-13")}, {date: new Date("2016-04-14")}, {date: null} ] },
-    // ];
-
     s.getMonth = function( monthIdString ) {
         return monthIdString.length === 6 ? Number(monthIdString.substring(4,6)) : Number(monthIdString.substring(4,5));
     };
@@ -170,18 +167,26 @@ exports.$date = function () {
 
     var Day = function(date) {
         this.date = date;
-    }
+    };
 
     s.getCells = function() {
 
         var createDates = function(dates) {
+            // outputs the array of dates for each day in currently selected month
             for(var i = 1; i <= s.daysInMonth(s.getMonthId()); i++) {
-                dates.push(new Date(s.selectedDate.getFullYear(), s.selectedDate.getMonth(), i));
+                var dUTCSec = Date.UTC(s.selectedDate.getFullYear(), s.selectedDate.getMonth(), i);
+                var dUTCDate = new Date(dUTCSec);
+                dates.push(dUTCDate);
             }
+            // console.log(dates);
             return dates;
         };
 
         var appendNullsBeforeAndAfter = function(dates) {
+            // we need to fit the dates to 5x7 visual grid of calendar days.
+            // it means, week starts at Sunday, but 1st day of the month is Saturday ->
+            // we need to put empty days before 1st day of the month end empty days after last day of the month ->
+            // so we put nulls before and after in our 'dates' array.
             var nullsBeforeNumber = dates[0].getDay();
             for (var i = 0; i < nullsBeforeNumber; i++){
                 dates.splice(0,0, null);
@@ -196,7 +201,18 @@ exports.$date = function () {
         };
 
         var splitToRowsAndAppendNullsForEachRow = function(dates) {
-            for(var i = 1; i <= 4; i++){
+            // since the bootstrap grid, we created for calendar has 9 cells per calendar row, when we need only 7 ->
+            // we need to put null before and null after each row
+
+            // console.log(dates.length);
+            var rows = 0;
+            if(dates.length/7 > 5) {
+                rows = 6;
+            }
+            else {
+                rows = 5;
+            };
+            for(var i = 1; i < rows; i++){
                 dates.splice(i*7 + 2*(i-1), 0, null, null);
             }
             dates.splice(0,0,null);
@@ -206,7 +222,16 @@ exports.$date = function () {
 
         var putDatesToCells = function (dates) {
             var cells = [];
-            for(var i = 1; i <= 15; i++){
+
+            var cellBlocks = 0;
+            if(dates.length/7 > 5) {
+                cellBlocks = 18;
+            }
+            else {
+                cellBlocks = 15;
+            };
+
+            for(var i = 1; i <= cellBlocks; i++){
                 var cell = new Cell(i,[]);
                 for(var j = 1; j <= 3; j++) {
                     var day = new Day(null);

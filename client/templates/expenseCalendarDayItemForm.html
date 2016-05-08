@@ -1,0 +1,55 @@
+<!-- pop-up with expense details and control buttons shown on click when Expens is NOT Confirmed-->
+<div class="row">
+    <div class="col-md-12">
+        <div class="talk-bubble tri-right border round-10 left-in">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <!-- Expense Amount -->
+                    <label>Spent: </label>
+                    <input id = "input-amount-{{e._id}}"
+                           type = "number"
+                           class = "form-control expense-pop-up input-xs input-primary short"
+                           name = "amount"
+                           placeholder = "enter amount"
+                           ng-pattern = "/^[0-9]+(\.[0-9]{1,2})?$/"
+                           step = '"0.01'
+                           ng-model = "e.amount"/>
+                </div>
+
+                <div class="panel-body">
+                    <!-- Expense description -->
+                    <div class= "form-group">
+                        <label class = "sr-only" for description>Expense description</label>
+                            <textarea id = "expense-description-{{e._id}}"
+                                      rows = 3
+                                      class = "form-control expense-pop-up input-xs"
+                                      name = "description"
+                                      placeholder = "describe the expense"
+                                      ng-model = "e.description"
+                            ></textarea>
+                    </div>
+                    <!-- Expense.labels.isConfirmed -->
+                    <div class = "form-group">
+                        <input type="checkbox"
+                               ng-model="e.labels.isConfirmed"
+                               name="isConfirmed"
+                               value = "true"
+                               ng-true-value="false"
+                               ng-false-value="true"
+                               ng-change="string">
+                        <label>Only planned?</label>
+                    </div>
+                    <!-- Confirm and Reject Buttons -->
+                    <p class = "text-center buttons-panel">
+                        <button class = "btn btn-success btn-xs"
+                                ng-click = "emitExpenseConfirmRequest( e )"
+                        >Save</button>
+                        <button class = "btn btn-danger btn-xs"
+                                ng-click = "emitExpenseDeleteRequest( e._id )"
+                        >Delete</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
