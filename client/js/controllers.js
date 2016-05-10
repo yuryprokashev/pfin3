@@ -141,8 +141,15 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
         });
     };
 
-    $scope.showForm = function (expense) {
-        expense.labels.isFormShown = true;
+    $scope.showForm = function (expense, emitter) {
+        if(emitter === '<expense-calendar-day-item>') {
+            expense.labels.isCalendarDayFormShown = true;
+        }
+        else if(emitter === '<expense-calendar-selected-day-item>') {
+            console.log('code to be written, but link works');
+            expense.labels.isSelectedDayFormShown = true;
+        }
+
     };
     
     $scope.selectDay = function( day ) {
@@ -152,6 +159,12 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
         }
         $scope.$broadcast('DaySelected', {day: $scope.selectedDay});
     };
+
+    // EVENT EMITTERS
+    // $scope.emitExpenseFormViewRequest = function( event, expense, emittingDirectiveName ) {
+    //     console.log(emittingDirectiveName);
+    //     scope.$emit("ExpenseFormViewRequest", {expense: expense, emitter: emittingDirectiveName });
+    // };
 
     // EVENT LISTENERS
     $scope.$on('UserDefined', function () {
@@ -177,7 +190,7 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
     });
     $scope.$on('ExpenseFormViewRequest', function (event, args) {
         // console.log('expense form view request for id: ' + args.expense._id);
-        $scope.showForm(args.expense);
+        $scope.showForm(args.expense, args.emitter);
     });
     $scope.$on('DaySelectionRequest', function (event, args) {
         $scope.selectDay(args.day);
@@ -200,13 +213,13 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
 
 };
 
-exports.ExpenseInputFormCtrl = function ( $scope ) {
-
-    $scope.$on('ExpenseCreated', function(){
-        $scope.resetNewExpenseForm();
-    });
-
-};
+// exports.ExpenseInputFormCtrl = function ( $scope ) {
+//
+//     $scope.$on('ExpenseCreated', function(){
+//         $scope.resetNewExpenseForm();
+//     });
+//
+// };
 
 exports.ExpensesCalendarCtrl = function( $scope, $http ) {
 

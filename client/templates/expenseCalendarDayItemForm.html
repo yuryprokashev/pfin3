@@ -5,41 +5,45 @@
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <!-- Expense Amount -->
-                    <label>Spent: </label>
+                    <label>Spent:</label>
                     <input id = "input-amount-{{e._id}}"
                            type = "number"
-                           class = "form-control expense-pop-up input-xs input-primary short"
+                           class = "expense-pop-up form-control input-xs input-primary short"
                            name = "amount"
                            placeholder = "enter amount"
                            ng-pattern = "/^[0-9]+(\.[0-9]{1,2})?$/"
                            step = '"0.01'
                            ng-model = "e.amount"/>
+                    <!--<basic-expense-input-amount class = "expense-pop-up input-xs input-primary short"></basic-expense-input-amount>-->
                 </div>
 
                 <div class="panel-body">
                     <!-- Expense description -->
-                    <div class= "form-group">
+                    <!--<div class= "form-group">-->
                         <label class = "sr-only" for description>Expense description</label>
                             <textarea id = "expense-description-{{e._id}}"
                                       rows = 3
-                                      class = "form-control expense-pop-up input-xs"
+                                      class = "expense-pop-up form-control input-xs"
                                       name = "description"
                                       placeholder = "describe the expense"
                                       ng-model = "e.description"
                             ></textarea>
-                    </div>
+                    <!--</div>-->
                     <!-- Expense.labels.isConfirmed -->
-                    <div class = "form-group">
+                    <!--<div class = "form-group">-->
+                    <label>
                         <input type="checkbox"
-                               ng-model="e.labels.isConfirmed"
-                               name="isConfirmed"
-                               value = "true"
-                               ng-true-value="false"
-                               ng-false-value="true"
-                               ng-change="string">
-                        <label>Only planned?</label>
-                    </div>
+                           ng-model="e.labels.isConfirmed"
+                           name="isConfirmed"
+                           value = "true"
+                           ng-true-value="false"
+                           ng-false-value="true"
+                           ng-change="string">Only planned?
+                    </label>
+
+                    <!--</div>-->
                     <!-- Confirm and Reject Buttons -->
+                    <!--<div>-->
                     <p class = "text-center buttons-panel">
                         <button class = "btn btn-success btn-xs"
                                 ng-click = "emitExpenseConfirmRequest( e )"
@@ -48,6 +52,7 @@
                                 ng-click = "emitExpenseDeleteRequest( e._id )"
                         >Delete</button>
                     </p>
+                    <!--</div>-->
                 </div>
             </div>
         </div>

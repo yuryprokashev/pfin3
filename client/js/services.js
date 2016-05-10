@@ -17,7 +17,7 @@ exports.$user = function( $http ) {
         });
     };
     // s.getUser();
-    setInterval(s.getUser, 60 * 60 * 1000);
+    // setInterval(s.getUser, 60 * 60 * 1000);
     return s;
 };
 

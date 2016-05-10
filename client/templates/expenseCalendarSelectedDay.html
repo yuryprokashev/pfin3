@@ -1,4 +1,5 @@
-<div class = "panel panel-primary">
+<div class = "panel panel-primary"
+     ng-style = "{position: 'absolute', left: position.left , top: position.top, width: '19.5em' }">
     <div class = "panel-heading truncate-ellipsis">{{ day.date | date: 'EEE d' }}</div>
     <div class = "new-recommendations-badge">
         <span class="badge progress-bar-danger" ng-show = "getRecommendationsCount(day.date)>0">{{ getRecommendationsCount( day.date) }}</span>
@@ -10,12 +11,12 @@
             <p class = "text-primary">Planned: {{ 0 | number : 0 }}</p>
 
             <!-- expenses list start -->
-            <expense-calendar-day-item class = "list-group-item"
-                                       ng-repeat = "e in getExpensesForDate( day.date ) track by $index"
-                                       ng-mouseleave = "e.labels.isFormShown = false"
-                                       ext-e = "e"
-                                       id = "{{e._id}}">
-            </expense-calendar-day-item>
+            <expense-calendar-selected-day-item class = "list-group-item"
+                                                ng-repeat = "e in getExpensesForDate( day.date ) track by $index"
+                                                ng-mouseleave = "e.labels.isSelectedDayFormShown = false"
+                                                ext-e = "e"
+                                                id = "{{e._id}}">
+            </expense-calendar-selected-day-item>
         </div>
     </div>
 </div>

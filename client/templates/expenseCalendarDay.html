@@ -14,7 +14,7 @@
                 <!-- expenses list start -->
                 <expense-calendar-day-item class = "list-group-item small"
                                            ng-repeat = "e in getExpensesForDate( day.date ).slice(0,3) track by $index"
-                                           ng-mouseleave = "e.labels.isFormShown = false"
+                                           ng-mouseleave = "e.labels.isCalendarDayFormShown = false"
                                            ext-e = "e"
                                            id = "{{e._id}}">
                 </expense-calendar-day-item>
