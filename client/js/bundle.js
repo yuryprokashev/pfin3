@@ -26,9 +26,9 @@ client.config( function( $routeProvider ){
         when ('/', {
         templateUrl: 'assets/templates/main.html'
     }).
-    //     when ('/dashboard', {
-    //     templateUrl: 'assets/templates/expensesApp.html'
-    // }).
+        when ('/dashboard', {
+        templateUrl: 'assets/templates/expensesApp.html'
+    }).
     when ('/calendar', {
         templateUrl: 'assets/templates/expensesCalendarApp.html'
     });
@@ -95,7 +95,7 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
     $scope.fillExpenseList = function (success) {
 
         // var mId = $scope.date.getMonthId();
-        var mId = getMonthId();
+        var mId = $scope.getMonthId();
 
         $http.get( '/api/v1/expenses/' + mId).
         then(
@@ -115,7 +115,7 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
         );
     };
 
-    var getMonthId = function () {
+    $scope.getMonthId = function () {
 
         var year = $scope.selectedDay.date.getFullYear();
         var month = $scope.selectedDay.date.getMonth();
@@ -240,6 +240,7 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
         $scope.fillExpenseList(function() {
             $scope.$emit('DaySelectionRequest', {day: $scope.selectedDay});
         });
+        $scope.$broadcast('MonthChanged');
     });
 
     // MAIN
@@ -249,14 +250,6 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
     });
 
 };
-
-// exports.ExpenseInputFormCtrl = function ( $scope ) {
-//
-//     $scope.$on('ExpenseCreated', function(){
-//         $scope.resetNewExpenseForm();
-//     });
-//
-// };
 
 exports.ExpensesCalendarCtrl = function( $scope, $http ) {
 
@@ -388,31 +381,63 @@ exports.ExpensesCalendarCtrl = function( $scope, $http ) {
     });
 };
 
-exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
+exports.ExpensesDashboardCtrl = function( $scope, $http ) {
 
-    $scope.charts = $charts;
-    $scope.date = $date;
-    
-    var charts = $scope.charts.charts;
-    var layouts = $scope.charts.layouts;
+    $scope.charts = [];
+    $scope.layouts = [];
+    $scope.isRequestInProgress = false;
+
+    $scope.getLayouts = function( callback ) {
+        $scope.isRequestInProgress = true;
+        $http.get( '/api/v1/charts/meta' ).
+        then(
+            function successCallback( res ){
+                for( var i in res.data ) {
+                    $scope.charts[ i ] = { chartDiv: res.data[i].chartDiv, traces: res.data[i].traces };
+                    $scope.layouts[ res.data[i].chartDiv ] = res.data[i].layout;
+                }
+                callback();
+                $scope.isRequestInProgress = false;
+            },
+            function errorCallBack( res ){
+                console.error('error in $scope.charts');
+                console.log(res);
+            }
+        );
+    };
+
+    $scope.reset = function() {
+        $scope.charts = [];
+    };
+
+    $scope.renewTrace = function( traceName, callback ) {
+        $scope.isRequestInProgress = true;
+        $http.get( '/api/v1/charts/' + traceName + '/'+ $scope.getMonthId()).
+        then( function successCallback (res) {
+
+            //console.log(res.data);
+            //s.charts.push(res.data);
+            callback( res.data );
+            $scope.isRequestInProgress = false;
+        }, function errorCallback (res) {
+            console.error('error in $scope.renewTrace');
+            console.log(res);
+        });
+    };
 
     // 1. SETUP STEP
-    $scope.charts.getLayouts( function() {
+    $scope.getLayouts( function() {
         $scope.$emit('SetupReady');
-    });
-
-    $scope.$watch('date.selectedDate', function(){
-        $scope.$emit('MonthChanged');
     });
 
     // 2. LOGIC. Chart creation and updates
     $scope.createChart = function ( chartName ) {
 
-        var traces = charts.find( function( item ){
+        var traces = $scope.charts.find( function( item ){
             return item.chartDiv === chartName;
         }).traces;
 
-        var layout = layouts[ chartName ];
+        var layout = $scope.layouts[ chartName ];
 
         if(chartName && layout && traces) {
             Plotly.newPlot( chartName, traces, layout);
@@ -423,7 +448,7 @@ exports.ExpensesDashboardCtrl = function( $scope, $charts, $date ) {
     };
     
     $scope.redrawChart = function( chartName, element ) {
-        $scope.charts.renewTrace( chartName, function( data ){
+        $scope.renewTrace( chartName, function( data ){
             element.data = data.traces;
             Plotly.redraw(element);
         });
@@ -682,7 +707,7 @@ exports.expenseCalendarSelectedDay = function($window) {
                 };
 
                 var r = el[0].getBoundingClientRect();
-                console.log(r);
+                // console.log(r);
                 scope.position.left = 0;
                 scope.position.top = 0;
 
@@ -693,7 +718,7 @@ exports.expenseCalendarSelectedDay = function($window) {
 
                 // 4. on 'scroll' event make it change the position
                 angular.element($window).bind('wheel', function(event) {
-                    console.log(event);
+                    // console.log(event);
                     if(event.deltaY < 0) {
                         scope.$emit('SelectedDayScrolledUp', {newTop: $window.scrollY});
                     }
@@ -814,6 +839,10 @@ exports.dailyVolumes = function() {
 
                 // >> when user delete Expense, we re-draw charts.
                 scope.$on('ExpenseDeleted', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                scope.$on('ExpenseConfirmed', function() {
                     scope.redrawChart( chartName, chartDiv );
                 });
             });
@@ -1066,7 +1095,7 @@ exports.$date = function () {
 
     s.getCells = function( day ) {
 
-        console.log(day);
+        // console.log(day);
         
         var date = day.date;
 

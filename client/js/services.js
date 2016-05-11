@@ -171,7 +171,7 @@ exports.$date = function () {
 
     s.getCells = function( day ) {
 
-        console.log(day);
+        // console.log(day);
         
         var date = day.date;
 

@@ -17,12 +17,12 @@
     {
       "chartDiv": "dailyVolumes",
       "layout": {
-        "height": 261,
+        "height": 150,
         "margin": {
           "l": 40,
-          "r": 10,
-          "t": 20,
-          "b": 25
+          "r": 5,
+          "t": 10,
+          "b": 15
         },
         "legend": {
           "bordercolor": "#3366CC",

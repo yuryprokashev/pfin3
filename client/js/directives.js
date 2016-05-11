@@ -165,7 +165,7 @@ exports.expenseCalendarSelectedDay = function($window) {
                 };
 
                 var r = el[0].getBoundingClientRect();
-                console.log(r);
+                // console.log(r);
                 scope.position.left = 0;
                 scope.position.top = 0;
 
@@ -176,7 +176,7 @@ exports.expenseCalendarSelectedDay = function($window) {
 
                 // 4. on 'scroll' event make it change the position
                 angular.element($window).bind('wheel', function(event) {
-                    console.log(event);
+                    // console.log(event);
                     if(event.deltaY < 0) {
                         scope.$emit('SelectedDayScrolledUp', {newTop: $window.scrollY});
                     }
@@ -297,6 +297,10 @@ exports.dailyVolumes = function() {
 
                 // >> when user delete Expense, we re-draw charts.
                 scope.$on('ExpenseDeleted', function() {
+                    scope.redrawChart( chartName, chartDiv );
+                });
+
+                scope.$on('ExpenseConfirmed', function() {
                     scope.redrawChart( chartName, chartDiv );
                 });
             });
