@@ -6,7 +6,7 @@ function dependencies( wagner ) {
     var fs = require( 'fs' );
     // now I register Config service, that reads content of the JSON and returns it as object
     wagner.factory( 'Config', function() {
-        var s = JSON.parse( fs.readFileSync( './server/config_prod.json' ).toString() );
+        var s = JSON.parse( fs.readFileSync( './server/config.json' ).toString() );
 
         // > getter for chart meta data based on chart name
         s.getChartTraces = function (chartDiv){
