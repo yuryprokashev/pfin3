@@ -19,10 +19,10 @@
       "layout": {
         "height": 261,
         "margin": {
-          "l": 30,
+          "l": 40,
           "r": 10,
           "t": 10,
-          "b": 10
+          "b": 15
         },
         "legend": {
           "bordercolor": "#3366CC",
