@@ -9,17 +9,33 @@ function auth ( User, server, Config ) {
     },
     function( accessToken, refreshToken, profile, cb ){
         //console.log(profile);
+
+        // var properties = profile.json.keys();
+        // var cookedProfile = {};
+        // for(var i in properties){
+        //     if(properties[i] !== undefined) {
+        //         cookedProfile[properties[i]] = profile.json[properties[i]];
+        //     }
+        //     else {}
+        // }
+        //
+        // if(profile.json) {
+        //     var familyName = profile.json.name.familyName
+        // }
+        // else {
+        //
+        // }
         User.findOneAndUpdate(
             { 'private.oauth': profile.id },
             {
                 $set: {
-                    'public.name.familyName': profile._json.name.familyName,
-                    'public.name.givenName': profile._json.name.givenName,
-                    'public.username': profile._json.displayName,
-                    'public.picture': profile._json.image.url,
-                    'private.google.gender': profile._json.gender,
-                    'private.google.language': profile._json.language,
-                    'private.google.circledByCount': profile._json.circledByCount
+                    'public.name.familyName': profile._json.name.familyName || null,
+                    'public.name.givenName': profile._json.name.givenName || null,
+                    'public.username': profile._json.displayName || null,
+                    'public.picture': profile._json.image.url || null,
+                    'private.google.gender': profile._json.gender || null,
+                    'private.google.language': profile._json.language || null,
+                    'private.google.circledByCount': profile._json.circledByCount || 0
                 }
             },
             { 'new': true, upsert: true },
