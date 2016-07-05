@@ -350,6 +350,11 @@ exports.ExpensesDashboardCtrl = function( $scope, $http ) {
     $scope.layouts = [];
     $scope.isRequestInProgress = false;
 
+    $scope.monthlyTotal = {
+        plan: 0,
+        fact: 0
+    };
+
     $scope.getLayouts = function( callback ) {
         $scope.isRequestInProgress = true;
         $http.get( '/api/v1/charts/meta' ).
@@ -384,6 +389,17 @@ exports.ExpensesDashboardCtrl = function( $scope, $http ) {
             $scope.isRequestInProgress = false;
         }, function errorCallback (res) {
             console.error('error in $scope.renewTrace');
+            console.log(res);
+        });
+    };
+
+    $scope.renewTotals = function(callback) {
+        $http.get( '/api/v1/total/' + $scope.getMonthId()).
+        then( function successCallback (res) {
+            callback(res.data);
+            $scope.isRequestInProgress = false;
+        }, function errorCallback (res) {
+            console.error('error in $scope.renewTotals');
             console.log(res);
         });
     };

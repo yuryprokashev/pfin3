@@ -401,21 +401,6 @@ var routes = function( wagner ) {
         }
     }));
 
-    // api that reject recommended expense as deleted.
-    // api.delete( '/recommend/expenses/:id', wagner.invoke( function( Expense ){
-    //     return function( req, res ) {
-    //         var _id = req.params.id;
-    //
-    //         Expense.findByIdAndUpdate( _id, { $set: {
-    //             "labels.isDeleted": true
-    //         } }, { new: true }, function  deleteCalllback ( err, result ) {
-    //             if (err) { res.json(err) }
-    //             res.json({ _id: _id, expense: result, status: true });
-    //         });
-    //     }
-    // }));
-
-
     // API to get Common data (references for Category and Currency)
     // api to get currencies and categories references
     api.get( '/common/:name', wagner.invoke( function( Category, Currency ){
@@ -640,6 +625,42 @@ var routes = function( wagner ) {
         res.format = "application/json";
         res.json({ guid: require('./guid')() });
     });
+
+    // api that gets all expenses for given user and specified monthId.
+    api.get( '/total/:monthId', wagner.invoke( function( Expense ) {
+        return function( req, res ){
+            var user = req.user;
+            if (!user) { res.json({ error: "Please, log in" }); }
+
+            else {
+                var mId = req.params.monthId;
+
+                if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
+                    var month = mId.length === 6 ? mId.substring(4,6) : mId.substring(4,5);
+                    // var agg = [
+                    //     {$match: {user: user._id.toString(), "labels.isDeleted": false}},
+                    //     {$project: {_id:1, amount:1, description:1, date:1, labels:1, month: {$month: "$date"}}},
+                    //     {$match: {month: Number(month) + 1}},
+                    //     {$project: { _id:1, amount:1, description:1, labels:1, day: {$dayOfMonth: "$date"}}},
+                    //     {$group: {_id:"$day", dayTotal: {$sum: "$amount"}, dayCount:{$eq:{"labels.isConfirmed": false, $sum: 1}}, expenses: {$push:{_id:"$_id", amount:"$amount", description:"$description", labels: "$labels"}}}},
+                    //     {$sort: {_id: 1}}
+                    // ];
+
+
+                    var agg = [{$match: {user: user._id.toString(), "labels.isDeleted": false}},
+                        {$project: {_id:1, amount:1, labels:1, month: {$month: "$date"}}},
+                        {$match: {month: Number(month) + 1}},
+                        {$group: {_id:"$month", monthTotalFact: {$sum: {$cond: [{$eq:["$labels.isConfirmed", true]}, "$amount", 0]}}, monthTotalPlan: {$sum: {$cond: [{$eq:["$labels.isConfirmed", false]}, "$amount", 0]}}}}]
+
+                    Expense.aggregate(agg).exec( function(err, result){
+                        if(err) { console.log(err) }
+                        res.json(result);
+                    });
+                }
+                else { console.error('wrong monthId length is passed to api'); }
+            }
+        }
+    }));
 
     return api;
 };

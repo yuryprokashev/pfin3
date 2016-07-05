@@ -387,6 +387,11 @@ exports.ExpensesDashboardCtrl = function( $scope, $http ) {
     $scope.layouts = [];
     $scope.isRequestInProgress = false;
 
+    $scope.monthlyTotal = {
+        plan: 0,
+        fact: 0
+    };
+
     $scope.getLayouts = function( callback ) {
         $scope.isRequestInProgress = true;
         $http.get( '/api/v1/charts/meta' ).
@@ -421,6 +426,17 @@ exports.ExpensesDashboardCtrl = function( $scope, $http ) {
             $scope.isRequestInProgress = false;
         }, function errorCallback (res) {
             console.error('error in $scope.renewTrace');
+            console.log(res);
+        });
+    };
+
+    $scope.renewTotals = function(callback) {
+        $http.get( '/api/v1/total/' + $scope.getMonthId()).
+        then( function successCallback (res) {
+            callback(res.data);
+            $scope.isRequestInProgress = false;
+        }, function errorCallback (res) {
+            console.error('error in $scope.renewTotals');
             console.log(res);
         });
     };
@@ -826,24 +842,54 @@ exports.dailyVolumes = function() {
             scope.$on( 'SetupReady', function () {
                 scope.createChart( chartName );
                 scope.redrawChart( chartName, chartDiv );
+                scope.renewTotals(function(data){
+                    if(data.length) {
+                        scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                        scope.monthlyTotal.fact = data[0].monthTotalFact;
+                    }
+                });
 
                 // >> when we change month, we re-draw charts
                 scope.$on('MonthChanged', function() {
                     scope.redrawChart( chartName, chartDiv );
+                    scope.renewTotals(function(data){
+                        if(data.length) {
+                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                            scope.monthlyTotal.fact = data[0].monthTotalFact;
+                        }
+                    });
                 });
 
                 // >> when user create Expense, we re-draw charts
                 scope.$on('ExpenseCreated', function(){
                     scope.redrawChart( chartName, chartDiv );
+                    scope.renewTotals(function(data){
+                        if(data.length) {
+                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                            scope.monthlyTotal.fact = data[0].monthTotalFact;
+                        }
+                    });
                 });
 
                 // >> when user delete Expense, we re-draw charts.
                 scope.$on('ExpenseDeleted', function() {
                     scope.redrawChart( chartName, chartDiv );
+                    scope.renewTotals(function(data){
+                        if(data.length) {
+                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                            scope.monthlyTotal.fact = data[0].monthTotalFact;
+                        }
+                    });
                 });
 
                 scope.$on('ExpenseConfirmed', function() {
                     scope.redrawChart( chartName, chartDiv );
+                    scope.renewTotals(function(data){
+                        if(data.length) {
+                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                            scope.monthlyTotal.fact = data[0].monthTotalFact;
+                        }
+                    });
                 });
             });
         }
