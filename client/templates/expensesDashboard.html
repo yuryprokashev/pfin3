@@ -3,12 +3,20 @@
         <div class="panel panel-info">
             <div class = "panel-heading">Daily Expenses volume in current month by day</div>
             <div class = "panel-body">
-                <div class = "list-group">
-                    <div class = "list-group-item disabled">
-                        Currently spent this month: {{monthlyTotal.fact|number:0}} RUB
+                <div class = "row">
+                    <div class="col-md-6">
+                        <div class = "list-group">
+                            <div class = "list-group-item text-muted">
+                                Currently spent this month: {{monthlyTotal.fact|number:0}} RUB
+                            </div>
+                        </div>
                     </div>
-                    <div class = "list-group-item active">
-                        Currently planned for this month: {{monthlyTotal.plan|number:0}} RUB
+                    <div class="col-md-6">
+                        <div class = "list-group">
+                            <div class = "list-group-item text-primary">
+                                Currently planned this month: {{monthlyTotal.plan|number:0}} RUB
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div daily-volumes ></div>
