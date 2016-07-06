@@ -4,17 +4,24 @@
             <div class = "panel-heading">Daily Expenses volume in current month by day</div>
             <div class = "panel-body">
                 <div class = "row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class = "list-group">
                             <div class = "list-group-item text-muted">
                                 Currently spent this month: {{monthlyTotal.fact|number:0}} RUB
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class = "list-group">
                             <div class = "list-group-item text-primary">
                                 Currently planned this month: {{monthlyTotal.plan|number:0}} RUB
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class = "list-group">
+                            <div class = "list-group-item text-danger">
+                                Total budget this month: {{monthlyTotal.plan + monthlyTotal.fact|number:0}} RUB
                             </div>
                         </div>
                     </div>
