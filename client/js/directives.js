@@ -23,9 +23,6 @@ exports.expensesCalendar = function() {
         controller: "ExpensesCalendarCtrl",
         templateUrl: '/assets/templates/expensesCalendar.html',
         link: function (scope, el, attrs, controllers) {
-            // console.log('expensesCalendar directive');
-            // console.log(scope);
-            // console.log(el[0]);
             scope.emitDaySelectionRequest = function(day) {
                 scope.$emit('DaySelectionRequest', {day: day});
             };
@@ -65,7 +62,6 @@ exports.expenseCalendarDay = function() {
                 if(scope.day.date) {
                     if(args.day.date.getDate() === scope.day.date.getDate()) {
                         scope.isSelected = true;
-                        console.log('day is selected');
                     }
                 }
             });
@@ -280,25 +276,33 @@ exports.dailyVolumes = function() {
 
             var chartName = 'dailyVolumes';
             var chartDiv = el[0].children[0];
+
+            var justRenewAll = function(data) {
+                if(data.length) {
+                    scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                    scope.monthlyTotal.fact = data[0].monthTotalFact;
+                }
+                else {
+                    scope.monthlyTotal.plan = 0;
+                    scope.monthlyTotal.fact = 0;
+                }
+                scope.totalMonth = scope.monthlyTotal.plan + scope.monthlyTotal.fact;
+                scope.isRedrawProgressBar = true;
+            };
             
             scope.$on( 'SetupReady', function () {
                 scope.createChart( chartName );
                 scope.redrawChart( chartName, chartDiv );
                 scope.renewTotals(function(data){
-                    if(data.length) {
-                        scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                        scope.monthlyTotal.fact = data[0].monthTotalFact;
-                    }
+                    justRenewAll(data);
                 });
 
                 // >> when we change month, we re-draw charts
                 scope.$on('MonthChanged', function() {
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
+                        // console.log(scope.isRedrawProgressBar);
                     });
                 });
 
@@ -306,10 +310,7 @@ exports.dailyVolumes = function() {
                 scope.$on('ExpenseCreated', function(){
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
                     });
                 });
 
@@ -317,20 +318,14 @@ exports.dailyVolumes = function() {
                 scope.$on('ExpenseDeleted', function() {
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
                     });
                 });
 
                 scope.$on('ExpenseConfirmed', function() {
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
                     });
                 });
             });
@@ -395,7 +390,6 @@ exports.expenseFrequency = function() {
                 scope.$on('ExpenseDeleted', function() {
                     scope.redrawChart( chartName, chartDiv );
                 });
-                console.log(controllers);
             });
         }
     }

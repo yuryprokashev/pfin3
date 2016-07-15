@@ -222,3 +222,7 @@ expense-calendar-selected-day .new-recommendations-badge {
 expense-calendar-selected-day {
     width: 18.5em;
 }
+
+.expense-dashboard-progress {
+    margin-bottom: 0px;
+}

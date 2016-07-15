@@ -183,7 +183,6 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
             expense.labels.isCalendarDayFormShown = true;
         }
         else if(emitter === '<expense-calendar-selected-day-item>') {
-            console.log('code to be written, but link works');
             expense.labels.isSelectedDayFormShown = true;
         }
 
@@ -392,6 +391,26 @@ exports.ExpensesDashboardCtrl = function( $scope, $http ) {
         fact: 0
     };
 
+    $scope.style = {};
+
+    $scope.totalMonth = 0;
+    $scope.isRedrawProgressBar = true;
+
+    $scope.$watch('isRedrawProgressBar', function(newVal, oldVal){
+        if(newVal === true) {
+            if($scope.totalMonth > 0) {
+                $scope.style.plan = {width: Math.ceil((100 * $scope.monthlyTotal.plan)/$scope.totalMonth) + "%"};
+                $scope.style.fact = {width: Math.floor((100 * $scope.monthlyTotal.fact)/$scope.totalMonth) + "%"};
+            }
+            else if($scope.totalMonth === 0) {
+                $scope.style.plan = {width: 50 + "%"};
+                $scope.style.fact = {width: 50 + "%"};
+            }
+            $scope.isRedrawProgressBar = false;
+        }
+    });
+
+
     $scope.getLayouts = function( callback ) {
         $scope.isRequestInProgress = true;
         $http.get( '/api/v1/charts/meta' ).
@@ -581,9 +600,6 @@ exports.expensesCalendar = function() {
         controller: "ExpensesCalendarCtrl",
         templateUrl: '/assets/templates/expensesCalendar.html',
         link: function (scope, el, attrs, controllers) {
-            // console.log('expensesCalendar directive');
-            // console.log(scope);
-            // console.log(el[0]);
             scope.emitDaySelectionRequest = function(day) {
                 scope.$emit('DaySelectionRequest', {day: day});
             };
@@ -623,7 +639,6 @@ exports.expenseCalendarDay = function() {
                 if(scope.day.date) {
                     if(args.day.date.getDate() === scope.day.date.getDate()) {
                         scope.isSelected = true;
-                        console.log('day is selected');
                     }
                 }
             });
@@ -838,25 +853,33 @@ exports.dailyVolumes = function() {
 
             var chartName = 'dailyVolumes';
             var chartDiv = el[0].children[0];
+
+            var justRenewAll = function(data) {
+                if(data.length) {
+                    scope.monthlyTotal.plan = data[0].monthTotalPlan;
+                    scope.monthlyTotal.fact = data[0].monthTotalFact;
+                }
+                else {
+                    scope.monthlyTotal.plan = 0;
+                    scope.monthlyTotal.fact = 0;
+                }
+                scope.totalMonth = scope.monthlyTotal.plan + scope.monthlyTotal.fact;
+                scope.isRedrawProgressBar = true;
+            };
             
             scope.$on( 'SetupReady', function () {
                 scope.createChart( chartName );
                 scope.redrawChart( chartName, chartDiv );
                 scope.renewTotals(function(data){
-                    if(data.length) {
-                        scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                        scope.monthlyTotal.fact = data[0].monthTotalFact;
-                    }
+                    justRenewAll(data);
                 });
 
                 // >> when we change month, we re-draw charts
                 scope.$on('MonthChanged', function() {
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
+                        // console.log(scope.isRedrawProgressBar);
                     });
                 });
 
@@ -864,10 +887,7 @@ exports.dailyVolumes = function() {
                 scope.$on('ExpenseCreated', function(){
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
                     });
                 });
 
@@ -875,20 +895,14 @@ exports.dailyVolumes = function() {
                 scope.$on('ExpenseDeleted', function() {
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
                     });
                 });
 
                 scope.$on('ExpenseConfirmed', function() {
                     scope.redrawChart( chartName, chartDiv );
                     scope.renewTotals(function(data){
-                        if(data.length) {
-                            scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                            scope.monthlyTotal.fact = data[0].monthTotalFact;
-                        }
+                        justRenewAll(data);
                     });
                 });
             });
@@ -953,7 +967,6 @@ exports.expenseFrequency = function() {
                 scope.$on('ExpenseDeleted', function() {
                     scope.redrawChart( chartName, chartDiv );
                 });
-                console.log(controllers);
             });
         }
     }

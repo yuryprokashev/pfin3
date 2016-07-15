@@ -146,7 +146,6 @@ exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
             expense.labels.isCalendarDayFormShown = true;
         }
         else if(emitter === '<expense-calendar-selected-day-item>') {
-            console.log('code to be written, but link works');
             expense.labels.isSelectedDayFormShown = true;
         }
 
@@ -354,6 +353,26 @@ exports.ExpensesDashboardCtrl = function( $scope, $http ) {
         plan: 0,
         fact: 0
     };
+
+    $scope.style = {};
+
+    $scope.totalMonth = 0;
+    $scope.isRedrawProgressBar = true;
+
+    $scope.$watch('isRedrawProgressBar', function(newVal, oldVal){
+        if(newVal === true) {
+            if($scope.totalMonth > 0) {
+                $scope.style.plan = {width: Math.ceil((100 * $scope.monthlyTotal.plan)/$scope.totalMonth) + "%"};
+                $scope.style.fact = {width: Math.floor((100 * $scope.monthlyTotal.fact)/$scope.totalMonth) + "%"};
+            }
+            else if($scope.totalMonth === 0) {
+                $scope.style.plan = {width: 50 + "%"};
+                $scope.style.fact = {width: 50 + "%"};
+            }
+            $scope.isRedrawProgressBar = false;
+        }
+    });
+
 
     $scope.getLayouts = function( callback ) {
         $scope.isRequestInProgress = true;
