@@ -1,3 +1,6 @@
+.main-page-feature-widget {
+    height: auto;
+}
 .my-form {
     margin-bottom: 0em;
 }
@@ -226,3 +229,5 @@ expense-calendar-selected-day {
 .expense-dashboard-progress {
     margin-bottom: 0px;
 }
+
+.progress-bar-muted {background: rgba(119, 119, 119, 1);}

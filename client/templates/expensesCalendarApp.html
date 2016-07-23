@@ -9,15 +9,8 @@
             </div>
         </div>
     </div>
-    <div class = "col-md-12">
-        <expenses-dashboard></expenses-dashboard>
-    </div>
     <div class = "col-md-9">
-        <div class = "panel panel-default">
-            <div class = "panel-body cal-panel">
-                <expenses-calendar></expenses-calendar>
-            </div>
-        </div>
+        <expenses-dashboard></expenses-dashboard>
     </div>
     <div class="col-md-3">
         <expense-calendar-selected-day ng-dblclick = "emitExpenseCreateRequest($event, selectedDay)"
@@ -27,6 +20,13 @@
                                        ext-get-recommendations-count = "getRecommendationsCount(selectedDay.date)"
                                        ext-is-weekend = "isWeekend(selectedDay.date)">
         </expense-calendar-selected-day>
+    </div>
+    <div class = "col-md-12">
+        <div class = "panel panel-default">
+            <div class = "panel-body cal-panel">
+                <expenses-calendar></expenses-calendar>
+            </div>
+        </div>
     </div>
 </div>
 

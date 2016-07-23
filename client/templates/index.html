@@ -30,15 +30,28 @@
                 <ul class="nav navbar-nav">
                     <li><a href = "#/" class = "navbar-brand">Personal Finance</a></li>
                     <!--<li><a href = "#dashboard">Dashboard</a></li>-->
-                    <li><a href = "#calendar">Calendar</a></li>
+                    <li><a href = "#calendar">Log and Plan</a></li>
                 </ul>
             </div>
             <div class="navbar-header navbar-right">
                 <ul class = "nav navbar-nav">
                     <li>
+                        <a class="fa fa-google-plus-square fa-2x"
+                           href="/auth/google"
+                           ng-show = "!user._id"
+                           aria-hidden="true"></a>
+                    </li>
+                    <li>
+                        <a class="fa fa-facebook-square fa-2x"
+                           href="/auth/facebook"
+                           ng-show = "!user._id"
+                           aria-hidden="true"></a>
+                    </li>
+                    <li>
                         <a class = "fa fa-sign-out fa-2x"
                            href = "/auth/logout"
-                           ng-show = "user"></a>
+                           ng-show = "user._id"
+                           aria-hidden="true"></a>
                     </li>
                     <li class="navbar-right" ng-show = "user._id">
                         <img ng-src="{{ user.public.picture }}">
@@ -49,8 +62,7 @@
     </nav>  <!--end of navigation -->
 </header>
 
-<div class="container"
-     ng-view></div> <!-- end of content area -->
+<div class="container-fluid" ng-view></div> <!-- end of content area -->
 
 <footer></footer> <!-- end of footer -->
 </body>

@@ -1,6 +1,101 @@
-<div class="jumbotron">
-    <h1>Personal Finance</h1>
-    <p>Calendar app, you get used to, can now help you to track your expenses.</p>
-    <p>Enjoy easy expense input, budgeting, and instant monthly reporting.</p>
-    <p><a class = "btn btn-success" ng-show = "!user._id" href = '/auth/google'>Sign In with Google Account</a></p>
+<div class="jumbotron" ng-show = "!user._id">
+    <h1>Make First Step to Your Financial Freedom</h1>
+    <p>Sign up in with your favourite social network account&#160&#160&#160
+        <a class="fa fa-google-plus-square fa-2x text-danger"
+           href="/auth/google"
+           ng-show = "!user._id"
+           aria-hidden="true"></a>
+        <a class="fa fa-facebook-square fa-2x text-primary"
+           href="/auth/facebook"
+           ng-show = "!user._id"
+           aria-hidden="true"></a>
+    </p>
+</div>
+<div class="row">
+    <div class="col-md-4" ng-mouseenter = "isLeftBlockHighlighted = false" ng-mouseleave = "isLeftBlockHighlighted = false">
+        <div class="jumbotron">
+            <div ng-show = "!isLeftBlockHighlighted">
+                <div style="height: 2em">
+                    <p class="text-center">Spend just</p>
+                </div>
+                <div style="height: 6em">
+                    <h1 class="text-center">5</h1>
+                </div>
+                <div style="height: 6em">
+                    <p class="text-center">minutes per day</p>
+                    <!--<p class="text-center">to log your expenses</p>-->
+                    <p class="text-center">for budget planning</p>
+                </div>
+            </div>
+            <div ng-show = "isLeftBlockHighlighted">
+                <div style="height: 4em">
+                </div>
+                <div style="height: 6em">
+                    <h1 class="text-center" >Fast</h1>
+                </div>
+                <div style="height: 4em">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4" ng-mouseenter = "isCenterBlockHighlighted = false" ng-mouseleave = "isCenterBlockHighlighted = false">
+        <div class="jumbotron">
+            <div ng-show = "!isCenterBlockHighlighted">
+                <div style="height: 2em">
+                    <p class="text-center">Use familiar app</p>
+                </div>
+                <div style="height: 6em">
+                    <h1 class="text-center">
+                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                    </h1>
+                </div>
+                <div style="height: 6em">
+                    <p class="text-center">for logging</p>
+                    <p class="text-center">and planning</p>
+                </div>
+            </div>
+            <div ng-show = "isCenterBlockHighlighted">
+                <div style="height: 4em">
+                </div>
+                <div style="height: 6em">
+                    <h1 class="text-center" >Simple</h1>
+                </div>
+                <div style="height: 4em">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4" ng-mouseenter = "isRightBlockHighlighted = false" ng-mouseleave = "isRightBlockHighlighted = false">
+        <div class="jumbotron">
+            <div ng-show = "!isRightBlockHighlighted">
+                <div style="height: 2em">
+                    <p class="text-center">Track a few things</p>
+                </div>
+                <div style="height: 5em">
+                    <h1>
+                        <div class = "progress expense-dashboard-progress">
+                            <div class="progress-bar progress-bar-muted" ng-style = "{width: '50%'}">Month: Spent</div>
+                            <div class="progress-bar" ng-style = "{width: '50%'}">Month: Planned</div>
+                        </div>
+                        <div class="progress expense-dashboard-progress">
+                            <div class = "progress-bar progress-bar-success" ng-style = "{width: '100%'}">Month: Total Budget</div>
+                        </div>
+                    </h1>
+                </div>
+                <div style="height: 7em">
+                    <p class="text-center">but have full control</p>
+                    <p class="text-center">over your budget</p>
+                </div>
+            </div>
+            <div ng-show = "isRightBlockHighlighted">
+                <div style="height: 4em">
+                </div>
+                <div style="height: 6em">
+                    <h1 class="text-center" >Control</h1>
+                </div>
+                <div style="height: 4em">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

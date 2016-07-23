@@ -8,13 +8,22 @@
                         <div class="list-group">
                             <div class = "list-group-item text-danger">
                                 <div class = "row">
-                                    <div class="col-md-4">
-                                        <p>Total budget this month: {{monthlyTotal.plan + monthlyTotal.fact|number:0}} R</p>
-                                    </div>
-                                    <div class="col-md-8">
+                                    <div class="col-md-12">
                                         <div class = "progress expense-dashboard-progress">
-                                            <div class="progress-bar progress-bar-success" ng-style = "style.fact">{{monthlyTotal.fact|number:0}} R</div>
-                                            <div class="progress-bar" ng-style = "style.plan">{{monthlyTotal.plan|number:0}} R</div>
+                                            <div class="progress-bar progress-bar-muted" ng-style = "style.fact">
+                                                {{monthlyTotal.fact|number:0}}
+                                                <i class="fa fa-rub" aria-hidden="true"></i>
+                                            </div>
+                                            <div class="progress-bar" ng-style = "style.plan">
+                                                {{monthlyTotal.plan|number:0}}
+                                                <i class="fa fa-rub" aria-hidden="true"></i>
+                                            </div>
+                                        </div>
+                                        <div class="progress expense-dashboard-progress">
+                                            <div class = "progress-bar progress-bar-success" ng-style = "{width: '100%'}">
+                                                Total budget: {{monthlyTotal.plan + monthlyTotal.fact|number:0}}
+                                                <i class="fa fa-rub" aria-hidden="true"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -22,7 +31,7 @@
                         </div>
                     </div>
                 </div>
-                <div daily-volumes ></div>
+                <div daily-volumes ng-show = "false"></div>
             </div>
         </div>
     </div>

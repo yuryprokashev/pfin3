@@ -1,6 +1,14 @@
 <div class = "center-block">
     <div class="alert alert-danger" role="alert">
-        <p>You are not logged in.</p>
-        <a href="/auth/google" class="alert-link">Click here to sign in with your Google account.</a>
+        <p>You are not logged in. Sign up, or Log in with your favourite social network account&#160&#160&#160
+            <a class="fa fa-google-plus-square fa-2x text-danger"
+               href="/auth/google"
+               ng-show = "!user._id"
+               aria-hidden="true"></a>
+            <a class="fa fa-facebook-square fa-2x text-primary"
+               href="/auth/facebook"
+               ng-show = "!user._id"
+               aria-hidden="true"></a>
+        </p>
     </div>
 </div>
