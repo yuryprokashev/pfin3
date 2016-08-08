@@ -1,0 +1,11 @@
+<div class="row" ng-show = "false">
+    <div class="col-md-4" ng-repeat = "c in self.dayNames track by $index">
+        <div class="col-md-4" ng-repeat = "dayName in c track by $index">
+            <p class="text-center"> {{dayName}}</p>
+        </div>
+    </div>
+</div>
+<div class="row" ng-repeat = "w in self.weeks track by $index"
+     ng-style="self.style">
+    <week ext-week = "w"></week>
+</div>

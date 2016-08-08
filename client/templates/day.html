@@ -1,0 +1,23 @@
+<div class="panel day-{{self.html.totalWeeks}} expanded-{{self.html.isInSelectedWeek}}"
+     ng-class = "{'panel-primary': self.html.isSelected, 'panel-default no-border': !self.html.isSelected}">
+    <div class="panel-body">
+        <p>
+            <span class="badge progress-bar-primary badge-calendar-day"
+                  ng-show = "self.html.isSelected">{{self.dayNum}}</span>
+            <span class="badge progress-bar-muted light badge-calendar-day"
+                  ng-show = "!self.html.isSelected && !self.html.isFuture">{{self.dayNum}}</span>
+            <span class="badge progress-bar-primary light badge-calendar-day"
+                  ng-show = "!self.html.isSelected && self.html.isFuture">{{self.dayNum}}</span>
+            <span class="text-muted small">
+                {{self.html.sum("amount", self.html.items) | number : 0}}
+                <i class="fa fa-rub" aria-hidden="true"></i>
+            </span>
+        </p>
+        <div class = "list-group">
+            <div class="list-group-item" ng-repeat = "e in self.html.items.slice(0, self.html.maxItems) track by $index">
+                <item ext-item = "e"></item>
+            </div>
+        </div>
+    </div>
+</div>
+

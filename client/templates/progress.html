@@ -1,0 +1,18 @@
+<div>
+    <div class = "progress expense-dashboard-progress">
+        <div class="progress-bar progress-bar-muted" ng-style = "self.style.fact">
+            {{self.totals.fact | number:0}}
+            <i class="fa fa-rub" aria-hidden="true"></i>
+        </div>
+        <div class="progress-bar" ng-style = "self.style.plan">
+            {{self.totals.plan | number:0}}
+            <i class="fa fa-rub" aria-hidden="true"></i>
+        </div>
+    </div>
+    <div class="progress expense-dashboard-progress">
+        <div class = "progress-bar progress-bar-success" ng-style = "{width: '100%'}">
+            {{self.totals.plan + self.totals.fact | number : 0}}
+            <i class="fa fa-rub" aria-hidden="true"></i>
+        </div>
+    </div>
+</div>

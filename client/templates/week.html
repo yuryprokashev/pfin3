@@ -1,0 +1,24 @@
+<div>
+    <div class="col-md-11 week-expander"
+         ng-show = "true"
+         ng-mouseenter = "isHover = true"
+         ng-mouseleave = "isHover = false">
+        <div>
+        <span class="text-muted">
+                <i class="fa fa-chevron-circle-right fa-lg"
+                   aria-hidden="true"
+                ng-click = "$emit('update', {newWeek: self.weekNum, index: $index})"></i>
+        </span>
+            <p class="text-center">
+                {{self.html.daysRange[0]}} - {{self.html.daysRange[1]}}
+            </p>
+        </div>
+    </div>
+    <div class="col-md-6"
+         ng-repeat = "c in self.html.days track by $index">
+        <div class="col-md-3" ng-repeat = "d in c track by $index">
+            <day ext-day = "d" ng-if = "d"></day>
+        </div>
+    </div>
+</div>
+

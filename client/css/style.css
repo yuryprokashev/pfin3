@@ -50,10 +50,10 @@ expense-calendar-day .list-group-item p, expense-calendar-day-item p {
     /*top: -4em;*/
     left: 0;
     top: 0;
-    width: 14em;
+    /*width: 14em;*/
     height: auto;
     background-color: white;
-    z-index: 3;
+    /*z-index: 3;*/
 }
 .border {
     border: 1px solid #666;
@@ -131,6 +131,7 @@ expense-calendar-day .list-group-item p, expense-calendar-day-item p {
 .buttons-panel {
     padding-top: 5px;
     padding-bottom: 5px;
+    margin-bottom: 0px;
 }
 
 .buttons-panel button {
@@ -139,24 +140,24 @@ expense-calendar-day .list-group-item p, expense-calendar-day-item p {
 
 /*EXPENSE POP-UP FORM IN CALENDAR*/
 /*-BASIC STYLE*/
-.expense-pop-up.form-control.input-xs {
+.expense-pop-up.form-control {
     display: inline-block;
     padding: 0px 0px 0px 5px;
     width: 100%;
     border-top-width: 0px;
     border-bottom-width: 0px;
-    font-size: 10px;
+    /*font-size: 10px;*/
     border-radius: 0px;
 }
 /*-STYLE AMOUNT ROW IN HEADER*/
 /*-- make it white color on the blue bg*/
-.expense-pop-up.form-control.input-xs.input-primary {
+.expense-pop-up.form-control.input-primary {
     background-color: #337AB7;
     color: white;
 }
 /*-- make it short, so it fits in one row with 'Spent:' label*/
-.expense-pop-up.form-control.input-xs.short {
-    width: 67%;
+.expense-pop-up.form-control.short {
+    width: 72%;
 }
 /*End of classes for expense pop-up in calendar*/
 
@@ -193,7 +194,7 @@ expense-calendar-day .list-group-item p, expense-calendar-day-item p {
     height: 14px;
     border-top-width: 0px;
     border-bottom-width: 0px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 textarea {
@@ -230,4 +231,123 @@ expense-calendar-selected-day {
     margin-bottom: 0px;
 }
 
+
+
+/*BOOTSTRAP COLOR CUSTOMIZATION FOR PROGRESS BAR WIDGET*/
 .progress-bar-muted {background: rgba(119, 119, 119, 1);}
+/*- it is used in Calendar to highlight selected Day and non selected days*/
+.progress-bar-primary {background: rgba(66, 139, 202, 1);}
+.progress-bar-muted-light{background: rgba(119, 119, 119, 0.5);}
+.light {
+    opacity: 0.5;
+}
+
+/*NEW CALENDAR CLASSES*/
+/*I need this class to show full width row of 7 days*/
+calendar .row {
+    /*!IMPORTANT: when you change below params, it will affect 'week .col-md-4' style*/
+    margin-left: 0;
+    margin-right: -14.5%;
+    z-index: 0;
+}
+
+week .col-md-3, .col-md-4, .col-md-6 {
+    /*!IMPORTANT: when you change below params, it will affect 'calendar .row' style*/
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+/*DAY HEIGHT AND MARGIN BETWEEN WEEK ROWS*/
+/*CLASSES TO CONTROL WEEK EXPANSION AND COLLAPSE ON DAY LEVEL*/
+day .panel.day-4 {
+    margin-bottom: 5%;
+}
+day .day-4.expanded-true {
+    height: 53.3%;
+}
+day .day-4.expanded-false {
+    height: 7%;
+}
+
+day .panel.day-5 {
+    margin-bottom: 4%;
+}
+day .day-5.expanded-true {
+    height: 47%;
+}
+day .day-5.expanded-false {
+    height: 6%;
+}
+
+day .panel.day-6 {
+    margin-bottom: 3%;
+}
+day .day-6.expanded-true {
+    height: 48%;
+}
+day .day-6.expanded-false {
+    height: 4%;
+}
+
+/*CLOSER DAYS BETWEEN EACH OTHER*/
+day .panel-body {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+day .list-group-item {
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 0px;
+    border-style: none;
+}
+
+/*TEXT OVERFLOW CLASS*/
+.truncate-ellipsis {
+    white-space: nowrap;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/*REMOVE BORDER FROM ELEMENT CLASS*/
+.no-border {
+    border-style: none;
+    box-shadow: none;
+}
+
+/*CALENDAR DAY HIGHLIGHT*/
+.badge-calendar-day {
+    font-size: 14px;
+    font-weight: 300;
+}
+
+/*LIGHT FONT WEIGHT IN ALL BODY DESCENDANTD*/
+body {
+    font-weight: 300;
+}
+
+/*HIGHLIGHT ON HOVER WITH GREY COLOR*/
+.highlight-on-hover {
+    background-color: rgba(119, 119, 119, 0.3);
+}
+
+/*ROW WITH WEEK EXPANDER BUTTON AND WEEK START DAY AND WEEK END DAY*/
+.week-expander {
+    padding: 2px 0 2px 4px;
+}
+.week-expander p {
+    display: inline-block;
+    width: 90%;
+    margin: 2px 0 2px 0;
+}
+
+/*MESSAGE POP UP STYLE*/
+/*MAKE PADDINGS LESS THAN IN DEFAULT BOOTSTRAP*/
+message-form .panel-body {
+    padding: 3px 3px 3px 3px;
+}
+
+message-form .panel-heading {
+    padding: 10px 3px 10px 4px;
+}

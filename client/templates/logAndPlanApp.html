@@ -1,0 +1,16 @@
+<div class = "row" ng-show = "!user._id">
+    <not-logged-in></not-logged-in>
+</div>
+<div class = "row" ng-show = "user._id">
+    <div class="col-md-12">
+        <message-form ext-message = "view.expensePoster"></message-form>
+    </div>
+    <div class="col-md-2">
+        <month-switch ext-month-switch-view = "view.monthSwitchView"></month-switch>
+    </div>
+    <div class = "col-md-10" style = "padding-left: 0px">
+        <calendar ext-calendar = "view.calendarView"></calendar>
+    </div>
+</div>
+
+

@@ -1,4 +1,51 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/**
+ * Created by py on 23/07/16.
+ */
+
+var AppView;
+
+var MonthSwitch = require('../../common/MonthSwitch');
+var Calendar = require('../../common/Calendar');
+var Dashboard = require('../../common/Dashboard');
+var MessagePoster = require('../../common/MessagePoster');
+var PusherClient = require('../../common/PusherClient');
+
+AppView = function(httpService) {
+
+    var Shared = require('../../common/Shared');
+    Shared.change("http", httpService);
+    var state = Shared.getInstance().state;
+
+    this.state = state;
+
+    this.monthSwitchView = new MonthSwitch(state);
+    this.calendarView = new Calendar(state);
+    this.dashboardView = new Dashboard(state);
+    this.expensePoster = new MessagePoster(state);
+
+    this.update = function(state) {
+        this.monthSwitchView.update(state);
+        this.calendarView.update(state);
+        this.dashboardView.update(state);
+        this.expensePoster.update(state);
+        console.log(this);
+    };
+
+    var self = this;
+    // param: Object data - arbitrary object received by PusherClient
+    // function: request update for all data in views
+    // return: void
+    var messageScoredCallback = function (data) {
+        self.update(state);
+    };
+    PusherClient.subscribe("message", "message::scored", messageScoredCallback);
+
+    this.update(state);
+};
+
+module.exports = AppView;
+},{"../../common/Calendar":6,"../../common/Dashboard":7,"../../common/MessagePoster":12,"../../common/MonthSwitch":14,"../../common/PusherClient":16,"../../common/Shared":17}],2:[function(require,module,exports){
 var controllers = require( './controllers.js' );
 var directives = require( './directives.js' );
 var services = require( './services.js' );
@@ -26,962 +73,208 @@ client.config( function( $routeProvider ){
         when ('/', {
         templateUrl: 'assets/templates/main.html'
     }).
-        when ('/dashboard', {
-        templateUrl: 'assets/templates/expensesApp.html'
-    }).
     when ('/calendar', {
-        templateUrl: 'assets/templates/expensesCalendarApp.html'
+        templateUrl: 'assets/templates/logAndPlanApp.html'
     });
 
 });
-},{"./controllers.js":2,"./directives.js":3,"./services.js":4,"underscore":6}],2:[function(require,module,exports){
-exports.ExpensesCalendarAppCtrl = function( $scope, $user, $date, $http ) {
+},{"./controllers.js":3,"./directives.js":4,"./services.js":5,"underscore":21}],3:[function(require,module,exports){
+exports.pfinAppCtrl = function ($scope, $views, $user) {
+    var Shared = require('../../common/Shared');
+    var MyDates = require('../../common/MyDates');
+    var state = Shared.getInstance().state;
 
-    // MODEL
-    var Expense = function(args) {
-        if(!args.user) {
-            console.error('Expense created with undefined user');
-            console.log(args.user);
-        }
-        else {
-            this.user = args.user;
-        }
-
-        this.date = args.date || $date.selectedDate;
-        this.amount = args.amount;
-        this.description = args.description;
-        if(!args.labels) {
-            this.labels = {isConfirmed: true, isDeleted: false, isDefault: false};
-        }
-        else {
-            this.labels = args.labels;
-        }
-    };
-    Expense.prototype = {
-
-    };
-
-    $scope.user = {};
-    $scope.date = $date;
-    $scope.cells = [];
-    $scope.expenseList = [];
-    $scope.newExpense = {};
-    $scope.expenseFormPositions = [];
-    $scope.selectedDay = {date: new Date()};
-    $scope.months = [];
-    
-    // METHODS
-    $scope.createNewExpenseObject = function(args){
-        return new Expense(args);
-    };
-
-    $scope.selectMonth = function( event, month ) {
-        event.target.blur();
-        $scope.date.selectMonth( month );
-    };
-
-    $scope.resetNewExpenseForm = function () {
-        $scope.user = $user.user;
-        // console.log($scope.user);
-        $scope.newExpense = $scope.createNewExpenseObject({
-            user: $scope.user._id,
-            date: null,
-            amount: null,
-            description: null,
-            labels: null
-        });
-    };
-
-    $scope.fillExpenseList = function (success) {
-
-        // var mId = $scope.date.getMonthId();
-        var mId = $scope.getMonthId();
-
-        $http.get( '/api/v1/expenses/' + mId).
-        then(
-            function successCallback (res) {
-                $scope.expenseList = res.data;
-
-                // addIsFormShownLabel();
-                $scope.cells = [];
-                $scope.cells = $date.getCells($scope.selectedDay);
-                if(success) {
-                    success();
-                }
-            },
-            function errorCallback (res) {
-                console.error(res);
-            }
-        );
-    };
-
-    $scope.getMonthId = function () {
-
-        var year = $scope.selectedDay.date.getFullYear();
-        var month = $scope.selectedDay.date.getMonth();
-
-        var result = year.toString() + month.toString();
-
-        return result;
-    };
-
-    function createMonths ( origin ) {
-        //console.log(origin);
-        var result = [];
-        // make a list of 11 months, with start month in the middle
-        for( var i = -5 ; i <= 5; i++ ){
-            var m = new Date(origin.getFullYear(), origin.getMonth());
-
-            m.setMonth( origin.getMonth() + i );
-
-            m.isSelected = false;
-            result.push(m);
-        }
-        // make central month 'Selected'
-        result[5].isSelected = true;
-        return result;
-    };
-
-    $scope.resetExpenseList = function() {
-        $scope.expenseList = [];
-    };
-
-    $scope.findExpenseById = function(id) {
-        var e = {};
-        var days = $scope.expenseList;
-        for( var i in days ){
-            var result = days[i].expenses.find( function(item){
-                return item._id == id;
-            });
-            if(result) {
-                e = result;
-                return e;
-            }
-        }
-        if(!e) {
-            console.log('No expenses found for id = ' + id);
-        }
-    };
-
-    $scope.post = function( expense, callback ) {
-        // console.log('posting expense');
-        $http.post( '/api/v1/expenses', expense ).
-        success( function( res ) {
-            $scope.$emit('ExpenseCreated', {expense: res.expense});
-            if(callback) {
-                callback(res.expense);
-            }
-        }).
-        error(function (res) {
-            console.log( res );
-
-        });
-    };
-
-    $scope.showForm = function (expense, emitter) {
-        if(emitter === '<expense-calendar-day-item>') {
-            expense.labels.isCalendarDayFormShown = true;
-        }
-        else if(emitter === '<expense-calendar-selected-day-item>') {
-            expense.labels.isSelectedDayFormShown = true;
-        }
-
-    };
-    
-    $scope.selectDay = function( day ) {
-        $scope.$broadcast('DeselectAllDays');
-        if(day) {
-            $scope.selectedDay = day;
-        }
-        $scope.$broadcast('DaySelected', {day: $scope.selectedDay});
-    };
-
-    // EVENT EMITTERS
-    // $scope.emitExpenseFormViewRequest = function( event, expense, emittingDirectiveName ) {
-    //     console.log(emittingDirectiveName);
-    //     scope.$emit("ExpenseFormViewRequest", {expense: expense, emitter: emittingDirectiveName });
-    // };
-
-    // EVENT LISTENERS
-    $scope.$on('UserDefined', function () {
-        $scope.resetNewExpenseForm();
-    });
-    $scope.$on('ExpenseCreated', function(event, args){
-        // var expense = args.expense;
-        // console.log(args.expense._id);
-        $scope.resetExpenseList();
-        $scope.fillExpenseList(function() {
-            var e = $scope.findExpenseById(args.expense._id);
-            // e.labels.isFormShown = true;
-            $scope.$emit('ExpenseFormViewRequest', {expense: e});
-        });
-    });
-    $scope.$on('ExpenseConfirmed', function () {
-        $scope.resetExpenseList();
-        $scope.fillExpenseList();
-    });
-    $scope.$on('ExpenseDeleted', function () {
-        $scope.resetExpenseList();
-        $scope.fillExpenseList();
-    });
-    $scope.$on('ExpenseFormViewRequest', function (event, args) {
-        // console.log('expense form view request for id: ' + args.expense._id);
-        $scope.showForm(args.expense, args.emitter);
-    });
-    $scope.$on('DaySelectionRequest', function (event, args) {
-        $scope.selectDay(args.day);
-    });
-    $scope.$on('MonthSelectionRequest', function (event, args) {
-        $scope.$broadcast('DeselectAllDays');
-        $scope.selectedDay.date.setMonth(args.month);
-        $scope.months = createMonths($scope.selectedDay.date);
-        $scope.resetExpenseList();
-        $scope.fillExpenseList(function() {
-            $scope.$emit('DaySelectionRequest', {day: $scope.selectedDay});
-        });
-        $scope.$broadcast('MonthChanged');
+    $scope.user = $user.user;
+    $scope.$watch('user', function (newVal, oldVal) {
+        Shared.change("user", newVal);
     });
 
-    // MAIN
-    $user.getUser(function success () {
-        $scope.$emit('UserDefined');
-        $scope.$emit('MonthSelectionRequest', {month: $scope.selectedDay.date.getMonth()});
-    });
+    $scope.view = $views.initAppView();
 
-};
-
-exports.ExpensesCalendarCtrl = function( $scope, $http ) {
-
-    // VIEW FUNCTIONS (FUNCTIONS THAT CALCULATE DATA FOR VIEW)
-    $scope.getTotalPerDay = function( date ) {
-        // console.log(date);
-        if(!(date instanceof Date)) {
-            // console.log("you passed input of wrong type. Please, pass 'Date' object.");
-        }
-
-        function isSameDate(value) {
-            return Number(value._id) === Number(day);
-        };
-
-        if(!date) {
-            return null;
-        }
-        else {
-            var day = date.getDate();
-            // console.log('day from data is ' + day);
-            var result = $scope.expenseList.filter(isSameDate);
-            if(!result.length) {
-                return 0;
-            }
-            else {
-                return result[0].dayTotal;
-            }
-        }
-    };
-    $scope.getExpensesForDate = function( date ) {
-
-        function isSameDate(value) {
-            return Number(value._id) === Number(day);
-        };
-
-        if(!date) {
-            return null;
-        }
-        else {
-            var day = date.getDate();
-            var result = $scope.expenseList.filter(isSameDate);
-            if(!result.length) {
-                return 0;
-            }
-            else {
-                // console.log(result[0].expenses);
-                return result[0].expenses;
-            }
-        }
-    };
-    $scope.getRecommendationsCount = function( date ) {
-        function isSameDate(value) {
-            return Number(value._id) === Number(day);
-        };
-
-        if(!date) {
-            return null;
-        }
-        else {
-            var day = date.getDate();
-            var result = $scope.expenseList.filter(isSameDate);
-            if(!result.length) {
-                return 0;
-            }
-            else {
-                // console.log(result[0].expenses);
-                return result[0].dayCount;
-            }
-        }
-    };
-    $scope.isWeekend = function(date) {
-        if(date) {
-            if(date.getDay() === 0 || date.getDay() === 6) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-    };
-
-    // SERVER REQUEST SENDERS
-    $scope.confirmExpense = function ( obj ) {
-        $http.post('/api/v1/recommend/expenses', obj).
-        then(
-            function( res ) {
-                // console.log(res.data);
-                $scope.$emit('ExpenseConfirmed', res.data._id);
-            }
-        )
-    };
-    $scope.deleteExpense = function( id ) {
-        $http.delete('/api/v1/expenses/' + id).
-        then(
-            function successCallback(res) {
-                $scope.$emit('ExpenseDeleted');
-            },
-            function errorCallback( res ) {
-                console.error( res );
-            }
-        );
-    };
-
-    // UI EVENT EMITTERS
-    $scope.emitExpenseCreateRequest = function (event, day) {
-        $scope.$emit('ExpenseCreateRequest', {date: day.date});
-    };
-
-    // EVENT LISTENERS
-    // $scope.$watch( 'date', function (){
-    //     $scope.fillExpenseList();
-    // }, true);
-    $scope.$on('ExpenseCreateRequest', function(event, args){
-        var e = $scope.createNewExpenseObject({
-            user: $scope.user._id,
-            date: args.date,
-            amount: 0,
-            description: 'New expense',
-            labels: {isConfirmed: false, isDeleted:false, isDefault: false}
-        });
-
-        $scope.post(e);
-    });
-    $scope.$on('ExpenseConfirmRequest', function(event, args){
-        $scope.confirmExpense(args.expense);
-    });
-    $scope.$on('ExpenseDeleteRequest', function(event, args){
-        $scope.deleteExpense(args._id);
-    });
-};
-
-exports.ExpensesDashboardCtrl = function( $scope, $http ) {
-
-    $scope.charts = [];
-    $scope.layouts = [];
-    $scope.isRequestInProgress = false;
-
-    $scope.monthlyTotal = {
-        plan: 0,
-        fact: 0
-    };
-
-    $scope.style = {};
-
-    $scope.totalMonth = 0;
-    $scope.isRedrawProgressBar = true;
-
-    $scope.$watch('isRedrawProgressBar', function(newVal, oldVal){
+    $scope.$watch('view.state.isUpdated', function (newVal, oldVal) {
         if(newVal === true) {
-            if($scope.totalMonth > 0) {
-                $scope.style.plan = {width: Math.ceil((100 * $scope.monthlyTotal.plan)/$scope.totalMonth) + "%"};
-                $scope.style.fact = {width: Math.floor((100 * $scope.monthlyTotal.fact)/$scope.totalMonth) + "%"};
-            }
-            else if($scope.totalMonth === 0) {
-                $scope.style.plan = {width: 50 + "%"};
-                $scope.style.fact = {width: 50 + "%"};
-            }
-            $scope.isRedrawProgressBar = false;
+            $scope.view.update(state);
+            Shared.change('isUpdated', false);
         }
     });
 
+    // param: String newDay - the day in string format "YYYYMMDD" for which we want to get week number (from 0 to 3-5)
+    // function: calculate the number of week, where given day belongs to.
+    // return: int weekNum
+    var getWeekForDay = function(newDay) {
+        var y = MyDates.getYearFromString(newDay);
+        var m = MyDates.getMonthFromString(newDay);
+        var d = MyDates.getDateFromString(newDay);
+        var date = new Date(y, m - 1, d);
+        return MyDates.numberOfWeek(date);
+    };
 
-    $scope.getLayouts = function( callback ) {
-        $scope.isRequestInProgress = true;
-        $http.get( '/api/v1/charts/meta' ).
-        then(
-            function successCallback( res ){
-                for( var i in res.data ) {
-                    $scope.charts[ i ] = { chartDiv: res.data[i].chartDiv, traces: res.data[i].traces };
-                    $scope.layouts[ res.data[i].chartDiv ] = res.data[i].layout;
-                }
-                callback();
-                $scope.isRequestInProgress = false;
-            },
-            function errorCallBack( res ){
-                console.error('error in $scope.charts');
-                console.log(res);
+    $scope.$on('update::month', function (event, args) {
+        var newDay, newWeek;
+
+        if(args.newMonth !== undefined) {
+            Shared.change('currentMonth', args.newMonth);
+
+            newDay = MyDates.getDateFromString(state.currentDay);
+            if(newDay > MyDates.daysInMonth(state.currentMonth)) {
+                newDay = MyDates.daysInMonth(state.currentMonth);
             }
-        );
-    };
+            newDay = state.currentMonth + MyDates.dayToString(newDay);
+            Shared.change('currentDay', newDay);
 
-    $scope.reset = function() {
-        $scope.charts = [];
-    };
+            newWeek = getWeekForDay(newDay);
+            Shared.change('currentWeek', newWeek);
+        }
 
-    $scope.renewTrace = function( traceName, callback ) {
-        $scope.isRequestInProgress = true;
-        $http.get( '/api/v1/charts/' + traceName + '/'+ $scope.getMonthId()).
-        then( function successCallback (res) {
+        if(args.newWeek !== undefined) {
 
-            //console.log(res.data);
-            //s.charts.push(res.data);
-            callback( res.data );
-            $scope.isRequestInProgress = false;
-        }, function errorCallback (res) {
-            console.error('error in $scope.renewTrace');
-            console.log(res);
-        });
-    };
+            newDay = MyDates.getDateFromString(state.currentDay);
+            newDay = Number(newDay) + 7 * (args.newWeek - state.currentWeek);
+            if(newDay > MyDates.daysInMonth(state.currentMonth)) {
+                newDay = MyDates.daysInMonth(state.currentMonth);
+            }
+            else if(newDay < 1) {
+                newDay = 1;
+            }
+            newDay = state.currentMonth + MyDates.dayToString(newDay);
+            Shared.change('currentDay', newDay);
+            Shared.change('currentWeek', args.newWeek);
+        }
 
-    $scope.renewTotals = function(callback) {
-        $http.get( '/api/v1/total/' + $scope.getMonthId()).
-        then( function successCallback (res) {
-            callback(res.data);
-            $scope.isRequestInProgress = false;
-        }, function errorCallback (res) {
-            console.error('error in $scope.renewTotals');
-            console.log(res);
-        });
-    };
-
-    // 1. SETUP STEP
-    $scope.getLayouts( function() {
-        $scope.$emit('SetupReady');
+        $scope.view.update(state);
     });
 
-    // 2. LOGIC. Chart creation and updates
-    $scope.createChart = function ( chartName ) {
-
-        var traces = $scope.charts.find( function( item ){
-            return item.chartDiv === chartName;
-        }).traces;
-
-        var layout = $scope.layouts[ chartName ];
-
-        if(chartName && layout && traces) {
-            Plotly.newPlot( chartName, traces, layout);
-        }
-        else {
-            console.log('chartDiv, layout or default does not exists for ' + charts[i]);
-        }
-    };
-    
-    $scope.redrawChart = function( chartName, element ) {
-        $scope.renewTrace( chartName, function( data ){
-            element.data = data.traces;
-            Plotly.redraw(element);
-        });
-    };
-};
-
-exports.RecommendedExpensesListCtrl = function( $scope, $date, $http, $error ) {
-
-    $scope.recommendedExpenseList = [];
-
-    $scope.date = $date;
-
-    $scope.isLoading = false;
-
-    $scope.error = { errorMsg: "", isError: false };
-
-    $scope.resetRecommendedExpenseList = function() {
-        $scope.recommendedExpenseList = [];
-    };
-
-    $scope.fillRecommendedExpenseList = function () {
-
-        $scope.isLoading = true;
-
-        $http.get( '/api/v1/recommend/expenses' ).
-        then(
-            function successCallback (res) {
-                // console.log(res);
-                if(res.data.recommendations.error) {
-                    $scope.error.isError = true;
-                    $scope.error.errorMsg = $error.translate(res.data.recommendations.error);
-                    $scope.isLoading = false;
-                }
-                else {
-                    $scope.recommendedExpenseList = res.data.recommendations;
-                    $scope.isLoading = false;
-                }
-            },
-            function errorCallback (res) {
-                console.log(res);
-            }
-        );
-    };
-
-    $scope.confirm = function( id ) {
-        console.log('this recommendation is confirmed: '+ id);
-        var obj = $scope.recommendedExpenseList.find( function(item){
-            return item._id === id;
-        });
-
-        $http.post( '/api/v1/recommend/expenses', obj ).
-        success( function( res ) {
-            $scope.$emit('RecommendedExpenseConfirmed');
-            console.log(res);
-        }).
-        error(function (res) {
-            console.log( res );
-        });
-    }
-    $scope.delete = function( id ) {
-        $http.delete('/api/v1/recommend/expenses/' + id).
-        then(
-            function successCallback(res) {
-                $scope.$emit('RecommendedExpenseDeleted');
-                var id = res.data._id;
-                for(var i in $scope.recommendedExpenseList){
-                    if($scope.recommendedExpenseList[i]._id === id) {
-                        $scope.recommendedExpenseList.splice( i, 1 );
-                        break;
-                    }
-                }
-            },
-            function errorCallback( res ) {
-                console.error( res );
-            }
-        );
-    };
-
-    $scope.$watch( 'date', function () {
-        $scope.resetRecommendedExpenseList();
-        $scope.fillRecommendedExpenseList();
-    }, true);
-
-    $scope.$on( "RecommendedExpenseConfirmed", function (){
-        $scope.resetRecommendedExpenseList();
-        $scope.fillRecommendedExpenseList();
+    $scope.$on('update::item', function (event, args) {
+        Shared.change('currentItem', args.currentItem);
+        Shared.change('currentDay', args.currentItem.dayCode);
+        Shared.change('currentWeek', getWeekForDay(args.currentItem.dayCode));
+        $scope.view.update(state);
     });
 
+    $scope.$on('update::day', function (event, args) {
+        var newDay = state.currentMonth + MyDates.dayToString(args.newDay);
+        Shared.change('currentItem', undefined);
+        Shared.change('currentDay', newDay);
+        Shared.change('currentWeek', getWeekForDay(newDay));
+        $scope.view.update(state);
+    });
+
+    $user.getUser(function success(){
+        $scope.user = $user.user;
+    });
 };
-
-},{}],3:[function(require,module,exports){
-exports.notLoggedIn = function() {
+},{"../../common/MyDates":15,"../../common/Shared":17}],4:[function(require,module,exports){
+exports.monthSwitchView = function () {
     return {
-        // require: ["ExpensesCalendarAppCtrl"],
-        templateUrl: "/assets/templates/notLoggedIn.html"
-    }
-};
-
-exports.monthSelector = function() {
-    return {
-        templateUrl: "/assets/templates/monthSelector.html",
-        link: function (scope, el, attrs, controllers) {
-            scope.emitMonthSelectionRequest = function(event, month) {
-                event.target.blur();
-                scope.$emit("MonthSelectionRequest", {month: month});
-            }
-        }
-    }
-};
-
-exports.expensesCalendar = function() {
-
-    return {
-        controller: "ExpensesCalendarCtrl",
-        templateUrl: '/assets/templates/expensesCalendar.html',
-        link: function (scope, el, attrs, controllers) {
-            scope.emitDaySelectionRequest = function(day) {
-                scope.$emit('DaySelectionRequest', {day: day});
-            };
-        }
-    }
-
-};
-
-exports.expenseCalendarDay = function() {
-    return {
-        require: ["^?expensesCalendar"],
         scope: {
-            day: "=extDay",
-            getTotalPerDay: "&extGetTotalPerDay",
-            getExpensesForDate: "&extGetExpensesForDate",
-            getRecommendationsCount: "&extGetRecommendationsCount",
-            isWeekend: "&extIsWeekend",
-            selectedDay: "=extSelectedDay"
+            self: "=extMonthSwitchView"
         },
-        templateUrl: '/assets/templates/expenseCalendarDay.html',
-        link: function ( scope, el, attrs, controllers ) {
-            // 1. Day is not selected by default, unless it is equal to selected day.
-
-            scope.$watch('day.date', function(newV, oldV){
-                if(scope.day.date) {
-                    if(scope.selectedDay.date.getDate() === scope.day.date.getDate()) {
-                        scope.isSelected = true;
-                    }
-                    else {
-                        scope.isSelected = false;
-                    }
-                }
-            });
-
-            // 2. Listen to 'DaySelected' event
-            scope.$on('DaySelected', function (event, args) {
-                if(scope.day.date) {
-                    if(args.day.date.getDate() === scope.day.date.getDate()) {
-                        scope.isSelected = true;
-                    }
-                }
-            });
-
-            // 3. Listen to 'DeselectAllDays' event
-            scope.$on('DeselectAllDays', function () {
-                scope.isSelected = false;
+        templateUrl: "/assets/templates/monthSwitch.html",
+        link: function (scope, el, attr, ctrl) {
+            el.on('click', function(event){
+                event.target.blur(); // -> remove blue frame (focus) from btn after click
             });
         }
     }
 };
 
-exports.expenseCalendarDayItem = function() {
+exports.progress = function() {
     return {
-        require: ["^?expensesCalendar"],
-        templateUrl: "/assets/templates/expenseCalendarDayItem.html",
+        replace: true,
         scope: {
-            e: "=extE",
+            self: "=extProgress"
         },
-        link: {
-            post: function (scope, el, attrs, controllers) {
-                // 1. Expense item HTML uses ng-style to position the expense pop-up form relative to the expense item ->
-                // -> Calculate this position foe each expense item and store it in each item's scope.
-                scope.popup = {
-                    position: {
-                        left: 0,
-                        top: 0
-                    }
-                };
-                var r = el[0].getBoundingClientRect();
-                scope.popup.position.left = r.width + 14;
-                scope.popup.position.top = -25;
-
-                // 2. Expense item HTML uses 'emitExpenseFormViewRequest' function. -> Make it available in each item scope.
-                scope.emitExpenseFormViewRequest = function( event, expense ) {
-                    scope.$emit("ExpenseFormViewRequest", {expense: expense, emitter: '<expense-calendar-day-item>'});
-                };
-
-                // 3. Expense popup form is hidden by default -> Make it hidden.
-                if(!scope.e.labels.isCalendarDayFormShown) {
-                    scope.e.labels.isCalendarDayFormShown = false;
-                }
-            }
+        templateUrl: "/assets/templates/progress.html",
+        link: function(scope, el, attr, ctrl) {
         }
     }
 };
 
-exports.expenseCalendarDayItemForm = function() {
+exports.calendar = function () {
     return {
-        require: ["^?expensesCalendar"],
-        templateUrl: "/assets/templates/expenseCalendarDayItemForm.html",
+        scope:{
+            self:"=extCalendar"
+        },
+        templateUrl: "/assets/templates/calendar.html",
+        link: function (scope, el, attr, ctrl) {
+        }
+    }
+};
+
+exports.week = function () {
+    return {
+        scope:{
+            self:"=extWeek"
+        },
+        templateUrl: "/assets/templates/week.html",
+        link: function (scope, el, attr, ctrl) {
+
+        }
+    }
+};
+
+exports.day = function () {
+    return {
+        scope:{
+            self:"=extDay"
+        },
+        templateUrl: "/assets/templates/day.html",
+        link: function (scope, el, attr, ctrl) {
+            el.on('click', function (event) {
+                event.stopImmediatePropagation();
+                scope.$emit('update::day', {newDay: scope.self.dayNum});
+            })
+        }
+    }
+};
+
+exports.messageForm = function() {
+    return {
         scope: {
-            e: "=extE"
+            self: "=extMessage"
         },
-        link: function (scope, el, attrs, controllers) {
-            // 1. Expense pop-up HTML uses  'emitExpenseConfirmRequest' function. -> Make it available in each form scope.
-            scope.emitExpenseConfirmRequest = function(expense) {
-                scope.$emit('ExpenseConfirmRequest', {expense: expense});
-            };
-            // 2. Expense pop-up HTML uses 'emitExpenseDeleteRequest' function. -> Make it available in each form scope.
-            scope.emitExpenseDeleteRequest = function ( id ) {
-                scope.$emit('ExpenseDeleteRequest', {_id: id});
-            };
+        templateUrl: "/assets/templates/messageForm.html",
+        link: function (scope, el, attr, ctrl) {
+
         }
     }
 };
-
-exports.expenseCalendarSelectedDay = function($window) {
+exports.item = function() {
     return {
-        require: ["^?expensesCalendar"],
         scope: {
-            day: "=extDay",
-            getTotalPerDay: "&extGetTotalPerDay",
-            getExpensesForDate: "&extGetExpensesForDate",
-            getRecommendationsCount: "&extGetRecommendationsCount",
-            isWeekend: "&extIsWeekend"
+            self: "=extItem"
         },
-        templateUrl: '/assets/templates/expenseCalendarSelectedDay.html',
-        link: {
-            post: function ( scope, el, attrs, controllers ) {
+        templateUrl: "/assets/templates/item.html",
+        link: function (scope, el, attr, ctrl) {
 
-                // 1. Listen to 'DaySelected' event
-                scope.$on('DaySelected', function (event, args){
-                    // console.log('this is expenseCalendarSelectedDay directive');
-                    // console.log(args);
-                });
-
-                // 2. Expense item HTML uses 'emitExpenseFormViewRequest' function. -> Make it available in each item scope.
-                scope.emitExpenseFormViewRequest = function( event, expense ) {
-                    scope.$emit("ExpenseFormViewRequest", {expense: expense});
-                };
-
-                // 3. Save it's own position
-                scope.position = {
-                    left: 0,
-                    top: 0
-                };
-
-                var r = el[0].getBoundingClientRect();
-                // console.log(r);
-                scope.position.left = 0;
-                scope.position.top = 0;
-
-                var zero = {
-                    left: r.left,
-                    top: r.top
-                }
-
-                // 4. on 'scroll' event make it change the position
-                angular.element($window).bind('wheel', function(event) {
-                    // console.log(event);
-                    if(event.deltaY < 0) {
-                        scope.$emit('SelectedDayScrolledUp', {newTop: $window.scrollY});
-                    }
-                    else if (event.deltaY > 0 ) {
-                        scope.$emit('SelectedDayScrolledDown', {newTop: $window.scrollY});
-                    }
-                });
-
-                scope.$on('SelectedDayScrolledUp', function( event, args ){
-                    // console.log(args);
-                    if(args.newTop - zero.top > 0) {
-                        scope.position.top = args.newTop - zero.top;
-                        scope.$apply();
-                    }
-                });
-
-                scope.$on('SelectedDayScrolledDown', function( event, args ){
-                    if(zero.top - args.newTop < 0) {
-                        scope.position.top = args.newTop - zero.top;
-                        scope.$apply();
-                    }
-                    // console.log(args);
-                    // scope.position.top = args.newTop;
-                    // scope.$apply();
-                });
-
-            }
+            // this handler selects clicked item
+            el.on('click', function (event) {
+                event.stopImmediatePropagation();
+                scope.self.boundingClientRect = el[0].getBoundingClientRect();
+                scope.$emit('update::item', {currentItem: scope.self});
+            })
         }
     }
 };
 
-exports.expenseCalendarSelectedDayItem = function() {
-    return {
-        require: ["^?expensesCalendar"],
-        templateUrl: "/assets/templates/expenseCalendarSelectedDayItem.html",
-        scope: {
-            e: "=extE",
-        },
-        link: {
-            post: function (scope, el, attrs, controllers) {
-                // 1. Expense item HTML uses ng-style to position the expense pop-up form relative to the expense item ->
-                // -> Calculate this position foe each expense item and store it in each item's scope.
-                // scope.popup = {
-                //     position: {
-                //         left: 0,
-                //         top: 0
-                //     }
-                // };
-                // var r = el[0].getBoundingClientRect();
-                // scope.popup.position.left = r.width + 14;
-                // scope.popup.position.top = -25;
-
-                // 2. Expense item HTML uses 'emitExpenseFormViewRequest' function. -> Make it available in each item scope.
-                scope.emitExpenseFormViewRequest = function( event, expense ) {
-                    scope.$emit("ExpenseFormViewRequest", {expense: expense, emitter: '<expense-calendar-selected-day-item>'});
-                };
-
-                // 3. Expense popup form is hidden by default -> Make it hidden.
-                if(!scope.e.labels.isSelectedDayFormShown) {
-                    scope.e.labels.isSelectedDayFormShown = false;
-                }
-            }
-        }
-    }
-};
-
-exports.expenseCalendarSelectedDayItemForm = function() {
-    return {
-        require: ["^?expensesCalendar"],
-        templateUrl: "/assets/templates/expenseCalendarSelectedDayItemForm.html",
-        scope: {
-            e: "=extE"
-        },
-        link: function (scope, el, attrs, controllers) {
-            // 1. Expense pop-up HTML uses  'emitExpenseConfirmRequest' function. -> Make it available in each form scope.
-            scope.emitExpenseConfirmRequest = function(expense) {
-                scope.$emit('ExpenseConfirmRequest', {expense: expense});
-            };
-            // 2. Expense pop-up HTML uses 'emitExpenseDeleteRequest' function. -> Make it available in each form scope.
-            scope.emitExpenseDeleteRequest = function ( id ) {
-                scope.$emit('ExpenseDeleteRequest', {_id: id});
-            };
-        }
-    }
-};
-
-exports.expensesDashboard = function() {
-
-    return {
-        controller: "ExpensesDashboardCtrl",
-        templateUrl: '/assets/templates/expensesDashboard.html'
-    }
-
-};
-
-exports.dailyVolumes = function() {
-    return {
-        require: "^expensesDashboard",
-        template: '<div id = "dailyVolumes"></div>',
-        link: function ( scope, el, attrs ) {
-
-            var chartName = 'dailyVolumes';
-            var chartDiv = el[0].children[0];
-
-            var justRenewAll = function(data) {
-                if(data.length) {
-                    scope.monthlyTotal.plan = data[0].monthTotalPlan;
-                    scope.monthlyTotal.fact = data[0].monthTotalFact;
-                }
-                else {
-                    scope.monthlyTotal.plan = 0;
-                    scope.monthlyTotal.fact = 0;
-                }
-                scope.totalMonth = scope.monthlyTotal.plan + scope.monthlyTotal.fact;
-                scope.isRedrawProgressBar = true;
-            };
-            
-            scope.$on( 'SetupReady', function () {
-                scope.createChart( chartName );
-                scope.redrawChart( chartName, chartDiv );
-                scope.renewTotals(function(data){
-                    justRenewAll(data);
-                });
-
-                // >> when we change month, we re-draw charts
-                scope.$on('MonthChanged', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                    scope.renewTotals(function(data){
-                        justRenewAll(data);
-                        // console.log(scope.isRedrawProgressBar);
-                    });
-                });
-
-                // >> when user create Expense, we re-draw charts
-                scope.$on('ExpenseCreated', function(){
-                    scope.redrawChart( chartName, chartDiv );
-                    scope.renewTotals(function(data){
-                        justRenewAll(data);
-                    });
-                });
-
-                // >> when user delete Expense, we re-draw charts.
-                scope.$on('ExpenseDeleted', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                    scope.renewTotals(function(data){
-                        justRenewAll(data);
-                    });
-                });
-
-                scope.$on('ExpenseConfirmed', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                    scope.renewTotals(function(data){
-                        justRenewAll(data);
-                    });
-                });
-            });
-        }
-    }
-};
-
-exports.categoryVolumes = function() {
-    return {
-        require: "^expensesDashboard",
-        template: '<div id = "categoryVolumes"></div>',
-        link: function ( scope, el, attrs ) {
-            var chartName = 'categoryVolumes';
-            var chartDiv = el[0].children[0];
-
-            scope.$on( 'SetupReady', function () {
-                scope.createChart( chartName );
-                scope.redrawChart( chartName, chartDiv );
-
-                // >> when we change month, we re-draw charts
-                scope.$on('MonthChanged', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                });
-
-                // >> when user create Expense, we re-draw charts
-                scope.$on('ExpenseCreated', function(){
-                    scope.redrawChart( chartName, chartDiv );
-                });
-
-                // >> when user delete Expense, we re-draw charts.
-                scope.$on('ExpenseDeleted', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                });
-            });
-        }
-    }
-};
-
-exports.expenseFrequency = function() {
-    return {
-        require: "^expensesDashboard",
-        template: '<div id = "expenseFrequency"></div>',
-        link: function ( scope, el, attrs, controllers ) {
-            var chartName = 'expenseFrequency';
-            var chartDiv = el[0].children[0];
-
-            scope.$on( 'SetupReady', function () {
-                scope.createChart( chartName );
-                scope.redrawChart( chartName, chartDiv );
-
-                // >> when we change month, we re-draw charts
-                scope.$on('MonthChanged', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                });
-
-                // >> when user create Expense, we re-draw charts
-                scope.$on('ExpenseCreated', function(){
-                    scope.redrawChart( chartName, chartDiv );
-                });
-
-                // >> when user delete Expense, we re-draw charts.
-                scope.$on('ExpenseDeleted', function() {
-                    scope.redrawChart( chartName, chartDiv );
-                });
-            });
-        }
-    }
-};
-
-exports.recommendedExpensesList = function() {
-    return {
-        // require: ["ExpensesCalendarAppCtrl"],
-        controller: "RecommendedExpensesListCtrl",
-        templateUrl: "/assets/templates/recommendedExpensesList.html"
-    }
-};
-
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var status = require( 'http-status' );
+
+// $views service returns AppView model
+exports.$views = function($http) {
+
+    var AppView = require( './AppView.js' );
+
+    var s = {};
+
+    var appView = new AppView($http);
+
+    s.initAppView = function() {
+        return appView;
+    };
+
+    return s;
+};
 
 exports.$user = function( $http ) {
     var s = {user:{}};
@@ -991,7 +284,6 @@ exports.$user = function( $http ) {
         success( function( data ) {
             s.user = data.user;
             callback();
-            // console.log(s.user);
         }).
         error( function( data, status ) {
             if( status === status.UNAUTHORIZED ) {
@@ -999,338 +291,1585 @@ exports.$user = function( $http ) {
             }
         });
     };
-    // s.getUser();
-    // setInterval(s.getUser, 60 * 60 * 1000);
     return s;
 };
+},{"./AppView.js":1,"http-status":20}],6:[function(require,module,exports){
+/**
+ * Created by py on 24/07/16.
+ */
 
-exports.$date = function () {
+var Calendar;
 
-    var s = {};
+var MyDates = require('./MyDates');
+var Week = require('./Week');
 
-    //var d = new Date();
+// param: Object state
+// function: object constructor
+// return: Calendar object
+Calendar = function(state) {
 
-    //s.selectedDate = new Date(d.getFullYear(), d.getMonth());
-    s.selectedDate = new Date();
-
-    s.getMonthId = function () {
-
-        var year = this.selectedDate.getFullYear();
-        var month = this.selectedDate.getMonth();
-
-        var result = year.toString() + month.toString();
-
-        return result;
-    };
-
-    s.months = [];
-
-    function createMonths ( origin ) {
-        //console.log(origin);
-        var result = [];
-        // make a list of 11 months, with start month in the middle
-        for( var i = -5 ; i <= 5; i++ ){
-            var m = new Date(origin.getFullYear(), origin.getMonth());
-
-            m.setMonth( origin.getMonth() + i );
-
-            m.isSelected = false;
-            result.push(m);
+    var self = this;
+    // param: Object state
+    // function: init the object. Set up storage for weeks, construct Weeks.
+    // return: void
+    var init = function (state) {
+        self.weeks = [];
+        self.dayNames = [
+            [null, "Sun", "Mon"],
+            ["Tue", "Wed", "Thu"],
+            ["Fri", "Sat", null]
+        ];
+        self.monthString = state.currentMonth;
+        var numOfWeeks = MyDates.weeksInMonth(self.monthString);
+        for(var i = 0; i < numOfWeeks; i++){
+            self.weeks.push(new Week(i, self.monthString, state, true));
         }
-        // make central month 'Selected'
-        result[5].isSelected = true;
-        return result;
     };
 
-    s.months = createMonths( s.selectedDate );
+    // param: String t - string representation of TimeWindow object
+    // function: decide, whether Calendar should be rebuilt (month changed)
+    // return: Bool decision
+    var isRenewCalendar = function(t) {
+        var decision = false;
+        if(t !== self.monthString){
+            decision = true;
+        }
+        return decision;
+    };
 
-    s.selectMonth = function( month ) {
-        s.months = createMonths( month );
-        s.selectedDate = s.months[5];
+    var update = function(state){
+        for(var i = 0; i < self.weeks.length; i++) {
+            self.weeks[i].update(state);
+        }
+    };
+
+    this.update = function(state) {
+        if(isRenewCalendar(state.currentMonth)) {
+            init(state);
+            update(state);
+        }
+        else {
+            update(state);
+        }
+    };
+
+    // MAIN LOOP
+    init(state);
+
+};
+
+module.exports = Calendar;
+},{"./MyDates":15,"./Week":19}],7:[function(require,module,exports){
+/**
+ * Created by py on 24/07/16.
+ */
+
+var Dashboard;
+
+Dashboard = function (state) {
+
+    this.update = function(state){
+
+    };
+
+};
+
+module.exports = Dashboard;
+},{}],8:[function(require,module,exports){
+/**
+ * Created by py on 25/07/16.
+ */
+
+var Day;
+
+var Shared = require('./Shared');
+var MyDates = require('./MyDates');
+
+// param: int dayNum - the day number in month (from 1 to 28-31)
+// param: int weekNum - the week number, where Day belongs to
+// param: String month - the string-encoded TimeWindow, which is on month level.
+// Formatted as "YYYYMM".
+// param: Object state
+// function: object constructor
+// return: Day object
+Day = function (dayNum, weekNum, month, state) {
+    var self = this;
+
+    // param: int dayNum - the day number in month (from 1 to 28-31)
+    // param: int weekNum - the number of week in month (from 0 to 3-5), where day belongs to.
+    // param: String month - the string-encoded TimeWindow, which is on month level.
+    // Formatted as "YYYYMM".
+    // param: Object state
+    // function: setup static parameters of Day object
+    // return: self, so method can be chained.
+    self.setUp = function(dayNum, weekNum, month, state) {
+        self.dayNum = dayNum;
+        self.weekNum = weekNum;
+        self.month = month;
+        self.timeWindow = self.month + MyDates.dayToString(dayNum);
+        self.getUrl = 'api/v1/day/'.concat(self.timeWindow);
+        self.needsHttpCall = true;
+        return self;
+    };
+
+    // param: void, since it is just initialization
+    // function: init self.html object, which is exposed to HTML template
+    // return: self, so method can be chained.
+    self.initHTML = function () {
+        self.html = {};
+        self.html.isSelected = false;
+        self.html.items = [];
+        self.html.isInSelectedWeek = false;
+        self.html.totalWeeks = MyDates.weeksInMonth(self.month);
+        self.html.maxItems = 0;
+        self.html.isFuture = false;
+        // param: String arg - the name of the property, over which we will sum. E.g. Day['name']
+        // param: Array [Object] arr - the array, over which elements we will sum
+        // function: calculate the sum of the 'name' property in the array
+        // return: int sum
+        self.html.sum = function(arg, arr) {
+            var s = 0;
+            for(var i = 0; i < arr.length; i++) {
+                if(typeof arr[i][arg] !== 'number'){
+                    throw new Error('property, you want to sum, is not number. Number expected');
+                }
+                else {
+                    s += arr[i][arg];
+                }
+            }
+            return s;
+        };
+
+        return self;
+    };
+
+    // param: Object state
+    // function: decides, whether Day should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
+    // return: self, so method can be chained
+    self.setIsSelected = function (state) {
+        var hitMonth, hitWeek, hitDay;
+        self.month === state.currentMonth ? hitMonth = true : hitMonth = false;
+        self.weekNum === state.currentWeek ? hitWeek = true : hitWeek = false;
+        var day = self.month + MyDates.dayToString(self.dayNum);
+        day === state.currentDay ? hitDay = true : hitDay = false;
+        self.html.isSelected = hitMonth && hitWeek && hitDay;
+        return self;
+    };
+
+    // param: Object state
+    // function: gets new items for Day object (e.g. Expense items). Makes http call and writes results into self.html.items
+    // return: self, so method can be chained
+    self.updateItems = function(state) {
+        if(self.needsHttpCall) {
+            var shared = Shared.getInstance();
+            var http = shared.service.http;
+            var setValues = shared.fns.setValues;
+
+            http.get(self.getUrl).then(function success (response) {
+                var data = response.data;
+                for(var i in data){
+                    data[i].dayCode = self.timeWindow;
+                }
+                self.html.items = data;
+                self.needsHttpCall = false;
+                return self;
+            }, function error (response) {
+                throw new Error('failed to get data from ' + self.getUrl);
+            });
+        }
+    };
+
+    // param: Object state
+    // function: decides, whether Day is in selected week so it should have special width in HTML. Writes decision to self.html.isInSelectedWeek
+    // return: self, so method can be chained
+    self.setIsInSelectedWeek = function(state) {
+        self.weekNum === state.currentWeek ? self.html.isInSelectedWeek = true : self.html.isInSelectedWeek = false;
+        return self;
+    };
+
+    // param: Bool isInSelectedWeek - flag, that tells if Day is in selected week
+    // function: set maximum number of items shown in Day
+    // return: self, so method can be chained.
+    self.setMaxItems = function (isInSelectedWeek) {
+        self.html.maxItems = isInSelectedWeek ? 20 : 0;
+        return self;
+    };
+
+    // param: String t - timeWindow of the day
+    // function: set 'self.html.isFuture' if day is in future.
+    // return: self, so method can be chained.
+    self.setIsFuture = function(t) {
+        var tws = MyDates.stringToTw(t);
         var today = new Date();
-        if(today.getMonth() !== month) {
-            
-        }
-        // console.log(s.getDayOfWeekOfFirstDayInMonth());
+        tws.startDate > today ? self.html.isFuture = true : self.html.isFuture = false;
+        return self;
     };
 
-    s.getDate = function () {
-        return s.selectedDate;
+    // param: Object state
+    // function: change self.html parameters according to 'state'
+    // return: void
+    self.update = function(state){
+        self.setIsInSelectedWeek(state)
+            .setIsSelected(state)
+            .setMaxItems(self.html.isInSelectedWeek)
+            .setIsFuture(self.timeWindow)
+            .updateItems(state);
     };
 
-    s.setDate = function( date ) {
-        s.selectedDate = date;
-    };
-
-    s.getDayOfWeekOfFirstDayInMonth = function(){
-        var firstDay = new Date(s.selectedDate);
-        firstDay.setDate(1);
-        return firstDay.getDay();
-    };
-
-    s.getFirstDayPosition = function() {
-        var result = { cell:0, index: 0 };
-        var start = s.getDayOfWeekOfFirstDayInMonth();
-        if(start <= 1) {
-            result.cell = 1;
-            if(start === 0) {
-                result.index = 1;
-            }
-            else if(start === 1) {
-                result.index = 2;
-            }
-        }
-        else if( start <= 4) {
-            result.cell = 2;
-            if(start === 2) {
-                result.index = 0;
-            }
-            else if(start === 3) {
-                result.index = 1;
-            }
-            else if(start === 4) {
-                result.index = 2;
-            }
-        }
-        else if( start <= 6) {
-            result.cell = 3;
-            if(start === 5) {
-                result.index = 0;
-            }
-            else if(start === 6) {
-                result.index = 1;
-            }
-        }
-        return result;
-    };
-
-    s.getMonth = function( monthIdString ) {
-        return monthIdString.length === 6 ? Number(monthIdString.substring(4,6)) : Number(monthIdString.substring(4,5));
-    };
-
-    s.getYear = function( monthIdString ) {
-        return Number(monthIdString.substring(0, 4));
-    };
-
-    s.daysInMonth = function( monthIdString ) {
-        // gets 'month' as string, e.g. '20161'
-        // returns number of calendar days in this month. Takes leap year into account.
-        // 1. Setup.
-        var number = 30;
-        var month = s.getMonth( monthIdString );
-        var year = s.getYear(monthIdString);
-
-        // 2. Logic.
-        if (month % 2 === 0 || month === 0) {
-            number = 31;
-        }
-        else if (month === 1) {
-            if (year % 4 === 0){
-                number = 29;
-            }
-            else {
-                number = 28;
-            }
-        }
-        else if (month % 2 === 1 && month !== 1){
-            number = 30;
-        }
-        // 3. Return result.
-        return number;
-    };
-
-    var Cell = function(id, array){
-        this.id = id;
-        this.cell = array;
-    };
-
-    Cell.prototype = {
-
-    };
-
-    var Day = function(date) {
-        this.date = date;
-    };
-
-    s.getCells = function( day ) {
-
-        // console.log(day);
-        
-        var date = day.date;
-
-        var createDates = function(dates) {
-            // outputs the array of dates for each day in currently selected month
-            for(var i = 1; i <= s.daysInMonth(s.getMonthId()); i++) {
-                var dUTCSec = Date.UTC(date.getFullYear(), date.getMonth(), i);
-                var dUTCDate = new Date(dUTCSec);
-                dates.push(dUTCDate);
-            }
-            // console.log(dates);
-            return dates;
-        };
-
-        var appendNullsBeforeAndAfter = function(dates) {
-            // we need to fit the dates to 5x7 visual grid of calendar days.
-            // it means, week starts at Sunday, but 1st day of the month is Saturday ->
-            // we need to put empty days before 1st day of the month end empty days after last day of the month ->
-            // so we put nulls before and after in our 'dates' array.
-            var nullsBeforeNumber = dates[0].getDay();
-            for (var i = 0; i < nullsBeforeNumber; i++){
-                dates.splice(0,0, null);
-            }
-
-            var nullsAfterNumber = 5*7 - dates.length;
-
-            for (var i = 0; i < nullsAfterNumber; i++) {
-                dates.splice(dates.length, 0, null);
-            }
-            return dates;
-        };
-
-        var splitToRowsAndAppendNullsForEachRow = function(dates) {
-            // since the bootstrap grid, we created for calendar has 9 cells per calendar row, when we need only 7 ->
-            // we need to put null before and null after each row
-
-            // console.log(dates.length);
-            var rows = 0;
-            if(dates.length/7 > 5) {
-                rows = 6;
-            }
-            else {
-                rows = 5;
-            };
-            for(var i = 1; i < rows; i++){
-                dates.splice(i*7 + 2*(i-1), 0, null, null);
-            }
-            dates.splice(0,0,null);
-            dates.splice(dates.length, 0, null);
-            return dates;
-        };
-
-        var putDatesToCells = function (dates) {
-            var cells = [];
-
-            var cellBlocks = 0;
-            if(dates.length/7 > 5) {
-                cellBlocks = 18;
-            }
-            else {
-                cellBlocks = 15;
-            };
-
-            for(var i = 1; i <= cellBlocks; i++){
-                var cell = new Cell(i,[]);
-                for(var j = 1; j <= 3; j++) {
-                    var day = new Day(null);
-                    cell.cell.push(day);
-                }
-                cells.push(cell);
-            }
-            // console.log(cells);
-            for(var n in cells) {
-                for (var d in cells[n].cell) {
-                    // console.log(cells[n].cell[d]);
-                    var index = 3 * (cells[n].id - 1) + Number(d);
-                    // console.log(index);
-                    // console.log(dates[index]);
-                    // console.log(cells[n].cell[d].date);
-                    cells[n].cell[d].date = dates[index];
-                    // console.log(cells[n].cell[d].date);
-                    // console.log('---------------------');
-                }
-            }
-            return cells;
-            // console.log(cells);
-        };
-
-        var createDatesForBootstrapGrid = function () {
-            var dates = [];
-            createDates(dates);
-            appendNullsBeforeAndAfter(dates);
-            splitToRowsAndAppendNullsForEachRow(dates);
-            // console.log(dates);
-            // console.log(dates.length);
-            var result = putDatesToCells(dates);
-            // console.log(cells);
-            return result;
-        };
-
-        var result = createDatesForBootstrapGrid();
-
-        return result;
-    };
-    
-    return s;
+    // MAIN LOOP
+    self.setUp(dayNum, weekNum, month, state)
+        .initHTML()
+        .update(state);
 };
 
-exports.$charts = function( $http, $date ) {
+module.exports = Day;
+},{"./MyDates":15,"./Shared":17}],9:[function(require,module,exports){
+/**
+ * Created by py on 05/08/16.
+ */
 
-    var s = {charts:[],layouts:[], isRequestInProgress: false};
+var ExpenseMessagePayload;
 
-    s.getLayouts = function( callback ) {
-        s.isRequestInProgress = true;
-        $http.get( '/api/v1/charts/meta' ).
-        then(
-            function successCallback( res ){
-                for( var i in res.data ) {
-                    s.charts[ i ] = { chartDiv: res.data[i].chartDiv, traces: res.data[i].traces };
-                    s.layouts[ res.data[i].chartDiv ] = res.data[i].layout;
-                }
-                //console.log(res.data);
-                //console.log(s.layouts);
-                //console.log(s.charts);
-                callback();
-                s.isRequestInProgress = false;
-            },
-            function errorCallBack( res ){
-            console.error('error in $charts.charts');
-            console.log(res);
-            }
-        );
+// param: MessagePayload p - the base MessagePayload object, that we decorate with Expense attributes
+// param: int amount - integer > 0 that is Expense amount
+// param: String desc - string description of Expense.
+// param: String id - optional parameter, id of existing expense.
+// function: Object constructor
+// return: ExpenseMessagePayload object
+ExpenseMessagePayload = function (p, amount, desc, id) {
+    // this.messagePayload = p;
+    this.dayCode = p.dayCode;
+    this.labels = p.labels;
+
+    if(amount === undefined || typeof amount !== 'number' || amount < 0) {
+        throw new Error('amount is either undefined, or not number, or less than 0');
+    }
+    else {
+        this.amount = amount;
+    }
+
+    if(desc === undefined || typeof desc !== 'string') {
+        throw new Error('description is either undefined, or not string');
+    }
+    else {
+        this.description = desc;
+    }
+
+    if(id === undefined) {
+        this.id = null;
+    }
+    else {
+        this.id = id;
+    }
+};
+
+module.exports = ExpenseMessagePayload;
+},{}],10:[function(require,module,exports){
+/**
+ * Created by py on 05/08/16.
+ */
+
+var Message;
+
+var MyDates = require('../common/MyDates');
+
+// param: String user - id of the user, who posts the Message
+// param: int sourceId - code for Message sources. 1 - for WebBrowser
+// param: int type - code toe Message Type. 1 - for 'Expense'
+// param: ExpenseMessagePayload emp - payload object
+// function: constructs Message object
+// return: Message object
+Message = function(user, sourceId, type, emp) {
+    if(user === undefined || typeof user !== 'string') {
+        throw new Error('user is either undefined or not String');
+    }
+    else {
+        this.user = user;
+    }
+
+    if(sourceId === undefined || typeof sourceId !== 'number') {
+        throw new Error('message source id is either undefined, or not integer');
+    }
+    else {
+        this.sourceId = sourceId;
+
+    }
+
+    if(type === undefined || typeof type !== 'number') {
+        throw new Error('message type is either undefined or not integer');
+    }
+    else {
+        this.type = type;
+    }
+
+    if(emp === undefined){
+        throw new Error('payload is either undefined (ExpenseMessagePayload expected)');
+    }
+    else {
+        this.payload = emp;
+    }
+
+    this.occuredAt = MyDates.now();
+};
+
+module.exports = Message;
+},{"../common/MyDates":15}],11:[function(require,module,exports){
+/**
+ * Created by py on 05/08/16.
+ */
+
+var MessagePayload;
+
+// param: String dayCode - formatted string "YYYYMMDD", where this Message is attributed to.
+// This is NOT a creation date, or stored date.
+// This date is used to show the Message in appropriate Day in Calendar
+// param: Object labels - collection of flags {isPlan: false}, {isDeleted: false}.
+MessagePayload = function(dayCode, labels) {
+    if(dayCode === undefined || typeof dayCode !== 'string' || dayCode.length !== 8) {
+        throw new Error('dayCode is either undefined, or not String, or not 8 chars long');
+    }
+    else {
+        this.dayCode = dayCode;
+    }
+    if(labels.isPlan === undefined || labels.isDeleted === undefined) {
+        throw new Error('labels object does not have mandatory key-values (isPlan and isDeleted expected)');
+    }
+    else {
+        this.labels = labels;
+    }
+};
+
+module.exports = MessagePayload;
+},{}],12:[function(require,module,exports){
+/**
+ * Created by py on 05/08/16.
+ */
+
+var MessagePoster;
+
+var MessagePayload = require('../common/MessagePayload');
+var ExpenseMessagePayload = require('../common/ExpenseMessagePayload');
+var Message = require('../common/Message');
+var Shared = require('../common/Shared');
+var MyDates = require('../common/MyDates');
+
+// param: Object state
+// function: object constructor
+// return: MessagePoster object
+MessagePoster = function (state) {
+    var self = this;
+
+    // param: Object state
+    // function: setup static parameters of Day object
+    // return: self, so method can be chained.
+    self.setUp = function(state) {
+        self.dateString = state.currentDay;
+        self.dateUTC = 0;
+        self.postUrl = 'api/v1/message/'.concat(self.dateString);
+        self.currentItemId = undefined;
+
+        return self;
     };
 
-    s.reset = function() {
-        s.charts = [];
+    // param: void, since it is just initialization
+    // function: init self.html object, which is exposed to HTML template
+    // return: self, so method can be chained.
+    self.initHTML = function () {
+        self.html = {};
+        self.html.isShown = false;
+        self.html.amount = {
+            placeholder: 'Expense amount',
+            value: 0
+        };
+        self.html.description = {
+            placeholder: 'Describe the expense... E.g. "Car. Gas", or "Food. Lunch"',
+            value: ''
+        };
+        self.html.isPlanned = false;
+        self.html.isDeleted = false;
+
+        self.html.style = {
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            width: 0,
+            'z-index': 1
+        };
+        return self;
     };
 
-    s.renewTrace = function( traceName, callback ) {
-        s.isRequestInProgress = true;
-        $http.get( '/api/v1/charts/' + traceName + '/'+ $date.getMonthId()).
-            then( function successCallback (res) {
+    // param: Object state
+    // function: decides, whether Form should be shown in HTML. Writes decision to self.html.isShown
+    // return: self, so method can be chained
+    self.setIsShown = function (state) {
+        state.currentItem !== undefined ? self.html.isShown = true : self.html.isShown = false;
+        return self;
+    };
 
-            //console.log(res.data);
-            //s.charts.push(res.data);
-            callback( res.data );
-            s.isRequestInProgress = false;
-        }, function errorCallback (res) {
-            console.error('error in $charts.renewTrace');
-            console.log(res);
+    // param: Object state
+    // function: change the dateSting of the MessagePoster.
+    // return: self, so method can be chained.
+    self.setDateString = function (state) {
+        self.dateString = state.currentDay;
+        return self;
+    };
+
+    // param: Object state
+    // function: set the selected Item from state
+    // return: self, so method can be chained.
+    self.setSelectedItem = function (state) {
+        if(state.currentItem !== undefined) {
+            self.currentItemId = state.currentItem._id;
+            self.html.amount.value = state.currentItem.amount;
+            self.html.description.value = state.currentItem.description;
+            self.html.isPlanned = !state.currentItem.labels.isConfirmed;
+            self.html.isDeleted = state.currentItem.labels.isDeleted;
+        }
+        return self;
+    };
+
+    // param: Object state
+    // function: set the expense poster position to near the clicked item
+    // return: self, so method can be chained.
+    self.setPopUpStyle = function (state) {
+        if(state.currentItem !== undefined) {
+            var clickedRect = state.currentItem.boundingClientRect;
+            self.html.style.left = clickedRect.left + clickedRect.width;
+            self.html.style.top = clickedRect.top - 42;
+            self.html.style.width = clickedRect.width * 1.5;
+        }
+        return self;
+    };
+
+    // param: ExpenseData message - the packed ExpenseData object to be sent over http to server
+    // function: posts message to server. If succeed, changes self.postSuccess to true. It will tell pfinAppCtrl to
+    // trigger the update event and AppView will be updated.
+    // Throws error, if failed to do so.
+    // return: void
+    self.save = function(message) {
+        var shared = Shared.getInstance();
+        var http = shared.service.http;
+        var state = Shared.getInstance().state;
+
+        http.post(self.postUrl, message).then(function success (response){
+            console.log(response.data);
+            Shared.change('currentItem', undefined);
+        }, function error (response){
+            throw new Error('failed to post message to ' + self.postUrl);
         });
     };
 
-    return s;
+    // param: void
+    // function: assemble expected ExpenseData from 'self'
+    // return: Message
+    self.assembleMessage = function() {
+        var dayCode = self.dateString;
+        var p = new MessagePayload(
+            dayCode,
+            {
+            isPlan: self.html.isPlanned,
+            isDeleted: self.html.isDeleted
+            }
+        );
+        var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId);
+        var user = Shared.getInstance().user;
+        return new Message(user._id, 1, 1, emp);
+
+    };
+
+    // param: String btn - name of the clicked button
+    // function: handle btn click in the form - assemble Message and send it over the http to save into DB.
+    // return: void
+    self.handleClick = function (btn) {
+        var message;
+        if(btn === 'delete') {
+            self.html.isDeleted = true;
+        }
+        message = self.assembleMessage();
+        self.save(message);
+    };
+
+    // param: Object state
+    // function: change self.html parameters according to 'state'
+    // return: void
+    self.update = function(state){
+        self.initHTML()
+            .setIsShown(state)
+            .setDateString(state)
+            .setSelectedItem(state)
+            .setPopUpStyle(state);
+    };
+
+    // MAIN LOOP
+    self.setUp(state)
+        .update(state);
 };
 
-exports.$error = function() {
-    var s = {};
-    var errorReference = {
-        EHOSTUNREACH: "Service in unreachable for the moment. We know about the problem and will fix it soon.",
-        ECONNREFUSED: "Service does not accept connections now. We know about the problem and will fix it soon."
-    }
+module.exports = MessagePoster;
+},{"../common/ExpenseMessagePayload":9,"../common/Message":10,"../common/MessagePayload":11,"../common/MyDates":15,"../common/Shared":17}],13:[function(require,module,exports){
+/**
+ * Created by py on 24/07/16.
+ */
 
-    s.translate = function(errorCode) {
-        var result = errorReference[errorCode];
-        if(!result){
-            console.log(errorCode);
-            return "Unknown error. We know about the problem and will fix it soon."
+var Month;
+
+var TimeWindow = require('./TimeWindow');
+var Shared = require('./Shared');
+var MyDates = require('./MyDates');
+
+// param: String t - string representation of timeWindow object
+// param: Object state
+// function: object constructor
+// return: Month object
+Month = function (t, state) {
+    var self = this;
+
+    // param: String month - the string-encoded TimeWindow, which is on month level.
+    // Formatted as "YYYYMM".
+    // param: Object state
+    // function: setup static parameters of Month object
+    // return: self, so method can be chained.
+    self.setUp = function(t, state) {
+        self.monthString = t;
+        self.getUrl = 'api/v1/month/'.concat(t);
+        self.needsHttpCall = true;
+        return self;
+    };
+
+
+    // param: void, since it is just initialization
+    // function: init self.html object, which is exposed to HTML template
+    // return: self, so method can be chained.
+    self.initHTML = function () {
+        self.html = {};
+        self.html.totals = {
+            plan: 0,
+            fact: 0
+        };
+        self.html.isSelected = false;
+        self.html.all = function () {
+            return self.html.totals.fact + self.html.totals.plan;
+        };
+        self.html.formattedMonth = MyDates.monthAsLabel(self.monthString, false);
+        self.html.style = {plan:{},fact:{}};
+        return self;
+    };
+
+    // param: Object state
+    // function: decides, whether Month should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
+    // return: self, so method can be chained
+    self.setIsSelected = function (state) {
+        if(state.currentMonth !== undefined){
+            self.monthString === state.currentMonth ? self.html.isSelected = true : self.html.isSelected = false;
+        }
+        return self;
+    };
+
+    // param: Object state
+    // function: get Month data over http, if month update is needed.
+    // return: self, so method can be chained.
+    self.updateTotals = function(state) {
+        var shared = Shared.getInstance();
+        var http = shared.service.http;
+        var setValues = shared.fns.setValues;
+
+        http.get(this.getUrl).then(function success(response){
+            setValues(response, self.html);
+            var all = function () {
+                return self.html.totals.fact + self.html.totals.plan;
+            };
+            if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
+                self.html.style.plan = {width: '50%'};
+                self.html.style.fact = {width: '50%'};
+            }
+            else {
+                self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
+                self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
+            }
+        }, function error(response) {
+            throw new Error('failed to get data from ' + self.getUrl);
+        });
+    };
+
+    // param: Object state
+    // function: change self.html parameters according to 'state'
+    // return: self, so method can be chained
+    self.update = function (state) {
+        self.setIsSelected(state)
+            .updateTotals(state);
+        return self;
+    };
+
+    // MAIN LOOP
+    self.setUp(t, state)
+        .initHTML()
+        .update(state);
+};
+
+
+module.exports = Month;
+},{"./MyDates":15,"./Shared":17,"./TimeWindow":18}],14:[function(require,module,exports){
+/**
+ * Created by py on 24/07/16.
+ */
+
+var MonthSwitch;
+
+var Month = require('./Month');
+var MyDates = require('./MyDates');
+
+// param: Object state
+// function: object constructor
+// return: MonthSwitch object
+MonthSwitch = function(state) {
+
+    var self = this;
+
+    // param: Object state
+    // function: constructs the array of 6 Months: 1 back, current, 4 forward.
+    // return: void
+    var init = function(state) {
+        self.months = [];
+        var months = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
+        for(var i = 0; i < months.length; i++) {
+            self.months.unshift(new Month(months[i], state));
+        }
+    };
+
+    // param: String t - current time window from state object
+    // function: decide, whether or not to renew the months in MonthSwitch
+    // return: Bool result
+    var isRenewSwitch = function(t) {
+        var result = false;
+        var last = self.months.length - 1;
+        if(t === self.months[0].monthString || t === self.months[last].monthString) {
+            result = true;
+        }
+        return result;
+    };
+
+    var update = function(state){
+        for(var i = 0; i < self.months.length; i++) {
+            self.months[i].isSelected = false;
+            self.months[i].update(state);
+        }
+    };
+
+    this.update = function(state) {
+        if(isRenewSwitch(state.currentMonth)) {
+            init(state);
+            update(state);
         }
         else {
-            return result;
+            update(state);
+        }
+    };
+
+    // MAIN LOOP
+    init(state);
+};
+
+module.exports = MonthSwitch;
+},{"./Month":13,"./MyDates":15}],15:[function(require,module,exports){
+/**
+ * Created by py on 23/07/16.
+ */
+
+var MyDates;
+
+var TimeWindow = require('../common/TimeWindow');
+
+MyDates = (function() {
+
+    // param: String string - string representation of timeWindow
+    // function: extract exact date (1-31) from timeWindow
+    // return: Number date
+    var getDate = function(string) {
+        if(string.length === 8){
+            return Number(string.substring(6,8));
+        }
+        else {
+            return null;
+        }
+    };
+
+    // param: String string - string representation of timeWindow
+    // function: extract Month from timeWindow
+    // return: String month
+    var getMonth = function(string) {
+        if(string.length >=  6) {
+            return Number(string.substring(4,6));
+        }
+        else {
+            return null;
+        }
+    };
+
+    // param: String string - string representation of timeWindow
+    // function: extract Year from timeWindow
+    // return: String year
+    var getYear = function(string) {
+        if(string.length >= 4) {
+            return Number(string.substring(0, 4));
+        }
+        else {
+            return null;
+        }
+    };
+
+    // param: String sting - formatted TimeWindow string in "YYYYMM" or "YYYYMMDD" expected.
+    // function: calculate number of days in given month
+    // return: integer
+    var daysInMonth = function(string) {
+        var number = 30;
+        var month = getMonth(string);
+        var year = getYear(string);
+
+        if(month <= 7) {
+            if(month % 2 === 1) {
+                number = 31;
+            }
+            else if(month % 2 === 0) {
+                if(year % 4 === 0 && month === 2) {
+                    number = 29;
+                }
+                else if (year % 4 !== 0 && month === 2){
+                    number = 28;
+                }
+                else if(year % 4 !== 0 && month !== 2) {
+                    number = 30
+                }
+            }
+        }
+        else if(month > 7) {
+            if(month % 2 === 0) {
+                number = 31
+            }
+        }
+
+        return number;
+    };
+
+    // param: String t - string representation of TimeWindow object. "YYYYMM" format expected.
+    // function: find out, how many weeks in given month-year.
+    // return: int numberOfWeeks
+    var weeksInMonth = function(t) {
+        var weeks = 1;
+        var firstDay = firstDayOfMonth(t);
+        var daysInFirstWeek = 7 - firstDay;
+        var fullWeeksInMonth = Math.floor((daysInMonth(t) - daysInFirstWeek)/7);
+        var lastWeek = (daysInMonth(t) - daysInFirstWeek)%7 === 0 ? 0 : 1;
+        return weeks + fullWeeksInMonth +lastWeek;
+
+    };
+
+    // param: String t - string representation of TimeWindow object
+    // function: find out the first dat of the month
+    // return: int firstDay
+    var firstDayOfMonth = function(t){
+        var tw = stringToTimeWindow(t);
+        var firstDayAsDate = new Date(tw.year, tw.month - 1, 1);
+        return firstDayAsDate.getDay();
+    };
+
+    // param: Date object
+    // param: Object def - def vector, showing, what format of the TimeWindowString we need as result.
+    // def has format {y: 1, m: 1, d: undefined} (this means, we want to convert date to YYYYMM string only.
+    // if no 'def' is provided to function, it will consider YYYYMMDD as resulting string format.
+    // function: parse date object and return it's TimeWindow string representation
+    // return: String t
+    var dateToTimeWindowString = function(date, def){
+        if(!def) {
+            def = {y:1, m:1, d: 1};
+        }
+        var t;
+        var tw = new TimeWindow({
+            year: date.getFullYear() * def.y,
+            month: (date.getMonth() + 1) * def.m,
+            day: date.getDate() * def.d
+        });
+
+        return timeWindowToFormattedString(tw, '');
+    };
+
+    // param: String string
+    // function: convert string of allowed format to TimeWindow object
+    // return: TimeWindow object
+    function stringToTimeWindow (string) {
+        var t;
+        var allowedLengths = [0, 4, 6, 8];
+        var isAllowedLength = function(element, index, array) {
+            return element === string.length;
+        };
+        if(!allowedLengths.some(isAllowedLength)) {
+            throw new Error('TimeWindow string must be 4,6 or 8 chars length');
+        }
+        else {
+            if(string.slice(0,4) === "0000") {
+                return new TimeWindow();
+            }
+            var year = string.slice(0,4);
+            var month = string.slice(4,6);
+            var day = string.slice(6,8);
+            t = new TimeWindow().set({year: Number(year), month: Number(month), day: Number(day)});
+            return t;
         }
     }
-    return s;
+
+    // param: TimeWindow t
+    // param: String s - symbol to separate 'year', 'month'' and 'day' in formatted timeWindow
+    // function: format TimeWindow object to String, where 'year', 'monht' and 'day' are separated by s
+    // if you omit 's', you'll get String representation of TimeWindow, used in api calls.
+    // return: String
+    var timeWindowToFormattedString = function(t, s) {
+        if(t.year) {
+            var year = t.year.toString();
+        }
+
+        if(t.month) {
+            var month = t.month.toString();
+            if (month.length < 2) {
+                month = "0" + month;
+            }
+        }
+        if(t.day) {
+            var day = t.day.toString();
+            if(day.length < 2) {
+                day = "0" + day;
+            }
+        }
+        if(!t.year) {
+            return "0000";
+        }
+        else if(!t.month) {
+            return year;
+        }
+        else if(!t.day){
+            // return month + s + year;
+            return year + s + month;
+        }
+        else {
+            // return day + s + month + s + year;
+            return year + s + month + s + day;
+        }
+    };
+
+    // param: Array [TimeWindow] arr
+    // param: String s - formatter
+    // function: convert array of TimeWindows as heading Strings
+    // return: Array [String] - array of strings, formatted with formatter separator.
+    function headingsArray (arr, s) {
+        var result = [];
+        for(var i in arr) {
+            result.push(timeWindowToFormattedString(arr[i], s));
+        }
+        return result;
+    }
+
+    // param: String t - timeWindow string representation
+    // param: Array [int] range - the range of items to be delivered. Index 0 - is current.
+    // Must contain only 2 items. [-1,1] means I want to explode t to three timeWindows:
+    // -1 tw from current, current tw and +1 tw from current
+    // function: convert TimeWindow to array of embedded TimeWindows.
+    // return: Array [TimeWindow]
+    var explode = function(t, range){
+        var result = [];
+
+        var today = new Date();
+
+        var todayYear = today.getFullYear();
+
+        var todayMonth = today.getMonth();
+
+        var todayDate = today.getDate();
+
+        var timeWindow = stringToTimeWindow(t);
+
+        if(!timeWindow.year) {
+            for (var y = range[1]; y >= range[0]; y --){
+                var tw = new TimeWindow().set({year: todayYear + y});
+                result.push(tw);
+            }
+        }
+        else if(timeWindow.year && !timeWindow.month) {
+            for(var m = range[1]; m >= range[0]; m--) {
+                result.push(new TimeWindow().set({year: timeWindow.year, month: todayMonth + m}));
+            }
+        }
+        else if(timeWindow.month && !timeWindow.day) {
+            for(var d = range[1]; d >= range[0]; d--) {
+                result.push(new TimeWindow().set({year: timeWindow.year, month: timeWindow.month, day: todayDate + d}));
+            }
+        }
+        else if(timeWindow.day) {
+            throw new Error('TimeWindows with "day" property can not be exploded');
+        }
+
+        return result;
+    };
+
+    // param: String t
+    // function: find the dimension of lower level, in which to explode
+    // return: int level
+    var explosionIndex = function(t) {
+        var index = {y: 0, m: 0, d: 0};
+        if(t === "0000") {
+            index = {y: 1, m: 0, d: 0};
+        }
+        else if(t !== "0000" && t.length === 4) {
+            index = {y: 0, m: 1, d: 0};
+        }
+        else if(t !== "0000" && t.length === 6) {
+            index = {y: 0, m: 0, d: 1};
+        }
+        else {
+            throw new Error('Unexpected length of TimeWindow (4 or 6 expected)');
+        }
+        return index;
+    };
+
+    var definitiveIndex = function(t) {
+        var index = {y: undefined, m: undefined, d: undefined};
+        if(t === "0000") {
+            index.y = 1;
+        }
+        else if(t !== "0000" && t.length === 4) {
+            index.y = 1;
+            index.m = 1;
+        }
+        else if(t !== "0000" && t.length === 6) {
+            index.y = 1;
+            index.m = 1;
+            index.d = 1;
+        }
+        else {
+            throw new Error('Unexpected length of TimeWindow (4 or 6 expected)');
+        }
+        return index;
+    };
+
+    // param: String t - timeWindow string representation
+    // param: Array [int] range - the range of items to be delivered. Index 0 - is current.
+    // param: String start - timeWindow, which is zero point in array.
+    // Must contain only 2 items. [-1,1] means I want to explode t to three timeWindows:
+    // -1 tw from start, current tw and +1 tw from start
+    // function: convert TimeWindow to array of embedded TimeWindows.
+    // return: Array [TimeWindow]
+    var explode2 = function(t, range, start) {
+        var result = [];
+        var zero = {}; // ->  TimeWindow from which startDate we will iterate back anf forth
+        var k = explosionIndex(t); // -> explosion index vector
+        var def = definitiveIndex(t); // -> index, showing what is defined and what it not in result of explosion
+        if(!start) {
+            var today = new Date();
+            zero = new TimeWindow().set({
+                year: today.getFullYear() * def.y,
+                month: (today.getMonth() + 1) * def.m,
+                day: today.getDate() * def.d
+            });
+        }
+        else {
+            zero = stringToTimeWindow(start);
+        }
+        for(var i = range[1]; i >= range[0]; i--) {
+            var newDate = new Date(zero.startDate.getFullYear() + k.y * i, zero.startDate.getMonth() + k.m * i, zero.startDate.getDate() + k.d * i);
+            result.push(new TimeWindow().set({
+                year: newDate.getFullYear() * def.y,
+                month: (newDate.getMonth() + 1) * def.m,
+                day: newDate.getDate() * def.d
+            }));
+        }
+        return result;
+    };
+
+    // param: String string - timeWindow string representation
+    // function: get the length of parent timeWindow string
+    // return: int length - length of parent timeWindow string
+    var parentLength = function(string) {
+        if(string.length === 4) {
+            return 4;
+        }
+        if(string.length === 6) {
+            return 4;
+        }
+        if(string.length === 8) {
+            return 6;
+        }
+    };
+
+    // param: String string - timeWindow string representation
+    // function: parse timeWindow and return it's parent as string
+    // return: String - parent timeWindow string representation
+    var getParent = function(string) {
+        if(string === "0000") {
+            return null
+        }
+        else if(string.length === 4 && string !== "0000") {
+            return "0000";
+        }
+        else {
+            return string.slice(0, parentLength(string));
+        }
+    };
+
+    // param: String t - timeWindow string representation
+    // param: Array [int] range - the range of items to be delivered. Index 0 - is current.
+    // Must contain only 2 items. [-1,1] means I want three neighbours of t:
+    // -1 tw from current, current tw and +1 tw from current
+    // function: constructs the array of several Months: range[0] back, current, range[1] forward.
+    // return: Array [TimeWindow]
+    var getNeighbours = function (t, range) {
+        var result = [];
+        var parent = getParent(t);
+        result = explode2(parent, range, t);
+        return result;
+    };
+
+    // param: int dayNum
+    // function: make char string out of integer
+    // return: String day
+    var dayToString = function(dayNum){
+        var day;
+        if(dayNum > 0 && dayNum <= 9){
+            day = "0" + dayNum.toString();
+        }
+        else if(dayNum > 9) {
+            day = dayNum.toString();
+        }
+        return day;
+    };
+
+    // param: Date date - date object
+    // function: calculate the week number in month, that is encoded in given Date object (from 0 to 3-5)
+    // return: int result
+    var numberOfWeek = function(date) {
+        var result = null;
+        var tws = dateToTimeWindowString(date, {y: 1, m: 1, d: undefined}); // -> this is currentMonth, encoded with string
+        // var days = daysInMonth(tws); // -> int number of days in month
+        var fday = firstDayOfMonth(tws); // -> int first day of month
+        var today = getDate(dateToTimeWindowString(date, {y: 1, m: 1, d: 1})); // -> int today date
+        return Math.floor((today + fday - 1)/7);
+
+    };
+
+    // param: void
+    // function: shorten and unify the DateTime format used for precise timing
+    // return: int datetime value in milliseconds
+    var nowInMilliseconds = function() {
+        return Date.parse(new Date());
+    };
+
+    var monthAsLabel = function(t, isLong) {
+
+        var tw = stringToTimeWindow(t);
+
+        if(tw.year && tw.month && !tw.day) {
+            var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var longMonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            var year = tw.year.toString().slice(2);
+            var month;
+            if(isLong) {
+                month = longMonthNames[tw.month - 1];
+            }
+            else {
+                month = monthNames[tw.month - 1];
+            }
+            return month + '-' + year;
+        }
+        else if(tw.year && tw.month && tw.day) {
+            throw new Error('this function works only for TimeWindows on month level');
+        }
+    };
+
+    return {
+        daysInMonth: daysInMonth,
+        weeksInMonth: weeksInMonth,
+        firstDay: firstDayOfMonth,
+        dateToString: dateToTimeWindowString,
+        getYearFromString: getYear,
+        getMonthFromString: getMonth,
+        getDateFromString: getDate,
+        twToString: timeWindowToFormattedString,
+        stringToTw: stringToTimeWindow,
+        explode: explode2,
+        headingsArray: headingsArray,
+        parent: getParent,
+        neighbours: getNeighbours,
+        dayToString: dayToString,
+        numberOfWeek: numberOfWeek,
+        now: nowInMilliseconds,
+        monthAsLabel: monthAsLabel
+    }
+})();
+
+module.exports = MyDates;
+},{"../common/TimeWindow":18}],16:[function(require,module,exports){
+/**
+ * Created by py on 13/07/16.
+ */
+
+var PusherClient;
+
+// param: String apiKey - Pusher API Key
+// function: object constructor
+// return: PusherClient object
+PusherClient = (function(apiKey){
+
+    var pusher = new Pusher(apiKey, {
+        encrypted: true
+    });
+
+    var channels = {};
+
+    // param: String channel - channel name to listen
+    // param: String event - event name to listen
+    // param: Function callback - method to execute when event arrives
+    // function: registers the callback for specified channel and event
+    // return: true, if function ended successfully
+    var subscribe = function (channel, event, callback) {
+        if(!channels[channel]) {
+            channels[channel] = [];
+        }
+        channels[channel].push({event: event, callback: callback});
+
+        var c = pusher.subscribe(channel);
+        c.bind(event, callback);
+        return true;
+    };
+
+    var getChannels = function(){
+        return channels;
+    };
+
+    return {
+        subscribe: subscribe,
+        channels: getChannels
+    }
+})('aaa12f45b280acb74218');
+
+module.exports = PusherClient;
+},{}],17:[function(require,module,exports){
+/**
+ * Created by py on 23/07/16.
+ */
+
+var Shared;
+
+var MyDates = require('../common/MyDates');
+
+// param: void
+// function: Shared module constructor. Module returns Singleton state object,
+// which is used to share data between all instances, nested in views.
+// return: Shared module
+Shared = (function() {
+
+    var singleton;
+
+    // param: HttpResponse res - http response, or any other object with some keys;
+    // param: Object obj - object, that we set from response
+    // function: sets all values from obj[keys] to values from res with the same keys
+    // return: modified obj.
+    var setValues = function(res, obj) {
+        var data;
+        if(res.data) {
+            data = res.data;
+
+        }
+        else if(!res.data) {
+            data = res;
+        }
+
+        var keys = Object.keys(data);
+        // console.log(keys);
+        for(var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            if(!obj[key]) {
+                throw new Error('Key, you are trying to set, does not exists in obj. Check you response.data and compare it with object.');
+            }
+            else {
+                obj[key] = data[key];
+            }
+        }
+
+        return obj;
+    };
+
+    // param: HttpService http - reference to Angular $http service. Ignored, if singleton already exists.
+    // param: MyDates md - reference to MyDates service. Ignored, if singleton already exists.
+    // param: String tw - string representation of 'all' timewindow. Ignored, if singleton already exists.
+    // param: int sid - subview id, index of subview currently visible on MainView.
+    // Starts with 1. Ignored, if singleton already exists.
+    // function: return instance, if it exists. If not, create new singleton instance and return it.
+    // return: singleton object with shared values and functions
+    var init = function() {
+        singleton = {service: undefined, fns: undefined, state: undefined};
+        singleton.service = {
+            http: {},
+            MyDates: MyDates
+        };
+        singleton.fns = {
+            setValues: setValues
+        };
+        singleton.state = {
+            currentMonth: MyDates.dateToString(new Date(), {y:1, m:1, d: undefined}),
+            currentWeek: MyDates.numberOfWeek(new Date()),
+            currentDay: MyDates.dateToString(new Date()),
+            currentItem: undefined,
+            isUpdated: false
+        };
+
+
+        // singleton.state = {
+        //     currentMonth: "201502",
+        //     currentWeek: 0,
+        //     currentDay: "20150201"
+        // };
+        singleton.user = {};
+        return singleton;
+    };
+
+    // param: void
+    // function: returns singleton instance
+    // return: singleton
+    var get = function() {
+        if(singleton) {
+            return singleton;
+        }
+        else {
+            init();
+        }
+    };
+
+    // param: String key - the name of attribute you want to change
+    // param: Object value - the value of parameter, you want to change
+    // function: changes the internal parameter of Shared service to new value
+    // return: Shared object, so method can be chained.
+    var change = function(key, value) {
+        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "isUpdated", "http", "user"];
+        var isAllowedKey = function(element, index, array) {
+            return element === key;
+        };
+        if(!allowedKeys.some(isAllowedKey)) {
+            throw new Error('Wrong key string. Allowed keys are: ' + allowedKeys.toString());
+        }
+        else if(key === "http"){
+            singleton.service.http = value;
+        }
+        else if(key === 'user'){
+            singleton[key] = value;
+        }
+        else {
+            singleton.state[key] = value;
+        }
+        return singleton;
+    };
+
+    var log = function(){
+        console.log(singleton);
+    };
+
+    // initialize singleton internally, so it exists every time, I call require('../common/Shared)
+    init();
+
+    return {
+        getInstance: get,
+        change: change,
+        log: log
+    }
+
+})();
+
+module.exports = Shared;
+},{"../common/MyDates":15}],18:[function(require,module,exports){
+
+var TimeWindow;
+
+// param: Object args
+// function: object constructor
+// return: TimeWindow object
+
+TimeWindow = function(args) {
+    if(args) {
+        this.set(args);
+    }
+    else {
+        this.startDate = new Date(Date.UTC(1970,0,1));
+        this.endDate = new Date(Date.UTC(2100,0,1));
+        this.year = null;
+        this.month = null;
+        this.day = null;
+    }
 };
-},{"http-status":5}],5:[function(require,module,exports){
+
+TimeWindow.prototype = {
+    // param: Object args
+    // function: set TimeWindow object properties based on given properties in args.
+    // note: TimeWindow object is created based exactly on the given args.
+    // It means that if you want March-2016, you should give {year: 2016, month: 3}
+    // If you give args as formulas based on Date.getMonth(), please take into account, that Javascript Date object
+    // gives you back 2 for March, not 3.
+    // return: modified TimeWindow object
+    set: function(args){
+        const DAY = 24 * 3600 * 1000;
+        if(!args) {
+            throw new Error('no args provided - TimeWindow object remained unchanged');
+        }
+        else if(args.day) {
+            if(args.month < 0) {
+                if(args.day < 0) {
+                    this.startDate = new Date(Date.UTC(args.year, args.month, args.day + 1));
+                }
+                else {
+                    this.startDate = new Date(Date.UTC(args.year, args.month, args.day));
+                }
+            }
+            else {
+                if(args.day < 0) {
+                    this.startDate = new Date(Date.UTC(args.year, args.month - 1, args.day + 1));
+                }
+                else {
+                    this.startDate = new Date(Date.UTC(args.year, args.month - 1, args.day));
+                }
+            }
+            this.endDate = new Date(Date.UTC(this.startDate.valueOf() + DAY));
+            this.year = this.startDate.getFullYear();
+            this.month = this.startDate.getMonth() + 1;
+            this.day = this.startDate.getDate();
+        }
+        else if(!args.day && args.month) {
+
+            if(args.month < 0) {
+                this.startDate = new Date(Date.UTC(args.year, args.month, 1));
+                this.endDate = new Date(Date.UTC(args.year, args.month + 1, 1));
+            }
+            else {
+                this.startDate = new Date(Date.UTC(args.year, args.month - 1, 1));
+                this.endDate = new Date(Date.UTC(args.year, args.month, 1));
+            }
+            this.year = this.startDate.getFullYear();
+            this.month = this.startDate.getMonth() + 1;
+            this.day = null;
+
+        }
+        else if(!args.day && !args.month && args.year) {
+            this.startDate = new Date(Date.UTC(args.year,0,1));
+            this.endDate = new Date(Date.UTC(args.year + 1,0,1));
+            this.year = this.startDate.getFullYear();
+            this.month = null;
+            this.day = null;
+        }
+
+        return this;
+    }
+};
+
+module.exports = TimeWindow;
+},{}],19:[function(require,module,exports){
+/**
+ * Created by py on 25/07/16.
+ */
+
+var Week;
+
+var MyDates = require('./MyDates');
+var Day = require('./Day');
+var Shared = require('./Shared');
+
+// param: int weekNum - the number of week in month (from 0 to 3-5)
+// param: String month - the string-encoded TimeWindow, which is on month level.
+// param: Object state
+// param: Bool isTransformRequired - tells constructor to apply transformation for Bootstrap
+// function: object constructor
+// return: Week object
+Week = function(weekNum, month, state, isTransformRequired) {
+    var self = this;
+
+    // param: int weekNum - the number of week in month (from 0 to 3-5), where day belongs to.
+    // param: Bool isTransformRequired - tells constructor to apply transformation for Bootstrap grid.
+    // param: Object state
+    // function: setup static parameters of Week object
+    // return: self, so method can be chained.
+    self.setUp = function(weekNum, month, state, isTransformRequired) {
+        self.month = month;
+        self.weekNum = weekNum;
+        self.isTransformed = isTransformRequired;
+        return self;
+    };
+
+    // param: void, since it is just initialization
+    // function: init self.html object, which is exposed to HTML template
+    // return: self, so method can be chained.
+    self.initHTML = function(){
+        self.html = {};
+        self.html.daysRange = [0,0];
+        self.html.isSelected = false;
+        self.html.days = [];
+        return self;
+    };
+
+    // param: Object state
+    // function: create Day objects and stash them into self.html.days (array)
+    // return: self, so method can be chained
+    self.setDays = function (state) {
+        // param: Object state
+        // function: create Days in first week (which has weekNum = 0)
+        // return: void
+        var setFirstWeek = function (state) {
+            var firstDayDelta = MyDates.firstDay(self.month);
+            for(var i = 0; i < firstDayDelta; i++){
+                self.html.days.push(null);
+            }
+            var dayNum;
+            for(var k = firstDayDelta; k < 7; k ++) {
+                dayNum = k - firstDayDelta + 1;
+                self.html.days.push(new Day(dayNum, 0, self.month, state));
+            }
+        };
+
+        // param: Object state
+        // function: create Days in other weeks (which has weekNum in range [1:5])
+        // return: void
+        var setOtherWeeks = function(state){
+            var firstDay = MyDates.firstDay(self.month);
+            var maxDays = MyDates.daysInMonth(self.month);
+            var dayNum;
+            for(var j = 0; j < 7; j++) {
+                dayNum = j + self.weekNum * 7 + 1 - firstDay;
+                if(dayNum < maxDays){
+                    self.html.days.push(new Day(dayNum, self.weekNum, self.month, state));
+                }
+                else if(dayNum === maxDays){
+                    self.html.daysRange[1] = dayNum;
+                    self.html.days.push(new Day(dayNum, self.weekNum, self.month, state));
+                }
+                else {
+                    self.html.days.push(null);
+                }
+            }
+        };
+
+        // param: Week w - Week object that has to be transformed
+        // param: int cells - number of cells for grid
+        // function: append null in front and null after the w.days array, so w.days length -> 9.
+        // and then, slice Week to three arrays, so w.days -> something like [[null, Day, Day], [Day, Day, Day], [Day, Day, null]]
+        var transform4BoostrapGrid = function(w, cells){
+            var transformedWeek = [];
+            var cell = [];
+            if(cells === 3) {
+                w.html.days.unshift(null);
+                w.html.days.push(null);
+                for(var i = 0; i < w.html.days.length; i = i + 3){
+                    cell = w.html.days.slice(i, i + 3);
+                    transformedWeek.push(cell);
+                }
+            }
+            if(cells === 2){
+                w.html.days.push(null);
+                for(var j = 0; j < w.html.days.length; j = j + 4){
+                    cell = w.html.days.slice(j, j + 4);
+                    transformedWeek.push(cell);
+                }
+            }
+
+            return transformedWeek;
+        };
+
+        // MAIN LOOP SET DAYS
+        if(self.weekNum === 0) {
+            setFirstWeek(state);
+        }
+        else {
+            setOtherWeeks(state);
+        }
+
+        if(self.isTransformed) {
+            self.html.days = transform4BoostrapGrid(self, 2);
+        }
+        return self;
+    };
+
+    // param: int weekNum - the number of week in month (from 0 to 3-5)
+    // param: int firstDay - the day of week of the first day in the month (0 - Sunday, 1 - Monday...)
+    // function: setup start day for week and end day for week
+    // return: self, so method can be chained.
+    self.setDayRange = function(weekNum, firstDay){
+        if(weekNum === 0) {
+            self.html.daysRange[0] = 1;
+            self.html.daysRange[1] = 7 - firstDay;
+        }
+        else {
+            self.html.daysRange[0] = weekNum * 7 + 1 - firstDay;
+            self.html.daysRange[1] = weekNum * 7 + 7 - firstDay;
+        }
+        return self;
+    };
+
+    // param: Object state
+    // function: updates Week object after state change
+    // return: self, so method can be chained
+    self.update = function(state) {
+
+        // param: Object state
+        // function: ask Day objects in self.html.days to update
+        // return: self, so method can be chained
+        self.updateDays = function (state) {
+            if(self.isTransformed === true) {
+                for(var c = 0; c < self.html.days.length; c++){
+                    for(var d = 0; d < self.html.days[0].length; d++){
+                        if(self.html.days[c][d] !== null){
+                            self.html.days[c][d].update(state);
+                        }
+                    }
+                }
+            }
+            else {
+                for(var i = 0; i < self.html.days.length; i++){
+                    if(self.html.days[i] !== null){
+                        self.html.days[i].update(state);
+                    }
+                }
+            }
+            return self;
+        };
+
+        // param: Object state
+        // function: decides, whether Week should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
+        // return: self, so method can be chained
+        self.setIsSelected = function(state) {
+            if(state.currentWeek){
+                self.weekNum === state.currentWeek.weekNum ? self.html.isSelected = true : self.html.isSelected = false;
+            }
+            return self;
+        };
+
+        // MAIN LOOP FOR UPDATE
+        self.setIsSelected(state)
+            .updateDays(state);
+        return self;
+    };
+
+    // param: Object state
+    // function: pushes month to state, if it is current
+    // return: self, so method  can be chained.
+    self.pushToState = function (state) {
+        if(state.currentWeek === undefined) {
+            if(self.weekNum === MyDates.numberOfWeek(new Date())){
+                Shared.change('currentWeek', self);
+            }
+        }
+        return self;
+    };
+    
+    // MAIN LOOP
+    self.setUp(weekNum, month, state, isTransformRequired)
+        .initHTML()
+        .setDays(state)
+        .setDayRange(weekNum, MyDates.firstDay(self.month))
+        .update(state);
+};
+
+module.exports = Week;
+},{"./Day":8,"./MyDates":15,"./Shared":17}],20:[function(require,module,exports){
 // Generated by CoffeeScript 1.7.1
 module.exports = {
   100: 'Continue',
@@ -1419,7 +1958,7 @@ module.exports = {
   HTTP_VERSION_NOT_SUPPORTED: 505
 };
 
-},{}],6:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -2969,4 +3508,4 @@ module.exports = {
   }
 }.call(this));
 
-},{}]},{},[1]);
+},{}]},{},[2]);

@@ -1,0 +1,35 @@
+<div class = "row">
+    <div class = "col-md-12" ng-repeat = "m in self.months track by $index">
+        <div class = "panel" ng-class = "{'panel-primary': m.html.isSelected, 'panel-default': !m.html.isSelected}"
+             ng-click = "$emit('update::month', {newMonth: m.monthString, index: $index})">
+            <div class = "panel-body"
+                 ng-mouseenter = "$index === 0 || $index === 5 ? isHover = true : isHover = false"
+                 ng-mouseleave = "isHover = false">
+                <div style = "height: 2.5em;">
+                    <h4 class="text-center" ng-class = "{'text-muted': !m.html.isSelected}">{{m.html.formattedMonth}}</h4>
+                </div>
+                <div style="height: 2.5em">
+                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected"></progress>
+                    <p class="text-muted text-center" ng-show = "!m.html.isSelected">
+                        {{m.html.all() | number : 0}}
+                        <i class="fa fa-rub" aria-hidden="true"></i>
+                    </p>
+                </div>
+                <div style = "height: 5em; position: absolute; top: 20%; left: 10%; z-index: 1" ng-if = "$index === 0" ng-show = "isHover">
+                    <div style = "height: 1.5em"></div>
+                    <p class="text-muted text-center">
+                        <i class="fa fa-chevron-left fa-2x" aria-hidden="true"></i>
+                    </p>
+                    <div style = "height: 1.5em"></div>
+                </div>
+                <div style = "height: 5em; position: absolute; top: 20%; left: 79%; z-index: 1" ng-if = "$index === 5" ng-show = "isHover">
+                    <div style = "height: 1.5em"></div>
+                    <p class="text-muted text-center">
+                        <i class="fa fa-chevron-right fa-2x" aria-hidden="true"></i>
+                    </p>
+                    <div style = "height: 1.5em"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

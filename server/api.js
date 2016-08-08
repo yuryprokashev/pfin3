@@ -4,6 +4,10 @@ var express = require( 'express' );
 var status = require( 'http-status' );
 var _ = require( 'underscore' );
 
+var MonthData = require('../common/MonthData');
+var ExpenseData = require('../common/Expense');
+var MyDates = require('../common/MyDates');
+
 const EventEmitter = require('events');
 const util = require('util');
 
@@ -658,6 +662,94 @@ var routes = function( wagner ) {
                     });
                 }
                 else { console.error('wrong monthId length is passed to api'); }
+            }
+        }
+    }));
+
+    // NEW VERSION OF API!!!
+    // param: String t - timewindow in string representation. In this case strictly 6 chars required.
+    api.get( '/month/:t', wagner.invoke(function(Expense) {
+        return function( req, res ) {
+            var user = req.user;
+            if(!user) {
+                res.json({ error: "Please, log in" });
+            }
+            else {
+                var t = req.params.t;
+                if(t.length !== 6){
+                    res.json({error: "wrong month length. 8 chars expected."});
+                }
+                else {
+                    var m = MyDates.getMonthFromString(t);
+                    var y = MyDates.getYearFromString(t);
+                    var agg = [
+                        {$match: {user: user._id.toString(), "labels.isDeleted": false}},
+                        {$project: {_id:1, amount:1, description:1, date:1, labels:1, year: {$year:"$date"}, month: {$month:"$date"},day: {$dayOfMonth: "$date"}, isPlanned: {$cond:{if:{$eq:["$labels.isConfirmed",false]}, then:"plan", else:"fact"}}}},
+                        {$match: {year: y, month: m}},
+                        {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
+                        {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}
+                    ];
+                    Expense.aggregate(agg).exec( function(err, result){
+                        if(err) { console.log(err) }
+
+                        var monthData;
+                        function findPlan(item) {
+                            return item._id === 'plan';
+                        }
+
+                        function findFact(item) {
+                            return item._id === 'fact';
+                        }
+                        var fact = result.find(findFact) || {_id: 'fact', total: 0};
+                        var plan = result.find(findPlan) || {_id: 'plan', total: 0};
+                        monthData = new MonthData(fact.total, plan.total);
+                        res.json(monthData);
+                    });
+                }
+            }
+        }
+    }));
+
+    // param: String t - timewindow in string representation. In this case strictly 6 chars required.
+    api.get( '/day/:t', wagner.invoke(function(Expense) {
+        return function( req, res ) {
+            var user = req.user;
+            if(!user) {
+                res.json({ error: "Please, log in" });
+            }
+            else {
+                var t = req.params.t;
+                if(t.length !== 8){
+                    res.json({error: "wrong day length. 8 chars expected."});
+                }
+                else {
+                    var d = MyDates.getDateFromString(t);
+                    var m = MyDates.getMonthFromString(t);
+                    var y = MyDates.getYearFromString(t);
+                    var agg = [
+                        {$match: {user: user._id.toString(), "labels.isDeleted": false}},
+                        {$project: {_id:1, amount:1, description:1, date:1, labels:1, year: {$year:"$date"}, month: {$month:"$date"},day: {$dayOfMonth: "$date"}, isPlanned: {$cond:{if:{$eq:["$labels.isConfirmed",false]}, then:1, else:0}}}},
+                        {$match: {year: y, month: m, day: d}},
+                        {$project: { _id:1, amount:1, description:1, labels:1, date: "$date",isPlanned: "$isPlanned"}}
+                    ];
+                    Expense.aggregate(agg).exec( function(err, result){
+                        if(err) { console.log(err) }
+                        res.json(result);
+                    });
+                }
+            }
+        }
+    }));
+
+    api.post('/message/:t', wagner.invoke(function () {
+        return function (req, res) {
+            var user = req.user;
+            if(!user) {
+                res.json({ error: "Please, log in" });
+            }
+            else {
+                var data = req.body;
+                res.json(data);
             }
         }
     }));
