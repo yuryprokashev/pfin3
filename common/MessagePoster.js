@@ -22,7 +22,6 @@ MessagePoster = function (state) {
     self.setUp = function(state) {
         self.dateString = state.currentDay;
         self.dateUTC = 0;
-        self.postUrl = 'api/v1/message/'.concat(self.dateString);
         self.currentItemId = undefined;
 
         return self;
@@ -66,8 +65,9 @@ MessagePoster = function (state) {
     // param: Object state
     // function: change the dateSting of the MessagePoster.
     // return: self, so method can be chained.
-    self.setDateString = function (state) {
+    self.setDateStringAndPostURL = function (state) {
         self.dateString = state.currentDay;
+        self.postUrl = 'api/v1/message/'.concat(self.dateString);
         return self;
     };
 
@@ -111,6 +111,8 @@ MessagePoster = function (state) {
         http.post(self.postUrl, message).then(function success (response){
             console.log(response.data);
             Shared.change('currentItem', undefined);
+            Shared.push('updatedDays', self.dateString);
+            Shared.change('isUpdated', true);
         }, function error (response){
             throw new Error('failed to post message to ' + self.postUrl);
         });
@@ -152,7 +154,7 @@ MessagePoster = function (state) {
     self.update = function(state){
         self.initHTML()
             .setIsShown(state)
-            .setDateString(state)
+            .setDateStringAndPostURL(state)
             .setSelectedItem(state)
             .setPopUpStyle(state);
     };

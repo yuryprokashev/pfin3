@@ -149,15 +149,20 @@ Week = function(weekNum, month, state, isTransformRequired) {
             if(self.isTransformed === true) {
                 for(var c = 0; c < self.html.days.length; c++){
                     for(var d = 0; d < self.html.days[0].length; d++){
-                        if(self.html.days[c][d] !== null){
+                        if(self.html.days[c][d] !== null) {
+                            // if(Shared.check('updatedDays', self.html.days[c][d].timeWindow)){
+                            //     self.html.days[c][d].update(state);
+                            //     Shared.remove('updatedDays', self.html.days[c][d].timeWindow);
+                            // }
                             self.html.days[c][d].update(state);
+
                         }
                     }
                 }
             }
             else {
                 for(var i = 0; i < self.html.days.length; i++){
-                    if(self.html.days[i] !== null){
+                    if(self.html.days[i] !== null) {
                         self.html.days[i].update(state);
                     }
                 }
@@ -181,24 +186,13 @@ Week = function(weekNum, month, state, isTransformRequired) {
         return self;
     };
 
-    // param: Object state
-    // function: pushes month to state, if it is current
-    // return: self, so method  can be chained.
-    self.pushToState = function (state) {
-        if(state.currentWeek === undefined) {
-            if(self.weekNum === MyDates.numberOfWeek(new Date())){
-                Shared.change('currentWeek', self);
-            }
-        }
-        return self;
-    };
     
     // MAIN LOOP
     self.setUp(weekNum, month, state, isTransformRequired)
         .initHTML()
         .setDays(state)
-        .setDayRange(weekNum, MyDates.firstDay(self.month))
-        .update(state);
+        .setDayRange(weekNum, MyDates.firstDay(self.month));
+        // .update(state);
 };
 
 module.exports = Week;

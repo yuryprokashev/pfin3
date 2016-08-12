@@ -40,4 +40,54 @@ describe('Shared', function () {
         });
     });
 
+    describe('#push(String arrayKey, Object valueToAdd)', function () {
+        it('should add the valueToAdd to Shared.state[arrayKey]', function () {
+            Shared.push('updatedDays', "20160709");
+            expect(Shared.getInstance().state.updatedDays[0]).to.be.equal("20160709");
+            Shared.clear('updatedDays');
+        });
+
+        it('should ignore valueToAdd, if it is already in Shared.state[arrayKey]', function () {
+            Shared.push('updatedDays', "20160709");
+            Shared.push('updatedDays', "20160709");
+            expect(Shared.getInstance().state.updatedDays.length).to.be.equal(1);
+            Shared.clear('updatedDays');
+        });
+
+    });
+
+    describe('#check(String arrayKey, Object valueToCheck)', function () {
+        it('should return true if valueToCheck is in Shared.state[arrayKey]', function () {
+            Shared.push('updatedDays', "20160720");
+            expect(Shared.check("updatedDays", "20160720")).to.be.equal(true);
+            Shared.clear('updatedDays');
+        });
+        it('should return false if valueToCheck is NOT in Shared.state[arrayKey]', function () {
+            Shared.push('updatedDays', "20160730");
+            expect(Shared.check("updatedDays", "20160710")).to.be.equal(false);
+            Shared.clear('updatedDays');
+        });
+        it('should return true if valueToCheck = "201607" and state.updatesKeys has "201607xx" string', function () {
+            Shared.push('updatedDays', "20160730");
+            expect(Shared.check("updatedDays", "201607")).to.be.equal(true);
+            Shared.clear('updatedDays');
+        });
+        it('should return false if valueToCheck = "201607" and state.updatesKeys has "201608xx" string', function () {
+            Shared.push('updatedDays', "20160830");
+            expect(Shared.check("updatedDays", "201607")).to.be.equal(false);
+            Shared.clear('updatedDays');
+        });
+    });
+
+    describe('#remove(String arrayKey, Object valueToRemove)', function () {
+        it('should remove the valueToRemove from Shared.state[arrayKey]', function () {
+            Shared.push('updatedDays', "20160709");
+            Shared.push('updatedDays', "20160710");
+            Shared.push('updatedDays', "20160711");
+            Shared.remove('updatedDays', "20160710");
+            expect(Shared.getInstance().state.updatedDays.length).to.be.equal(2);
+            expect(Shared.getInstance().state.updatedDays).to.be.eql(["20160709", "20160711"]);
+            Shared.clear('updatedDays');
+        })
+    });
 });

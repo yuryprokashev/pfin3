@@ -6,6 +6,7 @@ var MonthSwitch;
 
 var Month = require('./Month');
 var MyDates = require('./MyDates');
+var Shared = require('./Shared');
 
 // param: Object state
 // function: object constructor
@@ -20,6 +21,7 @@ MonthSwitch = function(state) {
     var init = function(state) {
         self.months = [];
         var months = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
+        Shared.change('updatedMonths', months);
         for(var i = 0; i < months.length; i++) {
             self.months.unshift(new Month(months[i], state));
         }

@@ -29,8 +29,8 @@ Day = function (dayNum, weekNum, month, state) {
         self.weekNum = weekNum;
         self.month = month;
         self.timeWindow = self.month + MyDates.dayToString(dayNum);
+        Shared.push('updatedDays', self.timeWindow);
         self.getUrl = 'api/v1/day/'.concat(self.timeWindow);
-        self.needsHttpCall = true;
         return self;
     };
 
@@ -82,7 +82,7 @@ Day = function (dayNum, weekNum, month, state) {
     // function: gets new items for Day object (e.g. Expense items). Makes http call and writes results into self.html.items
     // return: self, so method can be chained
     self.updateItems = function(state) {
-        if(self.needsHttpCall) {
+        if(Shared.check('updatedDays', self.timeWindow)){
             var shared = Shared.getInstance();
             var http = shared.service.http;
             var setValues = shared.fns.setValues;
@@ -93,12 +93,14 @@ Day = function (dayNum, weekNum, month, state) {
                     data[i].dayCode = self.timeWindow;
                 }
                 self.html.items = data;
-                self.needsHttpCall = false;
+
+                Shared.remove('updatedDays', self.timeWindow);
                 return self;
             }, function error (response) {
                 throw new Error('failed to get data from ' + self.getUrl);
             });
         }
+
     };
 
     // param: Object state
@@ -140,8 +142,8 @@ Day = function (dayNum, weekNum, month, state) {
 
     // MAIN LOOP
     self.setUp(dayNum, weekNum, month, state)
-        .initHTML()
-        .update(state);
+        .initHTML();
+        // .update(state);
 };
 
 module.exports = Day;

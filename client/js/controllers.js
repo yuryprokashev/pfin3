@@ -11,7 +11,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
     $scope.view = $views.initAppView();
 
     $scope.$watch('view.state.isUpdated', function (newVal, oldVal) {
-        if(newVal === true) {
+        if(newVal === true && newVal !== oldVal) {
             $scope.view.update(state);
             Shared.change('isUpdated', false);
         }
@@ -29,38 +29,41 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
     };
 
     $scope.$on('update::month', function (event, args) {
+        Shared.change('currentMonth', args.newMonth);
+        if(args.index === 0 || args.index === 5){
+            var newMonths = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
+            Shared.change('updatedMonths', newMonths);
+        }
+
         var newDay, newWeek;
-
-        if(args.newMonth !== undefined) {
-            Shared.change('currentMonth', args.newMonth);
-
-            newDay = MyDates.getDateFromString(state.currentDay);
-            if(newDay > MyDates.daysInMonth(state.currentMonth)) {
-                newDay = MyDates.daysInMonth(state.currentMonth);
-            }
-            newDay = state.currentMonth + MyDates.dayToString(newDay);
-            Shared.change('currentDay', newDay);
-
-            newWeek = getWeekForDay(newDay);
-            Shared.change('currentWeek', newWeek);
+        newDay = MyDates.getDateFromString(state.currentDay);
+        if(newDay > MyDates.daysInMonth(state.currentMonth)) {
+            newDay = MyDates.daysInMonth(state.currentMonth);
         }
+        newDay = state.currentMonth + MyDates.dayToString(newDay);
+        Shared.change('currentDay', newDay);
 
-        if(args.newWeek !== undefined) {
+        newWeek = getWeekForDay(newDay);
+        Shared.change('currentWeek', newWeek);
 
-            newDay = MyDates.getDateFromString(state.currentDay);
-            newDay = Number(newDay) + 7 * (args.newWeek - state.currentWeek);
-            if(newDay > MyDates.daysInMonth(state.currentMonth)) {
-                newDay = MyDates.daysInMonth(state.currentMonth);
-            }
-            else if(newDay < 1) {
-                newDay = 1;
-            }
-            newDay = state.currentMonth + MyDates.dayToString(newDay);
-            Shared.change('currentDay', newDay);
-            Shared.change('currentWeek', args.newWeek);
-        }
+
+        // if(args.newWeek !== undefined) {
+        //
+        //     newDay = MyDates.getDateFromString(state.currentDay);
+        //     newDay = Number(newDay) + 7 * (args.newWeek - state.currentWeek);
+        //     if(newDay > MyDates.daysInMonth(state.currentMonth)) {
+        //         newDay = MyDates.daysInMonth(state.currentMonth);
+        //     }
+        //     else if(newDay < 1) {
+        //         newDay = 1;
+        //     }
+        //     newDay = state.currentMonth + MyDates.dayToString(newDay);
+        //     Shared.change('currentDay', newDay);
+        //     Shared.change('currentWeek', args.newWeek);
+        // }
 
         $scope.view.update(state);
+        // $scope.$apply();
     });
 
     $scope.$on('update::item', function (event, args) {
@@ -68,14 +71,17 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
         Shared.change('currentDay', args.currentItem.dayCode);
         Shared.change('currentWeek', getWeekForDay(args.currentItem.dayCode));
         $scope.view.update(state);
+        $scope.$apply();
     });
 
     $scope.$on('update::day', function (event, args) {
+        // console.log('update::day');
         var newDay = state.currentMonth + MyDates.dayToString(args.newDay);
         Shared.change('currentItem', undefined);
         Shared.change('currentDay', newDay);
         Shared.change('currentWeek', getWeekForDay(newDay));
         $scope.view.update(state);
+        $scope.$apply();
     });
 
     $user.getUser(function success(){

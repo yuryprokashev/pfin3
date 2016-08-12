@@ -17,6 +17,9 @@ function MyEmitter() {
 util.inherits( MyEmitter, EventEmitter );
 const myEmitter = new MyEmitter();
 
+// NEW VERSION OF REQUIRE
+var MessageService = require('./services/MessageService'); // -> to serve POST '/message/:t' calls from Client.
+
 var routes = function( wagner ) {
 
     var api = express.Router();
@@ -449,116 +452,116 @@ var routes = function( wagner ) {
 
     // API to get charts data for dashboard
     // api to get specific chart data (chartName) for specific month (monthId)
-    api.get( '/charts/:chartName/:monthId', wagner.invoke( function( Expense, Category, MyDates, Config, PlotlyTracer ) {
-
-        return function( req, res ){
-            var user = req.user;
-            if (!user) { res.json({ error: "Please, log in" }); }
-
-            else {
-                // 1 Setup.
-                var mId = req.params.monthId;
-                var month = MyDates.getMonth(mId);
-                var chartName = req.params.chartName;
-                var charts = { chartDiv:"", traces:[] };
-
-                var aggQueries = {
-                    // 'dailyVolumes', 'categoryVolumes' and 'expenseFrequency' is 'chartName' parameter passed in api
-                    dailyVolumes: [
-                        [
-                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false}, { "labels.isConfirmed": true} ] } },
-                            { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
-                            { $match: { month: month + 1 } },
-                            { $project: { amount: 1, day: { $dayOfMonth: "$date" } } },
-                            { $group: { _id: "$day", dailyVolumes: { $sum:"$amount" } } },
-                            { $sort: { _id: 1 } }
-                        ],
-                        [
-                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false} ] } },
-                            { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
-                            { $match: { month: month + 1 } },
-                            { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
-                            { $project: { monthlySpentSpeed: { $ceil: { $divide: [ "$monthlyTotal", MyDates.getDaysInSelectedMonth( mId ) ] } } } }
-                        ]
-                    ],
-                    categoryVolumes: [
-                        [
-                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false }, { "labels.isConfirmed": true} ] } },
-                            { $lookup:
-                                {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}
-                            },
-                            { $unwind: "$categoryName"},
-                            { $project:
-                                { _id: 0, amount:1, date:1, month: {$month: "$date"}, "categoryName.name": 1, "categoryName.color": 1}
-                            },
-                            { $match: {month: month + 1}},
-                            { $group:
-                                {_id: "$categoryName.name", categoryVolume: {$sum: "$amount"}, categoryColor: { $first: "$categoryName.color"}}
-                            },
-                            { $sort : { _id : 1 } }
-                        ]
-                    ],
-                    expenseFrequency: [
-                        [
-                            { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false }, { "labels.isConfirmed": true} ] } },
-                            { $lookup: {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}},
-                            { $unwind: "$categoryName"},
-                            { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, "categoryName.name": 1 } },
-                            { $match: { month: month + 1 } },
-                            { $group: { _id: "$categoryName.name", expenseFrequency: { $sum: 1 } } },
-                            { $sort : { expenseFrequency : 1 } }
-                        ]
-                    ]
-                };
-
-                // 2. Logic
-                if ( MyDates.monthIdIsValid( mId ) ) {
-
-                    charts.chartDiv = chartName;
-                    var rawTraces = [];
-
-                    for( var q in aggQueries[ chartName ] ) {
-                        //console.log(aggQueries[ chartName ][q]);
-                        // Here we start several aggregation tasks, that are async.
-                        // Once each of them finishes, it fires the "TraceReady" event with the result object in it.
-                        Expense.aggregate(aggQueries[ chartName ][ q ]).exec(function (err, result) {
-                            // console.log('error in aggregation function = ' + err);
-                            myEmitter.emit(chartName+'TraceReady', result);
-                        });
-                    }
-
-                    // Here we get the trace, push it to 'traces' array and check, if we finished
-                    // Once finished -> we send 'ChartReady' event
-                    myEmitter.on(chartName+'TraceReady', function( trace ){
-                        rawTraces.push(trace);
-                        var plotlyTraces = [];
-
-                        for( var i in rawTraces ) {
-                            PlotlyTracer.makePlotlyTrace(chartName, rawTraces[i], mId, function(plotlyTrace) {
-                                plotlyTraces[i] = plotlyTrace;
-                                if( plotlyTraces.length === aggQueries[chartName].length) {
-                                    myEmitter.emit(chartName+'ChartReady', plotlyTraces);
-                                }
-                            } );
-                        }
-                    });
-
-                    // Here we send a response, when Chart is ready.
-                    myEmitter.once(chartName+'ChartReady', function( obj ){
-                        charts.traces = obj;
-                        rawTraces = [];
-                        myEmitter.removeAllListeners(chartName+'TraceReady');
-                        res.json(charts);
-                    });
-                }
-                else {
-                    if (MyDates.monthIdIsValid( mId )) {
-                        console.log("wrong monthId length is passed to api " + mId);
-                    }
-                }
-            }
-        }
-    }));
+    // api.get( '/charts/:chartName/:monthId', wagner.invoke( function( Expense, Category, MyDates, Config, PlotlyTracer ) {
+    //
+    //     return function( req, res ){
+    //         var user = req.user;
+    //         if (!user) { res.json({ error: "Please, log in" }); }
+    //
+    //         else {
+    //             // 1 Setup.
+    //             var mId = req.params.monthId;
+    //             var month = MyDates.getMonth(mId);
+    //             var chartName = req.params.chartName;
+    //             var charts = { chartDiv:"", traces:[] };
+    //
+    //             var aggQueries = {
+    //                 // 'dailyVolumes', 'categoryVolumes' and 'expenseFrequency' is 'chartName' parameter passed in api
+    //                 dailyVolumes: [
+    //                     [
+    //                         { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false}, { "labels.isConfirmed": true} ] } },
+    //                         { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
+    //                         { $match: { month: month + 1 } },
+    //                         { $project: { amount: 1, day: { $dayOfMonth: "$date" } } },
+    //                         { $group: { _id: "$day", dailyVolumes: { $sum:"$amount" } } },
+    //                         { $sort: { _id: 1 } }
+    //                     ],
+    //                     [
+    //                         { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false} ] } },
+    //                         { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" } } },
+    //                         { $match: { month: month + 1 } },
+    //                         { $group: {_id: "$month", monthlyTotal: { $sum: "$amount" } } },
+    //                         { $project: { monthlySpentSpeed: { $ceil: { $divide: [ "$monthlyTotal", MyDates.getDaysInSelectedMonth( mId ) ] } } } }
+    //                     ]
+    //                 ],
+    //                 categoryVolumes: [
+    //                     [
+    //                         { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false }, { "labels.isConfirmed": true} ] } },
+    //                         { $lookup:
+    //                             {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}
+    //                         },
+    //                         { $unwind: "$categoryName"},
+    //                         { $project:
+    //                             { _id: 0, amount:1, date:1, month: {$month: "$date"}, "categoryName.name": 1, "categoryName.color": 1}
+    //                         },
+    //                         { $match: {month: month + 1}},
+    //                         { $group:
+    //                             {_id: "$categoryName.name", categoryVolume: {$sum: "$amount"}, categoryColor: { $first: "$categoryName.color"}}
+    //                         },
+    //                         { $sort : { _id : 1 } }
+    //                     ]
+    //                 ],
+    //                 expenseFrequency: [
+    //                     [
+    //                         { $match: { $and: [ { user: user._id.toString() }, { "labels.isDeleted": false }, { "labels.isConfirmed": true} ] } },
+    //                         { $lookup: {from:"categories", localField:"category", foreignField:"_id", as: "categoryName"}},
+    //                         { $unwind: "$categoryName"},
+    //                         { $project: { _id: 0, amount: 1, date: 1, month: { $month: "$date" }, "categoryName.name": 1 } },
+    //                         { $match: { month: month + 1 } },
+    //                         { $group: { _id: "$categoryName.name", expenseFrequency: { $sum: 1 } } },
+    //                         { $sort : { expenseFrequency : 1 } }
+    //                     ]
+    //                 ]
+    //             };
+    //
+    //             // 2. Logic
+    //             if ( MyDates.monthIdIsValid( mId ) ) {
+    //
+    //                 charts.chartDiv = chartName;
+    //                 var rawTraces = [];
+    //
+    //                 for( var q in aggQueries[ chartName ] ) {
+    //                     //console.log(aggQueries[ chartName ][q]);
+    //                     // Here we start several aggregation tasks, that are async.
+    //                     // Once each of them finishes, it fires the "TraceReady" event with the result object in it.
+    //                     Expense.aggregate(aggQueries[ chartName ][ q ]).exec(function (err, result) {
+    //                         // console.log('error in aggregation function = ' + err);
+    //                         myEmitter.emit(chartName+'TraceReady', result);
+    //                     });
+    //                 }
+    //
+    //                 // Here we get the trace, push it to 'traces' array and check, if we finished
+    //                 // Once finished -> we send 'ChartReady' event
+    //                 myEmitter.on(chartName+'TraceReady', function( trace ){
+    //                     rawTraces.push(trace);
+    //                     var plotlyTraces = [];
+    //
+    //                     for( var i in rawTraces ) {
+    //                         PlotlyTracer.makePlotlyTrace(chartName, rawTraces[i], mId, function(plotlyTrace) {
+    //                             plotlyTraces[i] = plotlyTrace;
+    //                             if( plotlyTraces.length === aggQueries[chartName].length) {
+    //                                 myEmitter.emit(chartName+'ChartReady', plotlyTraces);
+    //                             }
+    //                         } );
+    //                     }
+    //                 });
+    //
+    //                 // Here we send a response, when Chart is ready.
+    //                 myEmitter.once(chartName+'ChartReady', function( obj ){
+    //                     charts.traces = obj;
+    //                     rawTraces = [];
+    //                     myEmitter.removeAllListeners(chartName+'TraceReady');
+    //                     res.json(charts);
+    //                 });
+    //             }
+    //             else {
+    //                 if (MyDates.monthIdIsValid( mId )) {
+    //                     console.log("wrong monthId length is passed to api " + mId);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }));
 
     // api to get default data for charts.
     api.get( '/charts/meta', wagner.invoke( function( Config ) {
@@ -741,18 +744,46 @@ var routes = function( wagner ) {
         }
     }));
 
-    api.post('/message/:t', wagner.invoke(function () {
-        return function (req, res) {
-            var user = req.user;
-            if(!user) {
-                res.json({ error: "Please, log in" });
-            }
-            else {
-                var data = req.body;
-                res.json(data);
-            }
+    // api.post('/message/:t', wagner.invoke(function () {
+    //     return function (req, res) {
+    //         var user = req.user;
+    //         if(!user) {
+    //             res.json({ error: "Please, log in" });
+    //         }
+    //         else {
+    //             var data = req.body;
+    //             res.json(data);
+    //         }
+    //     }
+    // }));
+
+    // param: HttpRequest req
+    // param: HttpResponse res
+    // function: replies to Client, that no user is prodived with request, if no user is provided.
+    // in case of user is not provided, it replies nothing.
+    // return: Bool true, if NoUser, else returns false.
+    var handleNoUser = function (req, res) {
+        var reply;
+        if(!req.body.user) {
+            reply = {error: "Please, log in."};
+            res.json(reply);
+            return true;
         }
-    }));
+        else {
+            return false;
+        }
+    };
+
+    api.post('/message/:t', function(req, res){
+
+        var isNoUser = handleNoUser(req,res);
+
+        if(isNoUser === false) {
+            MessageService.handle(req, function(result){
+                res.json(result);
+            });
+        }
+    });
 
     return api;
 };

@@ -383,7 +383,8 @@ MyDates = (function() {
     // function: shorten and unify the DateTime format used for precise timing
     // return: int datetime value in milliseconds
     var nowInMilliseconds = function() {
-        return Date.parse(new Date());
+        return new Date().valueOf();
+        // return Date.parse(new Date());
     };
 
     var monthAsLabel = function(t, isLong) {

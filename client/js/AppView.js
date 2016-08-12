@@ -18,17 +18,16 @@ AppView = function(httpService) {
 
     this.state = state;
 
-    this.monthSwitchView = new MonthSwitch(state);
+    this.monthSwitch = new MonthSwitch(state);
     this.calendarView = new Calendar(state);
     this.dashboardView = new Dashboard(state);
     this.expensePoster = new MessagePoster(state);
 
     this.update = function(state) {
-        this.monthSwitchView.update(state);
+        this.monthSwitch.update(state);
         this.calendarView.update(state);
         this.dashboardView.update(state);
         this.expensePoster.update(state);
-        console.log(this);
     };
 
     var self = this;
@@ -41,6 +40,7 @@ AppView = function(httpService) {
     PusherClient.subscribe("message", "message::scored", messageScoredCallback);
 
     this.update(state);
+    console.log(this);
 };
 
 module.exports = AppView;

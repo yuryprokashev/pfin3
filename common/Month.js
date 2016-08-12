@@ -23,7 +23,6 @@ Month = function (t, state) {
     self.setUp = function(t, state) {
         self.monthString = t;
         self.getUrl = 'api/v1/month/'.concat(t);
-        self.needsHttpCall = true;
         return self;
     };
 
@@ -56,30 +55,44 @@ Month = function (t, state) {
         return self;
     };
 
+    var setDefaultTotalsStyle = function() {
+        self.html.style.plan = {width: '50%'};
+        self.html.style.fact = {width: '50%'};
+    };
+
     // param: Object state
     // function: get Month data over http, if month update is needed.
     // return: self, so method can be chained.
     self.updateTotals = function(state) {
-        var shared = Shared.getInstance();
-        var http = shared.service.http;
-        var setValues = shared.fns.setValues;
 
-        http.get(this.getUrl).then(function success(response){
-            setValues(response, self.html);
-            var all = function () {
-                return self.html.totals.fact + self.html.totals.plan;
-            };
+        if(Shared.check('updatedMonths', self.monthString)){
+            var shared = Shared.getInstance();
+            var http = shared.service.http;
+            var setValues = shared.fns.setValues;
+
+            http.get(this.getUrl).then(function success(response){
+                setValues(response, self.html);
+                var all = function () {
+                    return self.html.totals.fact + self.html.totals.plan;
+                };
+                if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
+                    setDefaultTotalsStyle();
+                }
+                else {
+                    self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
+                    self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
+                }
+                Shared.remove('updatedMonths', self.monthString);
+                return self;
+            }, function error(response) {
+                throw new Error('failed to get data from ' + self.getUrl);
+            });
+        }
+        else {
             if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
-                self.html.style.plan = {width: '50%'};
-                self.html.style.fact = {width: '50%'};
+                setDefaultTotalsStyle();
             }
-            else {
-                self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
-                self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
-            }
-        }, function error(response) {
-            throw new Error('failed to get data from ' + self.getUrl);
-        });
+        }
     };
 
     // param: Object state
@@ -93,8 +106,8 @@ Month = function (t, state) {
 
     // MAIN LOOP
     self.setUp(t, state)
-        .initHTML()
-        .update(state);
+        .initHTML();
+        // .update(state);
 };
 
 

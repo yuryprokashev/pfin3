@@ -19,17 +19,16 @@ AppView = function(httpService) {
 
     this.state = state;
 
-    this.monthSwitchView = new MonthSwitch(state);
+    this.monthSwitch = new MonthSwitch(state);
     this.calendarView = new Calendar(state);
     this.dashboardView = new Dashboard(state);
     this.expensePoster = new MessagePoster(state);
 
     this.update = function(state) {
-        this.monthSwitchView.update(state);
+        this.monthSwitch.update(state);
         this.calendarView.update(state);
         this.dashboardView.update(state);
         this.expensePoster.update(state);
-        console.log(this);
     };
 
     var self = this;
@@ -42,6 +41,7 @@ AppView = function(httpService) {
     PusherClient.subscribe("message", "message::scored", messageScoredCallback);
 
     this.update(state);
+    console.log(this);
 };
 
 module.exports = AppView;
@@ -92,7 +92,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
     $scope.view = $views.initAppView();
 
     $scope.$watch('view.state.isUpdated', function (newVal, oldVal) {
-        if(newVal === true) {
+        if(newVal === true && newVal !== oldVal) {
             $scope.view.update(state);
             Shared.change('isUpdated', false);
         }
@@ -110,38 +110,41 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
     };
 
     $scope.$on('update::month', function (event, args) {
+        Shared.change('currentMonth', args.newMonth);
+        if(args.index === 0 || args.index === 5){
+            var newMonths = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
+            Shared.change('updatedMonths', newMonths);
+        }
+
         var newDay, newWeek;
-
-        if(args.newMonth !== undefined) {
-            Shared.change('currentMonth', args.newMonth);
-
-            newDay = MyDates.getDateFromString(state.currentDay);
-            if(newDay > MyDates.daysInMonth(state.currentMonth)) {
-                newDay = MyDates.daysInMonth(state.currentMonth);
-            }
-            newDay = state.currentMonth + MyDates.dayToString(newDay);
-            Shared.change('currentDay', newDay);
-
-            newWeek = getWeekForDay(newDay);
-            Shared.change('currentWeek', newWeek);
+        newDay = MyDates.getDateFromString(state.currentDay);
+        if(newDay > MyDates.daysInMonth(state.currentMonth)) {
+            newDay = MyDates.daysInMonth(state.currentMonth);
         }
+        newDay = state.currentMonth + MyDates.dayToString(newDay);
+        Shared.change('currentDay', newDay);
 
-        if(args.newWeek !== undefined) {
+        newWeek = getWeekForDay(newDay);
+        Shared.change('currentWeek', newWeek);
 
-            newDay = MyDates.getDateFromString(state.currentDay);
-            newDay = Number(newDay) + 7 * (args.newWeek - state.currentWeek);
-            if(newDay > MyDates.daysInMonth(state.currentMonth)) {
-                newDay = MyDates.daysInMonth(state.currentMonth);
-            }
-            else if(newDay < 1) {
-                newDay = 1;
-            }
-            newDay = state.currentMonth + MyDates.dayToString(newDay);
-            Shared.change('currentDay', newDay);
-            Shared.change('currentWeek', args.newWeek);
-        }
+
+        // if(args.newWeek !== undefined) {
+        //
+        //     newDay = MyDates.getDateFromString(state.currentDay);
+        //     newDay = Number(newDay) + 7 * (args.newWeek - state.currentWeek);
+        //     if(newDay > MyDates.daysInMonth(state.currentMonth)) {
+        //         newDay = MyDates.daysInMonth(state.currentMonth);
+        //     }
+        //     else if(newDay < 1) {
+        //         newDay = 1;
+        //     }
+        //     newDay = state.currentMonth + MyDates.dayToString(newDay);
+        //     Shared.change('currentDay', newDay);
+        //     Shared.change('currentWeek', args.newWeek);
+        // }
 
         $scope.view.update(state);
+        // $scope.$apply();
     });
 
     $scope.$on('update::item', function (event, args) {
@@ -149,14 +152,17 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
         Shared.change('currentDay', args.currentItem.dayCode);
         Shared.change('currentWeek', getWeekForDay(args.currentItem.dayCode));
         $scope.view.update(state);
+        $scope.$apply();
     });
 
     $scope.$on('update::day', function (event, args) {
+        // console.log('update::day');
         var newDay = state.currentMonth + MyDates.dayToString(args.newDay);
         Shared.change('currentItem', undefined);
         Shared.change('currentDay', newDay);
         Shared.change('currentWeek', getWeekForDay(newDay));
         $scope.view.update(state);
+        $scope.$apply();
     });
 
     $user.getUser(function success(){
@@ -164,10 +170,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
     });
 };
 },{"../../common/MyDates":15,"../../common/Shared":17}],4:[function(require,module,exports){
-exports.monthSwitchView = function () {
+exports.monthSwitch = function () {
     return {
         scope: {
-            self: "=extMonthSwitchView"
+            self: "=extMonthSwitch"
         },
         templateUrl: "/assets/templates/monthSwitch.html",
         link: function (scope, el, attr, ctrl) {
@@ -407,8 +413,8 @@ Day = function (dayNum, weekNum, month, state) {
         self.weekNum = weekNum;
         self.month = month;
         self.timeWindow = self.month + MyDates.dayToString(dayNum);
+        Shared.push('updatedDays', self.timeWindow);
         self.getUrl = 'api/v1/day/'.concat(self.timeWindow);
-        self.needsHttpCall = true;
         return self;
     };
 
@@ -460,7 +466,7 @@ Day = function (dayNum, weekNum, month, state) {
     // function: gets new items for Day object (e.g. Expense items). Makes http call and writes results into self.html.items
     // return: self, so method can be chained
     self.updateItems = function(state) {
-        if(self.needsHttpCall) {
+        if(Shared.check('updatedDays', self.timeWindow)){
             var shared = Shared.getInstance();
             var http = shared.service.http;
             var setValues = shared.fns.setValues;
@@ -471,12 +477,14 @@ Day = function (dayNum, weekNum, month, state) {
                     data[i].dayCode = self.timeWindow;
                 }
                 self.html.items = data;
-                self.needsHttpCall = false;
+
+                Shared.remove('updatedDays', self.timeWindow);
                 return self;
             }, function error (response) {
                 throw new Error('failed to get data from ' + self.getUrl);
             });
         }
+
     };
 
     // param: Object state
@@ -518,8 +526,8 @@ Day = function (dayNum, weekNum, month, state) {
 
     // MAIN LOOP
     self.setUp(dayNum, weekNum, month, state)
-        .initHTML()
-        .update(state);
+        .initHTML();
+        // .update(state);
 };
 
 module.exports = Day;
@@ -665,7 +673,6 @@ MessagePoster = function (state) {
     self.setUp = function(state) {
         self.dateString = state.currentDay;
         self.dateUTC = 0;
-        self.postUrl = 'api/v1/message/'.concat(self.dateString);
         self.currentItemId = undefined;
 
         return self;
@@ -709,8 +716,9 @@ MessagePoster = function (state) {
     // param: Object state
     // function: change the dateSting of the MessagePoster.
     // return: self, so method can be chained.
-    self.setDateString = function (state) {
+    self.setDateStringAndPostURL = function (state) {
         self.dateString = state.currentDay;
+        self.postUrl = 'api/v1/message/'.concat(self.dateString);
         return self;
     };
 
@@ -754,6 +762,8 @@ MessagePoster = function (state) {
         http.post(self.postUrl, message).then(function success (response){
             console.log(response.data);
             Shared.change('currentItem', undefined);
+            Shared.push('updatedDays', self.dateString);
+            Shared.change('isUpdated', true);
         }, function error (response){
             throw new Error('failed to post message to ' + self.postUrl);
         });
@@ -795,7 +805,7 @@ MessagePoster = function (state) {
     self.update = function(state){
         self.initHTML()
             .setIsShown(state)
-            .setDateString(state)
+            .setDateStringAndPostURL(state)
             .setSelectedItem(state)
             .setPopUpStyle(state);
     };
@@ -832,7 +842,6 @@ Month = function (t, state) {
     self.setUp = function(t, state) {
         self.monthString = t;
         self.getUrl = 'api/v1/month/'.concat(t);
-        self.needsHttpCall = true;
         return self;
     };
 
@@ -865,30 +874,44 @@ Month = function (t, state) {
         return self;
     };
 
+    var setDefaultTotalsStyle = function() {
+        self.html.style.plan = {width: '50%'};
+        self.html.style.fact = {width: '50%'};
+    };
+
     // param: Object state
     // function: get Month data over http, if month update is needed.
     // return: self, so method can be chained.
     self.updateTotals = function(state) {
-        var shared = Shared.getInstance();
-        var http = shared.service.http;
-        var setValues = shared.fns.setValues;
 
-        http.get(this.getUrl).then(function success(response){
-            setValues(response, self.html);
-            var all = function () {
-                return self.html.totals.fact + self.html.totals.plan;
-            };
+        if(Shared.check('updatedMonths', self.monthString)){
+            var shared = Shared.getInstance();
+            var http = shared.service.http;
+            var setValues = shared.fns.setValues;
+
+            http.get(this.getUrl).then(function success(response){
+                setValues(response, self.html);
+                var all = function () {
+                    return self.html.totals.fact + self.html.totals.plan;
+                };
+                if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
+                    setDefaultTotalsStyle();
+                }
+                else {
+                    self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
+                    self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
+                }
+                Shared.remove('updatedMonths', self.monthString);
+                return self;
+            }, function error(response) {
+                throw new Error('failed to get data from ' + self.getUrl);
+            });
+        }
+        else {
             if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
-                self.html.style.plan = {width: '50%'};
-                self.html.style.fact = {width: '50%'};
+                setDefaultTotalsStyle();
             }
-            else {
-                self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
-                self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
-            }
-        }, function error(response) {
-            throw new Error('failed to get data from ' + self.getUrl);
-        });
+        }
     };
 
     // param: Object state
@@ -902,8 +925,8 @@ Month = function (t, state) {
 
     // MAIN LOOP
     self.setUp(t, state)
-        .initHTML()
-        .update(state);
+        .initHTML();
+        // .update(state);
 };
 
 
@@ -917,6 +940,7 @@ var MonthSwitch;
 
 var Month = require('./Month');
 var MyDates = require('./MyDates');
+var Shared = require('./Shared');
 
 // param: Object state
 // function: object constructor
@@ -931,6 +955,7 @@ MonthSwitch = function(state) {
     var init = function(state) {
         self.months = [];
         var months = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
+        Shared.change('updatedMonths', months);
         for(var i = 0; i < months.length; i++) {
             self.months.unshift(new Month(months[i], state));
         }
@@ -970,7 +995,7 @@ MonthSwitch = function(state) {
 };
 
 module.exports = MonthSwitch;
-},{"./Month":13,"./MyDates":15}],15:[function(require,module,exports){
+},{"./Month":13,"./MyDates":15,"./Shared":17}],15:[function(require,module,exports){
 /**
  * Created by py on 23/07/16.
  */
@@ -1356,7 +1381,8 @@ MyDates = (function() {
     // function: shorten and unify the DateTime format used for precise timing
     // return: int datetime value in milliseconds
     var nowInMilliseconds = function() {
-        return Date.parse(new Date());
+        return new Date().valueOf();
+        // return Date.parse(new Date());
     };
 
     var monthAsLabel = function(t, isLong) {
@@ -1515,9 +1541,10 @@ Shared = (function() {
             currentWeek: MyDates.numberOfWeek(new Date()),
             currentDay: MyDates.dateToString(new Date()),
             currentItem: undefined,
+            updatedDays:[],
+            updatedMonths:[],
             isUpdated: false
         };
-
 
         // singleton.state = {
         //     currentMonth: "201502",
@@ -1545,7 +1572,7 @@ Shared = (function() {
     // function: changes the internal parameter of Shared service to new value
     // return: Shared object, so method can be chained.
     var change = function(key, value) {
-        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "isUpdated", "http", "user"];
+        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "updatedMonths", "isUpdated", "http", "user"];
         var isAllowedKey = function(element, index, array) {
             return element === key;
         };
@@ -1568,13 +1595,74 @@ Shared = (function() {
         console.log(singleton);
     };
 
+    // param: String arrayKey - the variable name of Array, we want to update
+    // param: Object valueToAdd - the value, we are going to push into Array with name 'key'
+    // function: pushes value to Array 'key'
+    // return: Shared object, so method can be chained.
+    var push = function(arrayKey, valueToAdd) {
+        var isInArray = function(element, index, array){
+            return element === valueToAdd;
+        };
+        if(!singleton.state[arrayKey].some(isInArray)){
+            singleton.state[arrayKey].push(valueToAdd);
+        }
+        return singleton;
+    };
+
+    // param: String key - the variable name of Array in state, where we want to pop last element
+    // function: removes given element
+    // return: void
+    var remove = function (arrayKey, valueToRemove) {
+        var isInArray = function(element, index, array){
+            return element === valueToRemove;
+        };
+        var indexToRemove = singleton.state[arrayKey].findIndex(isInArray);
+        singleton.state[arrayKey].splice(indexToRemove,1);
+    };
+
+    // param: String arrayKey - the array in state, where we want to check the key
+    // param: Object valueToCheck - the value that we want to check (is it in given array in state)
+    // function: checks if given valueToCheck is in Shared.state[arrayKey].
+    // return: Bool status
+    var check = function(arrayKey, valueToCheck) {
+        var result;
+        var isInArray;
+        if(valueToCheck.length === 8){
+            isInArray = function(element, index, array) {
+                return element === valueToCheck;
+            };
+            result = singleton.state[arrayKey].some(isInArray) ? true : false;
+        }
+        else if(valueToCheck.length === 6){
+            var monthArray = [];
+            var transformToMonthString = function (element, index, array) {
+                monthArray.push(element.slice(0,6));
+            };
+            singleton.state[arrayKey].forEach(transformToMonthString);
+            isInArray = function(element, index, array) {
+                return element === valueToCheck;
+            };
+            result = monthArray.some(isInArray) ? true : false;
+        }
+        return result;
+
+    };
+
+    var clear = function(arrayKey) {
+        singleton.state[arrayKey] = [];
+    };
+
     // initialize singleton internally, so it exists every time, I call require('../common/Shared)
     init();
 
     return {
         getInstance: get,
         change: change,
-        log: log
+        log: log,
+        push: push,
+        remove: remove,
+        check: check,
+        clear: clear
     }
 
 })();
@@ -1816,15 +1904,20 @@ Week = function(weekNum, month, state, isTransformRequired) {
             if(self.isTransformed === true) {
                 for(var c = 0; c < self.html.days.length; c++){
                     for(var d = 0; d < self.html.days[0].length; d++){
-                        if(self.html.days[c][d] !== null){
+                        if(self.html.days[c][d] !== null) {
+                            // if(Shared.check('updatedDays', self.html.days[c][d].timeWindow)){
+                            //     self.html.days[c][d].update(state);
+                            //     Shared.remove('updatedDays', self.html.days[c][d].timeWindow);
+                            // }
                             self.html.days[c][d].update(state);
+
                         }
                     }
                 }
             }
             else {
                 for(var i = 0; i < self.html.days.length; i++){
-                    if(self.html.days[i] !== null){
+                    if(self.html.days[i] !== null) {
                         self.html.days[i].update(state);
                     }
                 }
@@ -1848,24 +1941,13 @@ Week = function(weekNum, month, state, isTransformRequired) {
         return self;
     };
 
-    // param: Object state
-    // function: pushes month to state, if it is current
-    // return: self, so method  can be chained.
-    self.pushToState = function (state) {
-        if(state.currentWeek === undefined) {
-            if(self.weekNum === MyDates.numberOfWeek(new Date())){
-                Shared.change('currentWeek', self);
-            }
-        }
-        return self;
-    };
     
     // MAIN LOOP
     self.setUp(weekNum, month, state, isTransformRequired)
         .initHTML()
         .setDays(state)
-        .setDayRange(weekNum, MyDates.firstDay(self.month))
-        .update(state);
+        .setDayRange(weekNum, MyDates.firstDay(self.month));
+        // .update(state);
 };
 
 module.exports = Week;

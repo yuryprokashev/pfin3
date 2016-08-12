@@ -1,7 +1,7 @@
-exports.monthSwitchView = function () {
+exports.monthSwitch = function () {
     return {
         scope: {
-            self: "=extMonthSwitchView"
+            self: "=extMonthSwitch"
         },
         templateUrl: "/assets/templates/monthSwitch.html",
         link: function (scope, el, attr, ctrl) {

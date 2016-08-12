@@ -64,9 +64,10 @@ Shared = (function() {
             currentWeek: MyDates.numberOfWeek(new Date()),
             currentDay: MyDates.dateToString(new Date()),
             currentItem: undefined,
+            updatedDays:[],
+            updatedMonths:[],
             isUpdated: false
         };
-
 
         // singleton.state = {
         //     currentMonth: "201502",
@@ -94,7 +95,7 @@ Shared = (function() {
     // function: changes the internal parameter of Shared service to new value
     // return: Shared object, so method can be chained.
     var change = function(key, value) {
-        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "isUpdated", "http", "user"];
+        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "updatedMonths", "isUpdated", "http", "user"];
         var isAllowedKey = function(element, index, array) {
             return element === key;
         };
@@ -117,13 +118,74 @@ Shared = (function() {
         console.log(singleton);
     };
 
+    // param: String arrayKey - the variable name of Array, we want to update
+    // param: Object valueToAdd - the value, we are going to push into Array with name 'key'
+    // function: pushes value to Array 'key'
+    // return: Shared object, so method can be chained.
+    var push = function(arrayKey, valueToAdd) {
+        var isInArray = function(element, index, array){
+            return element === valueToAdd;
+        };
+        if(!singleton.state[arrayKey].some(isInArray)){
+            singleton.state[arrayKey].push(valueToAdd);
+        }
+        return singleton;
+    };
+
+    // param: String key - the variable name of Array in state, where we want to pop last element
+    // function: removes given element
+    // return: void
+    var remove = function (arrayKey, valueToRemove) {
+        var isInArray = function(element, index, array){
+            return element === valueToRemove;
+        };
+        var indexToRemove = singleton.state[arrayKey].findIndex(isInArray);
+        singleton.state[arrayKey].splice(indexToRemove,1);
+    };
+
+    // param: String arrayKey - the array in state, where we want to check the key
+    // param: Object valueToCheck - the value that we want to check (is it in given array in state)
+    // function: checks if given valueToCheck is in Shared.state[arrayKey].
+    // return: Bool status
+    var check = function(arrayKey, valueToCheck) {
+        var result;
+        var isInArray;
+        if(valueToCheck.length === 8){
+            isInArray = function(element, index, array) {
+                return element === valueToCheck;
+            };
+            result = singleton.state[arrayKey].some(isInArray) ? true : false;
+        }
+        else if(valueToCheck.length === 6){
+            var monthArray = [];
+            var transformToMonthString = function (element, index, array) {
+                monthArray.push(element.slice(0,6));
+            };
+            singleton.state[arrayKey].forEach(transformToMonthString);
+            isInArray = function(element, index, array) {
+                return element === valueToCheck;
+            };
+            result = monthArray.some(isInArray) ? true : false;
+        }
+        return result;
+
+    };
+
+    var clear = function(arrayKey) {
+        singleton.state[arrayKey] = [];
+    };
+
     // initialize singleton internally, so it exists every time, I call require('../common/Shared)
     init();
 
     return {
         getInstance: get,
         change: change,
-        log: log
+        log: log,
+        push: push,
+        remove: remove,
+        check: check,
+        clear: clear
     }
 
 })();

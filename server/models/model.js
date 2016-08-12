@@ -1,7 +1,7 @@
 var mongoose = require( 'mongoose' );
 var _ = require( 'underscore' );
 
-module.exports = function( wagner ){
+module.exports = function(wagner){
 
     // set up connection to Database with Mongoose
 
@@ -10,19 +10,25 @@ module.exports = function( wagner ){
 
     // get all schemas
     // compile then into the models
-    var Expense = mongoose.model( 'Expense', require( './expense.schema' ), 'expenses' );
+    var Expense = mongoose.model('Expense', require( './expense.schema' ), 'expenses' );
 
-    var Currency = mongoose.model( 'Currency', require( './currency.schema' ), 'currencies' );
+    var Currency = mongoose.model('Currency', require( './currency.schema' ), 'currencies' );
 
-    var Category = mongoose.model( 'Category', require( './category.schema' ), 'categories' );
+    var Category = mongoose.model('Category', require( './category.schema' ), 'categories' );
 
-    var User = mongoose.model( 'User', require( './user.schema' ), 'users' );
+    var User = mongoose.model('User', require( './user.schema' ), 'users' );
+
+    var Message = mongoose.model('Message', require('./message.schema'), 'messages');
+
+    // var Payload = mongoose.model('Payload', require('./payload.schema'), 'payloads');
 
     var models = {
         User: User,
         Expense: Expense,
         Currency: Currency,
-        Category: Category
+        Category: Category,
+        Message: Message,
+        // Payload: Payload
     };
 
     // register all models in wagner with undescore
