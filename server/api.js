@@ -43,7 +43,7 @@ var routes = function( wagner ) {
         var result = [];
 
         for( var i = 0; i < qty; i++ ) {
-            result.push(require('./guid')());
+            result.push(require('../common/guid')());
         };
 
         var filename = 'guids' + Date.now();
@@ -94,7 +94,7 @@ var routes = function( wagner ) {
     // API to provide guid generation to external systems.
     api.get( '/guid', function (req,res) {
         res.format = "application/json";
-        res.json({ guid: require('./guid')() });
+        res.json({ guid: require('../common/guid')() });
     });
 
     // api that gets all expenses for given user and specified monthId.

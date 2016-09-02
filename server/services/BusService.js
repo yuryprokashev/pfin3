@@ -4,8 +4,6 @@
 
 var BusService;
 
-var KafkaAdapter = require('./KafkaAdapter');
-
 BusService = function (adapter) {
     var self = this;
     self.adapter = adapter;
@@ -17,6 +15,6 @@ BusService = function (adapter) {
             self.adapter.subscribe(topic, callback);
         }
     }
-}(KafkaAdapter);
+};
 
 module.exports = BusService;

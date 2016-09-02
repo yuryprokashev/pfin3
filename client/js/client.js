@@ -25,7 +25,7 @@ client.config( function( $routeProvider ){
         when ('/', {
         templateUrl: 'assets/templates/main.html'
     }).
-    when ('/calendar', {
+    when ('/log-and-plan', {
         templateUrl: 'assets/templates/logAndPlanApp.html'
     });
 

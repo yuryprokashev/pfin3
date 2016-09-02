@@ -79,6 +79,6 @@ KafkaAdapter = function () {
         send: send,
         subscribe: subscribe
     }
-}();
+};
 
 module.exports = KafkaAdapter;

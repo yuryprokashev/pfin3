@@ -15,7 +15,7 @@ server.use( '/assets', express.static( __dirname + '/client' ) );
 // deliver home page on '/' get request
 server.get('/', function( req, res ) {
     var path = require ('path' );
-    var file = path.join(__dirname, './client/templates/', 'index.html')
+    var file = path.join(__dirname, './client/templates/', 'index.html');
     res.sendFile( file );
 });
 

@@ -1,4 +1,4 @@
 <p class = "text-muted small truncate-ellipsis"
-   ng-class = "{'highlight-on-hover': isHover}"
+   ng-class = "{'highlight-on-hover': isHover, 'is-not-synced': self.isItemProcessing}"
    ng-mouseenter = "isHover = true"
-   ng-mouseleave = "isHover = false">{{self.isItemProcessing}}{{self.amount | number : 0}} {{self.description}}</p>
+   ng-mouseleave = "isHover = false">{{self.amount | number : 0}} {{self.description}}</p>

@@ -81,6 +81,8 @@ exports.item = function() {
         templateUrl: "/assets/templates/item.html",
         link: function (scope, el, attr, ctrl) {
 
+            scope.self.isItemProcessing = false;
+
             // this handler selects clicked item
             el.on('click', function (event) {
                 event.stopImmediatePropagation();

@@ -14,7 +14,7 @@
             </span>
         </p>
         <div class = "list-group">
-            <div class="list-group-item" ng-repeat = "e in self.html.items.slice(0, self.html.maxItems) track by $index">
+            <div class="list-group-item" ng-repeat = "e in self.html.shownItems track by $index">
                 <item ext-item = "e"></item>
             </div>
         </div>

@@ -8,7 +8,6 @@ var MonthSwitch = require('../../common/MonthSwitch');
 var Calendar = require('../../common/Calendar');
 var Dashboard = require('../../common/Dashboard');
 var MessagePoster = require('../../common/MessagePoster');
-var PusherClient = require('../../common/PusherClient');
 
 AppView = function(httpService) {
 
@@ -29,15 +28,6 @@ AppView = function(httpService) {
         this.dashboardView.update(state);
         this.expensePoster.update(state);
     };
-
-    var self = this;
-    // param: Object data - arbitrary object received by PusherClient
-    // function: request update for all data in views
-    // return: void
-    var messageScoredCallback = function (data) {
-        self.update(state);
-    };
-    PusherClient.subscribe("message", "message::scored", messageScoredCallback);
 
     this.update(state);
     console.log(this);

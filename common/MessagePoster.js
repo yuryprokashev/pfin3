@@ -9,12 +9,16 @@ var ExpenseMessagePayload = require('../common/ExpenseMessagePayload');
 var Message = require('../common/Message');
 var Shared = require('../common/Shared');
 var MyDates = require('../common/MyDates');
+var PusherClient = require('../common/PusherClient');
+var guid = require('../common/guid');
 
 // param: Object state
 // function: object constructor
 // return: MessagePoster object
 MessagePoster = function (state) {
     var self = this;
+    var shared = Shared.getInstance();
+    var http = shared.service.http;
 
     // param: Object state
     // function: setup static parameters of Day object
@@ -23,6 +27,7 @@ MessagePoster = function (state) {
         self.dateString = state.currentDay;
         self.dateUTC = 0;
         self.currentItemId = undefined;
+        self.pushListener = {};
 
         return self;
     };
@@ -104,14 +109,12 @@ MessagePoster = function (state) {
     // Throws error, if failed to do so.
     // return: void
     self.save = function(message) {
-        var shared = Shared.getInstance();
-        var http = shared.service.http;
-        var state = Shared.getInstance().state;
 
-        http.post(self.postUrl, message).then(function success (response){
+        http.post(self.postUrl, message).then(function success (response) {
             console.log(response.data);
+            var currentItem = shared.state.currentItem;
+            currentItem.isItemProcessing = false;
             Shared.change('currentItem', undefined);
-            Shared.push('updatedDays', self.dateString);
             Shared.change('isUpdated', true);
         }, function error (response){
             throw new Error('failed to post message to ' + self.postUrl);
@@ -121,7 +124,7 @@ MessagePoster = function (state) {
     // param: void
     // function: assemble expected ExpenseData from 'self'
     // return: Message
-    self.assembleMessage = function() {
+    self.assembleMessage = function(clientToken) {
         var dayCode = self.dateString;
         var p = new MessagePayload(
             dayCode,
@@ -132,7 +135,7 @@ MessagePoster = function (state) {
         );
         var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId);
         var user = Shared.getInstance().user;
-        return new Message(user._id, 1, 1, emp);
+        return new Message(user._id, 1, 1, emp, clientToken);
 
     };
 
@@ -144,7 +147,11 @@ MessagePoster = function (state) {
         if(btn === 'delete') {
             self.html.isDeleted = true;
         }
-        message = self.assembleMessage();
+        var currentItem = shared.state.currentItem;
+        currentItem.isItemProcessing = true;
+        var token = guid();
+        self.pushListener = new PusherClient(token);
+        message = self.assembleMessage(token);
         self.save(message);
     };
 

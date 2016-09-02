@@ -44,6 +44,7 @@ Day = function (dayNum, weekNum, month, state) {
         self.html.isInSelectedWeek = false;
         self.html.totalWeeks = MyDates.weeksInMonth(self.month);
         self.html.maxItems = 0;
+        self.html.shownItems = [];
         self.html.isFuture = false;
         // param: String arg - the name of the property, over which we will sum. E.g. Day['name']
         // param: Array [Object] arr - the array, over which elements we will sum
@@ -116,6 +117,7 @@ Day = function (dayNum, weekNum, month, state) {
     // return: self, so method can be chained.
     self.setMaxItems = function (isInSelectedWeek) {
         self.html.maxItems = isInSelectedWeek ? 20 : 0;
+        self.html.shownItems = self.html.items.slice(0, self.html.maxItems);
         return self;
     };
 

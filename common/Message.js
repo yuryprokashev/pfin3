@@ -5,6 +5,7 @@
 var Message;
 
 var MyDates = require('../common/MyDates');
+var guid = require('../common/guid');
 
 // param: String user - id of the user, who posts the Message
 // param: int sourceId - code for Message sources. 1 - for WebBrowser
@@ -12,7 +13,7 @@ var MyDates = require('../common/MyDates');
 // param: ExpenseMessagePayload emp - payload object
 // function: constructs Message object
 // return: Message object
-Message = function(user, sourceId, type, emp) {
+Message = function(user, sourceId, type, emp, userToken) {
     if(user === undefined || typeof user !== 'string') {
         throw new Error('user is either undefined or not String');
     }
@@ -41,6 +42,8 @@ Message = function(user, sourceId, type, emp) {
     else {
         this.payload = emp;
     }
+
+    this.userToken = userToken;
 
     this.occuredAt = MyDates.now();
 };

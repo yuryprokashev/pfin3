@@ -19,7 +19,9 @@ var messageSchema = new mongoose.Schema( {
 
     userId: {type: String, ref: 'User'}, // -> indicator of a User, generated the Message, received from client
 
-    payload: {type: String, required: true} // -> Message will carry Payload as a simple string, it will store Payload also as String.
+    payload: {type: String, required: true}, // -> Message will carry Payload as a simple string, it will store Payload also as String.
+
+    userToken: {type: String, required: true} // -> userToken - unique token sent to identify where to send reply on Message
 });
 
 messageSchema.set( 'toObject', { virtuals: true });
