@@ -7,7 +7,6 @@ var MessagePoster;
 var MessagePayload = require('../common/MessagePayload');
 var ExpenseMessagePayload = require('../common/ExpenseMessagePayload');
 var Message = require('../common/Message');
-var Shared = require('../common/Shared');
 var MyDates = require('../common/MyDates');
 var PusherClient = require('../common/PusherClient');
 var guid = require('../common/guid');
@@ -17,18 +16,16 @@ var guid = require('../common/guid');
 // return: MessagePoster object
 MessagePoster = function (state) {
     var self = this;
-    var shared = Shared.getInstance();
-    var http = shared.service.http;
+    self.state = state;
 
     // param: Object state
     // function: setup static parameters of Day object
     // return: self, so method can be chained.
-    self.setUp = function(state) {
-        self.dateString = state.currentDay;
+    self.setUp = function() {
+        self.dateString = self.state.dayRef.timeWindow;
         self.dateUTC = 0;
         self.currentItemId = undefined;
-        self.pushListener = {};
-
+        // self.pushListener = {};
         return self;
     };
 
@@ -62,40 +59,29 @@ MessagePoster = function (state) {
     // param: Object state
     // function: decides, whether Form should be shown in HTML. Writes decision to self.html.isShown
     // return: self, so method can be chained
-    self.setIsShown = function (state) {
-        state.currentItem !== undefined ? self.html.isShown = true : self.html.isShown = false;
+    self.setIsShown = function () {
+        self.html.isShown = self.state.isFormShown;
         return self;
     };
 
     // param: Object state
     // function: change the dateSting of the MessagePoster.
     // return: self, so method can be chained.
-    self.setDateStringAndPostURL = function (state) {
-        self.dateString = state.currentDay;
-        self.postUrl = 'api/v1/message/'.concat(self.dateString);
+    self.setDateStringPostURL = function () {
+        self.dateString = self.state.dayRef.timeWindow;
+        // self.postUrl = 'api/v1/message/'.concat(self.dateString);
+        self.postUrl = `api/v1/message/${self.dateString}`;
         return self;
     };
 
-    // param: Object state
-    // function: set the selected Item from state
-    // return: self, so method can be chained.
-    self.setSelectedItem = function (state) {
-        if(state.currentItem !== undefined) {
-            self.currentItemId = state.currentItem._id;
-            self.html.amount.value = state.currentItem.amount;
-            self.html.description.value = state.currentItem.description;
-            self.html.isPlanned = !state.currentItem.labels.isConfirmed;
-            self.html.isDeleted = state.currentItem.labels.isDeleted;
-        }
-        return self;
-    };
+
 
     // param: Object state
     // function: set the expense poster position to near the clicked item
     // return: self, so method can be chained.
-    self.setPopUpStyle = function (state) {
-        if(state.currentItem !== undefined) {
-            var clickedRect = state.currentItem.boundingClientRect;
+    self.setPopUpStyle = function () {
+        if(state.isFormShown === true) {
+            var clickedRect = self.state.itemRef.boundingClientRect;
             self.html.style.left = clickedRect.left + clickedRect.width;
             self.html.style.top = clickedRect.top - 42;
             self.html.style.width = clickedRect.width * 1.5;
@@ -103,28 +89,13 @@ MessagePoster = function (state) {
         return self;
     };
 
-    // param: ExpenseData message - the packed ExpenseData object to be sent over http to server
-    // function: posts message to server. If succeed, changes self.postSuccess to true. It will tell pfinAppCtrl to
-    // trigger the update event and AppView will be updated.
-    // Throws error, if failed to do so.
-    // return: void
-    self.save = function(message) {
-
-        http.post(self.postUrl, message).then(function success (response) {
-            console.log(response.data);
-            var currentItem = shared.state.currentItem;
-            currentItem.isItemProcessing = false;
-            Shared.change('currentItem', undefined);
-            Shared.change('isUpdated', true);
-        }, function error (response){
-            throw new Error('failed to post message to ' + self.postUrl);
-        });
-    };
-
     // param: void
     // function: assemble expected ExpenseData from 'self'
     // return: Message
-    self.assembleMessage = function(clientToken) {
+    self.assembleMessage = function(btnClicked, clientToken) {
+        if(btnClicked === 'delete'){
+            self.html.isDeleted = true;
+        }
         var dayCode = self.dateString;
         var p = new MessagePayload(
             dayCode,
@@ -134,41 +105,45 @@ MessagePoster = function (state) {
             }
         );
         var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId);
-        var user = Shared.getInstance().user;
-        return new Message(user._id, 1, 1, emp, clientToken);
+        var user = self.state.user._id;
+        // console.log(self.state.user);
+        return new Message(user, 1, 1, emp, clientToken);
 
-    };
-
-    // param: String btn - name of the clicked button
-    // function: handle btn click in the form - assemble Message and send it over the http to save into DB.
-    // return: void
-    self.handleClick = function (btn) {
-        var message;
-        if(btn === 'delete') {
-            self.html.isDeleted = true;
-        }
-        var currentItem = shared.state.currentItem;
-        currentItem.isItemProcessing = true;
-        var token = guid();
-        self.pushListener = new PusherClient(token);
-        message = self.assembleMessage(token);
-        self.save(message);
     };
 
     // param: Object state
     // function: change self.html parameters according to 'state'
     // return: void
-    self.update = function(state){
-        self.initHTML()
-            .setIsShown(state)
-            .setDateStringAndPostURL(state)
-            .setSelectedItem(state)
-            .setPopUpStyle(state);
+    self.update = function(){
+        self.setIsShown()
+            .setDateStringPostURL()
+            .setSelectedItem()
+            .setPopUpStyle();
     };
 
     // MAIN LOOP
-    self.setUp(state)
-        .update(state);
+    self.setUp()
+        .initHTML()
+        .update();
 };
+
+// param: Object state
+// function: set the selected Item from state
+// return: self, so method can be chained.
+MessagePoster.prototype.setSelectedItem = function(){
+    var self = this;
+    if(self.state.itemRef !== undefined) {
+        self.item = self.state.itemRef;
+        self.currentItemId = self.item._id;
+        self.html.amount.value = self.item.amount;
+        self.html.description.value = self.item.description;
+        self.html.isPlanned = self.item.labels.isPlan;
+        self.html.isDeleted = self.item.labels.isDeleted;
+    }
+    return self;
+};
+
+
+
 
 module.exports = MessagePoster;

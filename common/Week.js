@@ -6,7 +6,6 @@ var Week;
 
 var MyDates = require('./MyDates');
 var Day = require('./Day');
-var Shared = require('./Shared');
 
 // param: int weekNum - the number of week in month (from 0 to 3-5)
 // param: String month - the string-encoded TimeWindow, which is on month level.
@@ -16,16 +15,18 @@ var Shared = require('./Shared');
 // return: Week object
 Week = function(weekNum, month, state, isTransformRequired) {
     var self = this;
+    self.state = state;
 
     // param: int weekNum - the number of week in month (from 0 to 3-5), where day belongs to.
     // param: Bool isTransformRequired - tells constructor to apply transformation for Bootstrap grid.
     // param: Object state
     // function: setup static parameters of Week object
     // return: self, so method can be chained.
-    self.setUp = function(weekNum, month, state, isTransformRequired) {
+    self.setUp = function(weekNum, month, isTransformRequired) {
         self.month = month;
         self.weekNum = weekNum;
         self.isTransformed = isTransformRequired;
+        self.days = [];
         return self;
     };
 
@@ -43,40 +44,40 @@ Week = function(weekNum, month, state, isTransformRequired) {
     // param: Object state
     // function: create Day objects and stash them into self.html.days (array)
     // return: self, so method can be chained
-    self.setDays = function (state) {
+    self.setDays = function () {
         // param: Object state
         // function: create Days in first week (which has weekNum = 0)
         // return: void
-        var setFirstWeek = function (state) {
+        var setFirstWeek = function () {
             var firstDayDelta = MyDates.firstDay(self.month);
             for(var i = 0; i < firstDayDelta; i++){
-                self.html.days.push(null);
+                self.days.push(null);
             }
             var dayNum;
             for(var k = firstDayDelta; k < 7; k ++) {
                 dayNum = k - firstDayDelta + 1;
-                self.html.days.push(new Day(dayNum, 0, self.month, state));
+                self.days.push(new Day(dayNum, 0, self.month, self.state));
             }
         };
 
         // param: Object state
         // function: create Days in other weeks (which has weekNum in range [1:5])
         // return: void
-        var setOtherWeeks = function(state){
+        var setOtherWeeks = function(){
             var firstDay = MyDates.firstDay(self.month);
             var maxDays = MyDates.daysInMonth(self.month);
             var dayNum;
             for(var j = 0; j < 7; j++) {
                 dayNum = j + self.weekNum * 7 + 1 - firstDay;
                 if(dayNum < maxDays){
-                    self.html.days.push(new Day(dayNum, self.weekNum, self.month, state));
+                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state));
                 }
                 else if(dayNum === maxDays){
                     self.html.daysRange[1] = dayNum;
-                    self.html.days.push(new Day(dayNum, self.weekNum, self.month, state));
+                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state));
                 }
                 else {
-                    self.html.days.push(null);
+                    self.days.push(null);
                 }
             }
         };
@@ -89,17 +90,17 @@ Week = function(weekNum, month, state, isTransformRequired) {
             var transformedWeek = [];
             var cell = [];
             if(cells === 3) {
-                w.html.days.unshift(null);
-                w.html.days.push(null);
-                for(var i = 0; i < w.html.days.length; i = i + 3){
-                    cell = w.html.days.slice(i, i + 3);
+                w.days.unshift(null);
+                w.days.push(null);
+                for(var i = 0; i < w.days.length; i = i + 3){
+                    cell = w.days.slice(i, i + 3);
                     transformedWeek.push(cell);
                 }
             }
             if(cells === 2){
-                w.html.days.push(null);
-                for(var j = 0; j < w.html.days.length; j = j + 4){
-                    cell = w.html.days.slice(j, j + 4);
+                w.days.push(null);
+                for(var j = 0; j < w.days.length; j = j + 4){
+                    cell = w.days.slice(j, j + 4);
                     transformedWeek.push(cell);
                 }
             }
@@ -109,10 +110,10 @@ Week = function(weekNum, month, state, isTransformRequired) {
 
         // MAIN LOOP SET DAYS
         if(self.weekNum === 0) {
-            setFirstWeek(state);
+            setFirstWeek();
         }
         else {
-            setOtherWeeks(state);
+            setOtherWeeks();
         }
 
         if(self.isTransformed) {
@@ -140,21 +141,17 @@ Week = function(weekNum, month, state, isTransformRequired) {
     // param: Object state
     // function: updates Week object after state change
     // return: self, so method can be chained
-    self.update = function(state) {
+    self.update = function() {
 
         // param: Object state
         // function: ask Day objects in self.html.days to update
         // return: self, so method can be chained
-        self.updateDays = function (state) {
+        self.updateDays = function () {
             if(self.isTransformed === true) {
                 for(var c = 0; c < self.html.days.length; c++){
                     for(var d = 0; d < self.html.days[0].length; d++){
                         if(self.html.days[c][d] !== null) {
-                            // if(Shared.check('updatedDays', self.html.days[c][d].timeWindow)){
-                            //     self.html.days[c][d].update(state);
-                            //     Shared.remove('updatedDays', self.html.days[c][d].timeWindow);
-                            // }
-                            self.html.days[c][d].update(state);
+                            self.html.days[c][d].update();
 
                         }
                     }
@@ -163,7 +160,7 @@ Week = function(weekNum, month, state, isTransformRequired) {
             else {
                 for(var i = 0; i < self.html.days.length; i++){
                     if(self.html.days[i] !== null) {
-                        self.html.days[i].update(state);
+                        self.html.days[i].update();
                     }
                 }
             }
@@ -173,26 +170,56 @@ Week = function(weekNum, month, state, isTransformRequired) {
         // param: Object state
         // function: decides, whether Week should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
         // return: self, so method can be chained
-        self.setIsSelected = function(state) {
-            if(state.currentWeek){
-                self.weekNum === state.currentWeek.weekNum ? self.html.isSelected = true : self.html.isSelected = false;
+        self.setIsSelected = function() {
+            if(self.state.weekRef){
+                self.weekNum === self.state.weekRef.weekNum ? self.html.isSelected = true : self.html.isSelected = false;
             }
             return self;
         };
 
         // MAIN LOOP FOR UPDATE
-        self.setIsSelected(state)
-            .updateDays(state);
+        self.setIsSelected()
+            .updateDays();
         return self;
     };
 
     
     // MAIN LOOP
-    self.setUp(weekNum, month, state, isTransformRequired)
+    self.setUp(weekNum, month, isTransformRequired)
         .initHTML()
-        .setDays(state)
+        .setDays()
         .setDayRange(weekNum, MyDates.firstDay(self.month));
-        // .update(state);
+};
+
+Week.prototype.getDayRef = function(dayCode) {
+    if(this.isTransformed === true){
+        for(var c = 0; c < this.html.days.length; c++){
+            for(var d = 0; d < this.html.days[0].length; d++){
+                if(this.html.days[c][d] !== null) {
+                    if(this.html.days[c][d].timeWindow === dayCode) {
+                        return this.html.days[c][d];
+                    }
+                }
+            }
+        }
+    }
+    else if(this.isTransformed === false) {
+        for(var i = 0; i < this.html.days.length; i++){
+            if(this.html.days[i].timeWindow === dayCode) {
+                return this.html.days[i];
+            }
+        }
+    }
+};
+
+Week.prototype.getFlatDays = function(){
+    var result = [];
+    this.days.forEach(function(item){
+        if(item !== null){
+            result.push(item);
+        }
+    });
+    return result;
 };
 
 module.exports = Week;

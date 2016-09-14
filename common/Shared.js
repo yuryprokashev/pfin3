@@ -66,7 +66,11 @@ Shared = (function() {
             currentItem: undefined,
             updatedDays:[],
             updatedMonths:[],
-            isUpdated: false
+            isUpdated: false,
+            isFormShown: false,
+            currentPayloadType: 1, // -> 1 for Expenses. Later will be changed via payloadViewSwitch.
+            currentSortParam: "occuredAt", // Now sort only by 'occuredAt'. Later will be controller by sortParamSwitch.
+            currentSortOrder: -1 // -1 means sort items in Day by 'currentSortParam' latest comes first. Later will be controlled by sortOrderSwitch.
         };
 
         // singleton.state = {
@@ -95,7 +99,7 @@ Shared = (function() {
     // function: changes the internal parameter of Shared service to new value
     // return: Shared object, so method can be chained.
     var change = function(key, value) {
-        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "updatedMonths", "isUpdated", "http", "user"];
+        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "updatedMonths", "isUpdated", "isFormShown", "http", "user"];
         var isAllowedKey = function(element, index, array) {
             return element === key;
         };

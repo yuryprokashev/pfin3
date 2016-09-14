@@ -5,7 +5,6 @@
 var Message;
 
 var MyDates = require('../common/MyDates');
-var guid = require('../common/guid');
 
 // param: String user - id of the user, who posts the Message
 // param: int sourceId - code for Message sources. 1 - for WebBrowser

@@ -38,10 +38,10 @@
                         </div>
                         <p class = "text-center buttons-panel">
                             <button class = "btn btn-success btn-xs"
-                                    ng-click = "self.handleClick('save')"
+                                    ng-click = "$emit('clicked::item::btn',{btn: 'save', form: self})"
                             >Save</button>
                             <button class = "btn btn-danger btn-xs"
-                                    ng-click = "self.handleClick('delete')"
+                                    ng-click = "$emit('clicked::item::btn',{btn: 'delete', form: self})"
                             >Delete</button>
                         </p>
                     </div>

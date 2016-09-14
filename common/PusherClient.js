@@ -4,12 +4,10 @@
 
 var PusherClient;
 
-var Shared = require('../common/Shared');
-
 // param: String id - id of the message for which we want to be notified back
 // function: object constructor
 // return: PusherClient object
-PusherClient = function(id) {
+PusherClient = function(id, callback) {
     var io = require('socket.io-client');
 
     var socket = io('http://localhost');
@@ -19,9 +17,7 @@ PusherClient = function(id) {
     });
 
     socket.on("client-payload-new-1", function (data) {
-        console.log(data);
-        Shared.push('updatedDays', data.dateCode); // -> this should happen only after Push has been arrived
-        Shared.change('isUpdated', true);
+        callback(data);
     });
 
     console.log("Pusher Client with token " + id + " is initialized");

@@ -2,6 +2,8 @@
  * Created by py on 26/07/16.
  */
 
+// TODO. Do I need it still here? Where is it used?
+
 var Expense;
 
 Expense = function(args) {

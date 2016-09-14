@@ -10,32 +10,37 @@ var Calendar = require('../../common/Calendar');
 var Dashboard = require('../../common/Dashboard');
 var MessagePoster = require('../../common/MessagePoster');
 
-AppView = function(httpService) {
+AppView = function() {
 
-    var Shared = require('../../common/Shared');
-    Shared.change("http", httpService);
-    var state = Shared.getInstance().state;
-
-    this.state = state;
-
-    this.monthSwitch = new MonthSwitch(state);
-    this.calendarView = new Calendar(state);
-    this.dashboardView = new Dashboard(state);
-    this.expensePoster = new MessagePoster(state);
-
-    this.update = function(state) {
-        this.monthSwitch.update(state);
-        this.calendarView.update(state);
-        this.dashboardView.update(state);
-        this.expensePoster.update(state);
+    this.init = function(state) {
+        this.state = state;
+        this.monthSwitch = new MonthSwitch(state);
+        // this.calendarView = new Calendar(state);
+        // this.dashboardView = new Dashboard(state);
+        // this.expensePoster = new MessagePoster(state);
+        console.log(this);
     };
 
-    this.update(state);
-    console.log(this);
+    this.initCalendarView = function() {
+        this.calendarView = new Calendar(this.state);
+    };
+
+    this.initExpensePoster = function() {
+        this.expensePoster = new MessagePoster(this.state);
+    };
+
+
+    this.update = function() {
+        this.monthSwitch.update();
+        this.calendarView.update();
+        // this.dashboardView.update(state);
+        this.expensePoster.update();
+        // console.log(this);
+    };
 };
 
 module.exports = AppView;
-},{"../../common/Calendar":6,"../../common/Dashboard":7,"../../common/MessagePoster":12,"../../common/MonthSwitch":14,"../../common/Shared":17}],2:[function(require,module,exports){
+},{"../../common/Calendar":6,"../../common/Dashboard":7,"../../common/MessagePoster":12,"../../common/MonthSwitch":14}],2:[function(require,module,exports){
 var controllers = require( './controllers.js' );
 var directives = require( './directives.js' );
 var services = require( './services.js' );
@@ -69,24 +74,34 @@ client.config( function( $routeProvider ){
 
 });
 },{"./controllers.js":3,"./directives.js":4,"./services.js":5,"underscore":69}],3:[function(require,module,exports){
-exports.pfinAppCtrl = function ($scope, $views, $user) {
-    var Shared = require('../../common/Shared');
+exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     var MyDates = require('../../common/MyDates');
-    var state = Shared.getInstance().state;
+    var UIItem = require('../../common/UIItem');
 
-    $scope.user = $user.user;
-    $scope.$watch('user', function (newVal, oldVal) {
-        Shared.change("user", newVal);
+    $scope.state = {
+        init: {
+            month: MyDates.dateToString(new Date(), {y:1, m:1, d: undefined}),
+            week: MyDates.numberOfWeek(new Date()),
+            day: MyDates.dateToString(new Date())
+        },
+        monthRef: undefined,
+        weekRef: undefined,
+        dayRef: undefined,
+        itemRef: undefined,
+        isFormShown: false,
+        payloadType: 1,
+        sortParam: "occuredAt",
+        sortOrder: -1,
+        updatedDays:[],
+        updatedMonths:[],
+        user: {}
+    };
+
+    $user.getUser(function success(){
+        $scope.state.user = $user.user;
     });
 
-    $scope.view = $views.initAppView();
-
-    $scope.$watch('view.state.isUpdated', function (newVal, oldVal) {
-        if(newVal === true && newVal !== oldVal) {
-            $scope.view.update(state);
-            Shared.change('isUpdated', false);
-        }
-    });
+    $scope.view = $views.initAppView($scope.state);
 
     // param: String newDay - the day in string format "YYYYMMDD" for which we want to get week number (from 0 to 3-5)
     // function: calculate the number of week, where given day belongs to.
@@ -96,70 +111,302 @@ exports.pfinAppCtrl = function ($scope, $views, $user) {
         var m = MyDates.getMonthFromString(newDay);
         var d = MyDates.getDateFromString(newDay);
         var date = new Date(y, m - 1, d);
+        // console.log(date);
         return MyDates.numberOfWeek(date);
     };
 
-    $scope.$on('update::month', function (event, args) {
-        Shared.change('currentMonth', args.newMonth);
-        if(args.index === 0 || args.index === 5){
-            var newMonths = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
-            Shared.change('updatedMonths', newMonths);
+    var getDayCode = function() {
+        var d = $scope.state.dayRef !== undefined ? $scope.state.dayRef.timeWindow : $scope.state.init.day;
+        return MyDates.getDateFromString(d);
+    };
+
+    var setWeekRef = function(dayNum){
+        // console.log(`dayCode is ${dayCode}`);
+
+        if(dayNum > MyDates.daysInMonth($scope.state.monthRef.monthString)) {
+            dayNum = MyDates.daysInMonth($scope.state.monthRef.monthString);
         }
+        var dayCode = $scope.state.monthRef.monthString + MyDates.dayToString(dayNum);
+        // console.log(`dayCode is ${dayCode}`);
+        var newWeek = getWeekForDay(dayCode);
+        // console.log(`new week = ${newWeek}`);
+        return $scope.view.calendarView.weeks[newWeek];
+    };
 
-        var newDay, newWeek;
-        newDay = MyDates.getDateFromString(state.currentDay);
-        if(newDay > MyDates.daysInMonth(state.currentMonth)) {
-            newDay = MyDates.daysInMonth(state.currentMonth);
-        }
-        newDay = state.currentMonth + MyDates.dayToString(newDay);
-        Shared.change('currentDay', newDay);
+    var setDayRef = function(dayCode){
+        dayCode = $scope.state.monthRef.monthString + MyDates.dayToString(dayCode);
+        return $scope.state.weekRef.getDayRef(dayCode);
+    };
 
-        newWeek = getWeekForDay(newDay);
-        Shared.change('currentWeek', newWeek);
+    var getDaysAsync = function() {
+        var days = $scope.view.calendarView.getFlatDays();
+        console.log(days);
+        let completed = 0;
+        let responses = [];
+        
+        var finish = function(){
+            responses.sort(function(a,b) {
+                if(a.dayNum > b.dayNum) {
+                    return 1;
+                }
+                else if(a.dayNum < b.dayNum){
+                    return -1;
+                }
+            });
+            for(let i = 0; i < days.length; i++) {
+                let items = responses[i].items;
+                let result =  [];
+                items.forEach(function(item){
+                    let transformedItem = UIItem.transformToUIItem(item);
+                    transformedItem.isItemProcessing = false;
+                    transformedItem.isSaved = true;
+                    result.push(transformedItem);
+                });
+                days[i].day.html.items = result;
+                days[i].day.update();
+            }
+        };
+
+        days.forEach(function(item){
+            $http.get(item.day.getUrl)
+                .then(function(res){
+                    responses.push({dayNum: item.dayNum, items: res.data});
+                    if(++completed === days.length) {
+                        finish();
+                    }
+                })
+        });
+    };
 
 
-        // if(args.newWeek !== undefined) {
-        //
-        //     newDay = MyDates.getDateFromString(state.currentDay);
-        //     newDay = Number(newDay) + 7 * (args.newWeek - state.currentWeek);
-        //     if(newDay > MyDates.daysInMonth(state.currentMonth)) {
-        //         newDay = MyDates.daysInMonth(state.currentMonth);
-        //     }
-        //     else if(newDay < 1) {
-        //         newDay = 1;
-        //     }
-        //     newDay = state.currentMonth + MyDates.dayToString(newDay);
-        //     Shared.change('currentDay', newDay);
-        //     Shared.change('currentWeek', args.newWeek);
+    $scope.$on('directive::monthSwitch::ready', function(event, args){
+
+        var months = $scope.view.monthSwitch.months;
+        let completed = 0;
+        var responses = [];
+
+        var finish = function() {
+            responses.sort(function(a,b) {
+                if(a.index > b.index) {
+                    return 1;
+                }
+                else if(a.index < b.index){
+                    return -1;
+                }
+            });
+
+            for(var i = 0;i < $scope.view.monthSwitch.months.length; i++) {
+                $scope.view.monthSwitch.months[i].update(responses[i].totals);
+            }
+            $scope.view.initCalendarView($scope.state);
+            getDaysAsync();
+            $scope.$emit('directive::calendarView::ready');
+
+        };
+
+        months.forEach(function(m){
+            $http.get(m.getUrl)
+                .then(function (res) {
+                    responses.push({index: months.indexOf(m), totals: res.data.totals});
+                    if(++completed === months.length) {
+                        finish();
+                    }
+                })
+        });
+        console.log('directive::monthSwitch::ready');
+        $scope.state.monthRef = args.monthRef;
+        $scope.state.init.month = undefined;
+    });
+
+    $scope.$on('directive::calendarView::ready', function(event, args){
+        console.log('directive::calendarView::ready');
+        var dayCode = getDayCode();
+        $scope.state.weekRef = setWeekRef(dayCode);
+        $scope.state.dayRef = setDayRef(dayCode);
+        $scope.view.calendarView.update();
+        $scope.view.initExpensePoster($scope.state);
+
+        // console.log($scope.state);
+    });
+
+    $scope.$on('clicked::month', function (event, args) {
+        console.log('clicked::month');
+        $scope.state.monthRef.html.isSelected = false;
+        $scope.state.monthRef = args.month;
+        $scope.state.monthRef.html.isSelected = true;
+        // if(args.index === 0 || args.index === 5) {
+        //     var newMonths = MyDates.headingsArray(MyDates.neighbours($scope.state.monthRef.monthString, [-2, 3]),'');
+        //     $scope.state.updatedMonths = newMonths;
         // }
 
-        $scope.view.update(state);
-        // $scope.$apply();
+        $scope.view.initCalendarView();
+        var dayCode = getDayCode();
+        // console.log(`dayCode = ${dayCode}`);
+        $scope.state.weekRef = setWeekRef(dayCode);
+        $scope.state.dayRef = setDayRef(dayCode);
+
+        if($scope.state.isFormShown === true) {
+            $scope.state.isFormShown = false;
+        }
+        $scope.view.calendarView.update();
+        // console.log($scope.state);
     });
 
-    $scope.$on('update::item', function (event, args) {
-        Shared.change('currentItem', args.currentItem);
-        Shared.change('currentDay', args.currentItem.dayCode);
-        Shared.change('currentWeek', getWeekForDay(args.currentItem.dayCode));
-        $scope.view.update(state);
-        $scope.$apply();
+    $scope.$on('clicked::item', function (event, args) {
+        console.log('clicked::item');
+        $scope.state.itemRef = args.item;
+        let dayNum = MyDates.getDateFromString(args.item.dayCode);
+        $scope.state.weekRef = setWeekRef(dayNum);
+        $scope.state.dayRef = setDayRef(dayNum);
+        // $scope.view.calendarView.update();
+
+        $scope.state.isFormShown = true;
+        // $scope.view.expensePoster.update();
+        
+        $scope.$apply(function(){
+            $scope.view.calendarView.update();
+            $scope.view.expensePoster.update();
+        });
     });
 
-    $scope.$on('update::day', function (event, args) {
-        // console.log('update::day');
-        var newDay = state.currentMonth + MyDates.dayToString(args.newDay);
-        Shared.change('currentItem', undefined);
-        Shared.change('currentDay', newDay);
-        Shared.change('currentWeek', getWeekForDay(newDay));
-        $scope.view.update(state);
-        $scope.$apply();
+    
+    var clicks = [];
+    $scope.$on('clicked::day', function (event, args) {
+        // This process is async, since we always wait for second click after first
+        // This process changes State
+        // This process relies on data in event to be done
+        // This process must change the selected day to new one.
+        // This process must check, if the day is the same and do nothing.
+        // start: 'clicked::day' is fired. we create a promise that there will be another click in 300ms
+        // then: if promise is resolved, we fire 'dblclicked::day' event
+        // if promise is rejected we fire 'change::day' event
+        console.log('clicked::day');
+        clicks.push(event);
+        $scope.state.dayRef = args.day;
+
+        $timeout(function () {
+            if(clicks.length === 1){
+                // var newDay = $scope.state.monthRef.monthString + MyDates.dayToString(args.day.dayNum);
+                $scope.state.itemRef = undefined;
+                $scope.state.weekRef = setWeekRef($scope.state.dayRef.dayNum);
+
+                if($scope.state.isFormShown === true) {
+                    $scope.state.isFormShown = false;
+                }
+                $scope.view.calendarView.update();
+                $scope.view.expensePoster.update();
+            }
+            else if(clicks.length >= 2) {
+                $scope.$emit('dblclicked::day', {day: args.day})
+            }
+            clicks = [];
+        }, 200);
+    });
+    
+    $scope.$on('dblclicked::day', function (event, args) {
+
+        // This process is async
+        // This process changes State
+        // This process relies on data in event to be done
+        // This process must create new item upon dblclick and open the messageForm for it
+        // This process must check the dayCode of clicked day, so new item is shown as Plan or as Fact in UI
+        console.log('dblclicked::day');
+        var day = args.day;
+        var isFuture = day.html.isFuture;
+        var item = new UIItem(1, 0, "New item", day.timeWindow, {isPlan: isFuture, isDeleted: false}, false);
+        $scope.state.itemRef = item;
+        day.addItem(item);
+        $scope.$apply(function(){
+            $scope.state.dayRef.update();
+            $scope.view.expensePoster.update();
+        });
     });
 
-    $user.getUser(function success(){
-        $scope.user = $user.user;
+    $scope.$on("compiled::item", function (event, args) {
+        // This process is sync
+        // This process changes State
+        // This process relies on data in event to be done.
+        // This process must end with messageForm shown for the new item, just added to DOM with dbl-click.
+        // start: item is compiled to DOM -> 'compiled::item fires
+        // then: we check if State.currentItem is equal to item in event.
+        // then: if not, we do nothing
+        // then: if yes, we must show messageForm.
+        console.log('compiled::item');
+        if($scope.state.itemRef === args.item) {
+            $scope.state.isFormShown = true;
+            $scope.view.expensePoster.update();
+        }
     });
+
+    $scope.$on('clicked::item::btn', function(event, args){
+
+        var pushCallback = function(pushData) {
+            // - read dayCode from push
+            // - trigger http get for the dayCode
+            // - all items arrived from http call will have status 'isSaved'
+            console.log(`pushCallback on ${pushData.dayCode}`);
+            let dayNum = MyDates.getDateFromString(pushData.dayCode);
+            let week = setWeekRef(dayNum);
+            let day = week.getDayRef(pushData.dayCode);
+            $http.get(day.getUrl)
+                .then(function(res){
+                    let items = res.data;
+                    let result =  [];
+                    items.forEach(function(item){
+                        let transformedItem = UIItem.transformToUIItem(item);
+                        transformedItem.isItemProcessing = false;
+                        transformedItem.isSaved = true;
+                        result.push(transformedItem);
+                    });
+                    $scope.$applyAsync(function(){
+                        day.html.items = result;
+                        day.update();
+                    });
+                });
+        };
+
+        // @function: executed after updateData from server has arrived. Updates target object with updateData;
+        // @param: Array [Object] updateData - the result of async http call to server.
+        // @param: Object target - the object, that has to be updated with updateData
+        // @return: void
+        var saveCallback = function(response) {
+            console.log(`saveCallback on ${response.data._id}`);
+            $scope.state.itemRef.setItemFromForm(args.form);
+            $scope.state.itemRef.isItemProcessing = true;
+            $scope.state.itemRef.isSaved = false;
+            $scope.state.isFormShown = false;
+            $scope.view.calendarView.update();
+            $scope.view.expensePoster.update();
+            // $scope.state.monthRef.update();
+            // - change item amount and description to user input
+            // - close form
+
+        };
+
+        // This process is async
+        // This process changes state
+        // This process relies on data in event to be done.
+        // start: user click button in directive -> 'clicked::item::btn' fires
+        // then: we connect to push socket and register message push arrival handler (set item to 'saved' state)
+        // then: we post message to api.message
+        // then: after api reply (message post status) has arrived we execute callback, which have to
+        // - close form
+        // - set item to 'processing state'
+        // - change item amount and description to user input
+        // - update the monthSwitch with date from server
+        //
+        const PusherClient = require('../../common/PusherClient');
+        const guid = require('../../common/guid');
+        var token = guid();
+        $scope.pushListener = new PusherClient(token, pushCallback); // -> set change of state when push arrives
+        var message = args.form.assembleMessage(args.btn, token);
+        $http.post(args.form.postUrl, message)
+            .then(saveCallback);
+
+    });
+
 };
-},{"../../common/MyDates":15,"../../common/Shared":17}],4:[function(require,module,exports){
+},{"../../common/MyDates":15,"../../common/PusherClient":16,"../../common/UIItem":18,"../../common/guid":20}],4:[function(require,module,exports){
 exports.monthSwitch = function () {
     return {
         scope: {
@@ -167,6 +414,7 @@ exports.monthSwitch = function () {
         },
         templateUrl: "/assets/templates/monthSwitch.html",
         link: function (scope, el, attr, ctrl) {
+            scope.$emit('directive::monthSwitch::ready', {monthRef: scope.self.monthRef});
             el.on('click', function(event){
                 event.target.blur(); // -> remove blue frame (focus) from btn after click
             });
@@ -193,6 +441,7 @@ exports.calendar = function () {
         },
         templateUrl: "/assets/templates/calendar.html",
         link: function (scope, el, attr, ctrl) {
+            // scope.$emit('directive::calendarView::ready')
         }
     }
 };
@@ -216,10 +465,13 @@ exports.day = function () {
         },
         templateUrl: "/assets/templates/day.html",
         link: function (scope, el, attr, ctrl) {
+
+            scope.$emit('compiled::day', {day: scope.self});
+
             el.on('click', function (event) {
                 event.stopImmediatePropagation();
-                scope.$emit('update::day', {newDay: scope.self.dayNum});
-            })
+                scope.$evalAsync(scope.$emit('clicked::day', {day: scope.self}));
+            });
         }
     }
 };
@@ -231,10 +483,10 @@ exports.messageForm = function() {
         },
         templateUrl: "/assets/templates/messageForm.html",
         link: function (scope, el, attr, ctrl) {
-
         }
     }
 };
+
 exports.item = function() {
     return {
         scope: {
@@ -244,13 +496,16 @@ exports.item = function() {
         link: function (scope, el, attr, ctrl) {
 
             scope.self.isItemProcessing = false;
+            scope.self.boundingClientRect = el[0].getBoundingClientRect();
+            scope.$emit("compiled::item", {item: scope.self});
 
             // this handler selects clicked item
             el.on('click', function (event) {
                 event.stopImmediatePropagation();
                 scope.self.boundingClientRect = el[0].getBoundingClientRect();
-                scope.$emit('update::item', {currentItem: scope.self});
-            })
+                scope.$emit('clicked::item', {item: scope.self});
+            });
+
         }
     }
 };
@@ -265,9 +520,10 @@ exports.$views = function($http) {
 
     var s = {};
 
-    var appView = new AppView($http);
+    var appView = new AppView();
 
-    s.initAppView = function() {
+    s.initAppView = function(state) {
+        appView.init(state);
         return appView;
     };
 
@@ -307,20 +563,16 @@ var Week = require('./Week');
 Calendar = function(state) {
 
     var self = this;
+    self.state = state;
     // param: Object state
     // function: init the object. Set up storage for weeks, construct Weeks.
     // return: void
-    var init = function (state) {
+    this.init = function () {
         self.weeks = [];
-        self.dayNames = [
-            [null, "Sun", "Mon"],
-            ["Tue", "Wed", "Thu"],
-            ["Fri", "Sat", null]
-        ];
-        self.monthString = state.currentMonth;
+        self.monthString = self.state.monthRef.monthString;
         var numOfWeeks = MyDates.weeksInMonth(self.monthString);
-        for(var i = 0; i < numOfWeeks; i++){
-            self.weeks.push(new Week(i, self.monthString, state, true));
+        for(var i = 0; i < numOfWeeks; i++) {
+            self.weeks.push(new Week(i, self.monthString, self.state, true));
         }
     };
 
@@ -335,25 +587,36 @@ Calendar = function(state) {
         return decision;
     };
 
-    var update = function(state){
+    var update = function(){
         for(var i = 0; i < self.weeks.length; i++) {
-            self.weeks[i].update(state);
+            self.weeks[i].update();
         }
     };
 
-    this.update = function(state) {
-        if(isRenewCalendar(state.currentMonth)) {
-            init(state);
-            update(state);
+    this.update = function() {
+        if(isRenewCalendar(self.state.monthRef.monthString)) {
+            this.init();
+            update();
         }
         else {
-            update(state);
+            update();
         }
     };
 
     // MAIN LOOP
-    init(state);
+    this.init();
 
+};
+
+Calendar.prototype.getFlatDays = function(){
+    let flatDays = [];
+    this.weeks.forEach(function(week){
+        let oneWeek = week.getFlatDays();
+        oneWeek.forEach(function(day){
+            flatDays.push({dayNum: day.dayNum, day: day});
+        })
+    });
+    return flatDays;
 };
 
 module.exports = Calendar;
@@ -380,8 +643,8 @@ module.exports = Dashboard;
 
 var Day;
 
-var Shared = require('./Shared');
 var MyDates = require('./MyDates');
+
 
 // param: int dayNum - the day number in month (from 1 to 28-31)
 // param: int weekNum - the week number, where Day belongs to
@@ -392,6 +655,7 @@ var MyDates = require('./MyDates');
 // return: Day object
 Day = function (dayNum, weekNum, month, state) {
     var self = this;
+    self.state = state;
 
     // param: int dayNum - the day number in month (from 1 to 28-31)
     // param: int weekNum - the number of week in month (from 0 to 3-5), where day belongs to.
@@ -400,13 +664,17 @@ Day = function (dayNum, weekNum, month, state) {
     // param: Object state
     // function: setup static parameters of Day object
     // return: self, so method can be chained.
-    self.setUp = function(dayNum, weekNum, month, state) {
+    self.setUp = function(dayNum, weekNum, month) {
         self.dayNum = dayNum;
         self.weekNum = weekNum;
         self.month = month;
         self.timeWindow = self.month + MyDates.dayToString(dayNum);
-        Shared.push('updatedDays', self.timeWindow);
-        self.getUrl = 'api/v1/day/'.concat(self.timeWindow);
+        var dayCode = self.timeWindow;
+        var payloadType = self.state.payloadType;
+        var sortParam = self.state.sortParam;
+        var sortOrder = self.state.sortOrder;
+        self.getUrl = `api/v1/payload/${dayCode}/${payloadType}/${sortParam}/${sortOrder}`;
+        // self.getUrl = `api/v1/day/${dayCode}`;
         return self;
     };
 
@@ -422,6 +690,7 @@ Day = function (dayNum, weekNum, month, state) {
         self.html.maxItems = 0;
         self.html.shownItems = [];
         self.html.isFuture = false;
+
         // param: String arg - the name of the property, over which we will sum. E.g. Day['name']
         // param: Array [Object] arr - the array, over which elements we will sum
         // function: calculate the sum of the 'name' property in the array
@@ -429,7 +698,10 @@ Day = function (dayNum, weekNum, month, state) {
         self.html.sum = function(arg, arr) {
             var s = 0;
             for(var i = 0; i < arr.length; i++) {
-                if(typeof arr[i][arg] !== 'number'){
+                if(arr[i][arg] === undefined) {
+                    s += 0;
+                }
+                else if(typeof arr[i][arg] !== 'number') {
                     throw new Error('property, you want to sum, is not number. Number expected');
                 }
                 else {
@@ -445,87 +717,75 @@ Day = function (dayNum, weekNum, month, state) {
     // param: Object state
     // function: decides, whether Day should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
     // return: self, so method can be chained
-    self.setIsSelected = function (state) {
+    self.setIsSelected = function () {
         var hitMonth, hitWeek, hitDay;
-        self.month === state.currentMonth ? hitMonth = true : hitMonth = false;
-        self.weekNum === state.currentWeek ? hitWeek = true : hitWeek = false;
+        self.month === self.state.monthRef.monthString ? hitMonth = true : hitMonth = false;
+        self.weekNum === self.state.weekRef.weekNum ? hitWeek = true : hitWeek = false;
         var day = self.month + MyDates.dayToString(self.dayNum);
-        day === state.currentDay ? hitDay = true : hitDay = false;
+        day === self.state.dayRef.timeWindow ? hitDay = true : hitDay = false;
+        // console.log(`hitMonth: ${hitMonth}, hitWeek: ${hitWeek}, hitDay: ${hitDay}`);
         self.html.isSelected = hitMonth && hitWeek && hitDay;
         return self;
     };
 
     // param: Object state
-    // function: gets new items for Day object (e.g. Expense items). Makes http call and writes results into self.html.items
-    // return: self, so method can be chained
-    self.updateItems = function(state) {
-        if(Shared.check('updatedDays', self.timeWindow)){
-            var shared = Shared.getInstance();
-            var http = shared.service.http;
-            var setValues = shared.fns.setValues;
-
-            http.get(self.getUrl).then(function success (response) {
-                var data = response.data;
-                for(var i in data){
-                    data[i].dayCode = self.timeWindow;
-                }
-                self.html.items = data;
-
-                Shared.remove('updatedDays', self.timeWindow);
-                return self;
-            }, function error (response) {
-                throw new Error('failed to get data from ' + self.getUrl);
-            });
-        }
-
-    };
-
-    // param: Object state
     // function: decides, whether Day is in selected week so it should have special width in HTML. Writes decision to self.html.isInSelectedWeek
     // return: self, so method can be chained
-    self.setIsInSelectedWeek = function(state) {
-        self.weekNum === state.currentWeek ? self.html.isInSelectedWeek = true : self.html.isInSelectedWeek = false;
+    self.setIsInSelectedWeek = function() {
+        self.weekNum === self.state.weekRef.weekNum ? self.html.isInSelectedWeek = true : self.html.isInSelectedWeek = false;
         return self;
     };
 
     // param: Bool isInSelectedWeek - flag, that tells if Day is in selected week
     // function: set maximum number of items shown in Day
     // return: self, so method can be chained.
-    self.setMaxItems = function (isInSelectedWeek) {
-        self.html.maxItems = isInSelectedWeek ? 20 : 0;
+    self.setMaxItems = function () {
+        self.html.maxItems = self.html.isInSelectedWeek ? 20 : 0;
         self.html.shownItems = self.html.items.slice(0, self.html.maxItems);
-        return self;
-    };
-
-    // param: String t - timeWindow of the day
-    // function: set 'self.html.isFuture' if day is in future.
-    // return: self, so method can be chained.
-    self.setIsFuture = function(t) {
-        var tws = MyDates.stringToTw(t);
-        var today = new Date();
-        tws.startDate > today ? self.html.isFuture = true : self.html.isFuture = false;
         return self;
     };
 
     // param: Object state
     // function: change self.html parameters according to 'state'
     // return: void
-    self.update = function(state){
-        self.setIsInSelectedWeek(state)
-            .setIsSelected(state)
-            .setMaxItems(self.html.isInSelectedWeek)
-            .setIsFuture(self.timeWindow)
-            .updateItems(state);
+    self.update = function(){
+        self.setIsInSelectedWeek()
+            .setIsSelected()
+            .setMaxItems()
+            .setIsFuture();
+            // .updateItems(state);
     };
 
     // MAIN LOOP
-    self.setUp(dayNum, weekNum, month, state)
+    self.setUp(dayNum, weekNum, month)
         .initHTML();
-        // .update(state);
+};
+
+Day.prototype.addItem = function(item) {
+    this.html.items.push(item);
+};
+
+Day.prototype.get = function(callback) {
+    var self = this;
+    var http = shared.service.http;
+    http.get(this.getUrl)
+        .then(function success (response){
+            callback(response.data, self);
+        }, function error (response){
+            callback(response.data, self);
+        });
+};
+
+Day.prototype.setIsFuture = function() {
+    var self = this;
+    var tws = MyDates.stringToTw(self.timeWindow);
+    var today = new Date();
+    tws.startDate > today ? self.html.isFuture = true : self.html.isFuture = false;
+    return self;
 };
 
 module.exports = Day;
-},{"./MyDates":15,"./Shared":17}],9:[function(require,module,exports){
+},{"./MyDates":15}],9:[function(require,module,exports){
 /**
  * Created by py on 05/08/16.
  */
@@ -574,7 +834,6 @@ module.exports = ExpenseMessagePayload;
 var Message;
 
 var MyDates = require('../common/MyDates');
-var guid = require('../common/guid');
 
 // param: String user - id of the user, who posts the Message
 // param: int sourceId - code for Message sources. 1 - for WebBrowser
@@ -618,7 +877,7 @@ Message = function(user, sourceId, type, emp, userToken) {
 };
 
 module.exports = Message;
-},{"../common/MyDates":15,"../common/guid":20}],11:[function(require,module,exports){
+},{"../common/MyDates":15}],11:[function(require,module,exports){
 /**
  * Created by py on 05/08/16.
  */
@@ -655,7 +914,6 @@ var MessagePoster;
 var MessagePayload = require('../common/MessagePayload');
 var ExpenseMessagePayload = require('../common/ExpenseMessagePayload');
 var Message = require('../common/Message');
-var Shared = require('../common/Shared');
 var MyDates = require('../common/MyDates');
 var PusherClient = require('../common/PusherClient');
 var guid = require('../common/guid');
@@ -665,18 +923,16 @@ var guid = require('../common/guid');
 // return: MessagePoster object
 MessagePoster = function (state) {
     var self = this;
-    var shared = Shared.getInstance();
-    var http = shared.service.http;
+    self.state = state;
 
     // param: Object state
     // function: setup static parameters of Day object
     // return: self, so method can be chained.
-    self.setUp = function(state) {
-        self.dateString = state.currentDay;
+    self.setUp = function() {
+        self.dateString = self.state.dayRef.timeWindow;
         self.dateUTC = 0;
         self.currentItemId = undefined;
-        self.pushListener = {};
-
+        // self.pushListener = {};
         return self;
     };
 
@@ -710,40 +966,29 @@ MessagePoster = function (state) {
     // param: Object state
     // function: decides, whether Form should be shown in HTML. Writes decision to self.html.isShown
     // return: self, so method can be chained
-    self.setIsShown = function (state) {
-        state.currentItem !== undefined ? self.html.isShown = true : self.html.isShown = false;
+    self.setIsShown = function () {
+        self.html.isShown = self.state.isFormShown;
         return self;
     };
 
     // param: Object state
     // function: change the dateSting of the MessagePoster.
     // return: self, so method can be chained.
-    self.setDateStringAndPostURL = function (state) {
-        self.dateString = state.currentDay;
-        self.postUrl = 'api/v1/message/'.concat(self.dateString);
+    self.setDateStringPostURL = function () {
+        self.dateString = self.state.dayRef.timeWindow;
+        // self.postUrl = 'api/v1/message/'.concat(self.dateString);
+        self.postUrl = `api/v1/message/${self.dateString}`;
         return self;
     };
 
-    // param: Object state
-    // function: set the selected Item from state
-    // return: self, so method can be chained.
-    self.setSelectedItem = function (state) {
-        if(state.currentItem !== undefined) {
-            self.currentItemId = state.currentItem._id;
-            self.html.amount.value = state.currentItem.amount;
-            self.html.description.value = state.currentItem.description;
-            self.html.isPlanned = !state.currentItem.labels.isConfirmed;
-            self.html.isDeleted = state.currentItem.labels.isDeleted;
-        }
-        return self;
-    };
+
 
     // param: Object state
     // function: set the expense poster position to near the clicked item
     // return: self, so method can be chained.
-    self.setPopUpStyle = function (state) {
-        if(state.currentItem !== undefined) {
-            var clickedRect = state.currentItem.boundingClientRect;
+    self.setPopUpStyle = function () {
+        if(state.isFormShown === true) {
+            var clickedRect = self.state.itemRef.boundingClientRect;
             self.html.style.left = clickedRect.left + clickedRect.width;
             self.html.style.top = clickedRect.top - 42;
             self.html.style.width = clickedRect.width * 1.5;
@@ -751,28 +996,13 @@ MessagePoster = function (state) {
         return self;
     };
 
-    // param: ExpenseData message - the packed ExpenseData object to be sent over http to server
-    // function: posts message to server. If succeed, changes self.postSuccess to true. It will tell pfinAppCtrl to
-    // trigger the update event and AppView will be updated.
-    // Throws error, if failed to do so.
-    // return: void
-    self.save = function(message) {
-
-        http.post(self.postUrl, message).then(function success (response) {
-            console.log(response.data);
-            var currentItem = shared.state.currentItem;
-            currentItem.isItemProcessing = false;
-            Shared.change('currentItem', undefined);
-            Shared.change('isUpdated', true);
-        }, function error (response){
-            throw new Error('failed to post message to ' + self.postUrl);
-        });
-    };
-
     // param: void
     // function: assemble expected ExpenseData from 'self'
     // return: Message
-    self.assembleMessage = function(clientToken) {
+    self.assembleMessage = function(btnClicked, clientToken) {
+        if(btnClicked === 'delete'){
+            self.html.isDeleted = true;
+        }
         var dayCode = self.dateString;
         var p = new MessagePayload(
             dayCode,
@@ -782,45 +1012,49 @@ MessagePoster = function (state) {
             }
         );
         var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId);
-        var user = Shared.getInstance().user;
-        return new Message(user._id, 1, 1, emp, clientToken);
+        var user = self.state.user._id;
+        // console.log(self.state.user);
+        return new Message(user, 1, 1, emp, clientToken);
 
-    };
-
-    // param: String btn - name of the clicked button
-    // function: handle btn click in the form - assemble Message and send it over the http to save into DB.
-    // return: void
-    self.handleClick = function (btn) {
-        var message;
-        if(btn === 'delete') {
-            self.html.isDeleted = true;
-        }
-        var currentItem = shared.state.currentItem;
-        currentItem.isItemProcessing = true;
-        var token = guid();
-        self.pushListener = new PusherClient(token);
-        message = self.assembleMessage(token);
-        self.save(message);
     };
 
     // param: Object state
     // function: change self.html parameters according to 'state'
     // return: void
-    self.update = function(state){
-        self.initHTML()
-            .setIsShown(state)
-            .setDateStringAndPostURL(state)
-            .setSelectedItem(state)
-            .setPopUpStyle(state);
+    self.update = function(){
+        self.setIsShown()
+            .setDateStringPostURL()
+            .setSelectedItem()
+            .setPopUpStyle();
     };
 
     // MAIN LOOP
-    self.setUp(state)
-        .update(state);
+    self.setUp()
+        .initHTML()
+        .update();
 };
 
+// param: Object state
+// function: set the selected Item from state
+// return: self, so method can be chained.
+MessagePoster.prototype.setSelectedItem = function(){
+    var self = this;
+    if(self.state.itemRef !== undefined) {
+        self.item = self.state.itemRef;
+        self.currentItemId = self.item._id;
+        self.html.amount.value = self.item.amount;
+        self.html.description.value = self.item.description;
+        self.html.isPlanned = self.item.labels.isPlan;
+        self.html.isDeleted = self.item.labels.isDeleted;
+    }
+    return self;
+};
+
+
+
+
 module.exports = MessagePoster;
-},{"../common/ExpenseMessagePayload":9,"../common/Message":10,"../common/MessagePayload":11,"../common/MyDates":15,"../common/PusherClient":16,"../common/Shared":17,"../common/guid":20}],13:[function(require,module,exports){
+},{"../common/ExpenseMessagePayload":9,"../common/Message":10,"../common/MessagePayload":11,"../common/MyDates":15,"../common/PusherClient":16,"../common/guid":20}],13:[function(require,module,exports){
 /**
  * Created by py on 24/07/16.
  */
@@ -828,7 +1062,6 @@ module.exports = MessagePoster;
 var Month;
 
 var TimeWindow = require('./TimeWindow');
-var Shared = require('./Shared');
 var MyDates = require('./MyDates');
 
 // param: String t - string representation of timeWindow object
@@ -837,18 +1070,18 @@ var MyDates = require('./MyDates');
 // return: Month object
 Month = function (t, state) {
     var self = this;
+    self.state = state;
 
     // param: String month - the string-encoded TimeWindow, which is on month level.
     // Formatted as "YYYYMM".
     // param: Object state
     // function: setup static parameters of Month object
     // return: self, so method can be chained.
-    self.setUp = function(t, state) {
+    self.setUp = function(t) {
         self.monthString = t;
-        self.getUrl = 'api/v1/month/'.concat(t);
+        self.getUrl = `api/v1/month/${self.monthString}`;
         return self;
     };
-
 
     // param: void, since it is just initialization
     // function: init self.html object, which is exposed to HTML template
@@ -871,71 +1104,58 @@ Month = function (t, state) {
     // param: Object state
     // function: decides, whether Month should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
     // return: self, so method can be chained
-    self.setIsSelected = function (state) {
-        if(state.currentMonth !== undefined){
-            self.monthString === state.currentMonth ? self.html.isSelected = true : self.html.isSelected = false;
+    self.setIsSelected = function () {
+        if(self.state.init.month !== undefined) {
+            self.monthString === self.state.init.month ? self.html.isSelected = true : self.html.isSelected = false
+        }
+
+        else if(self.state.init.month === undefined) {
+            self.monthString === self.state.monthRef.monthString ? self.html.isSelected = true : self.html.isSelected = false;
+
         }
         return self;
     };
 
-    var setDefaultTotalsStyle = function() {
+    self.setDefaultTotalsStyle = function() {
         self.html.style.plan = {width: '50%'};
         self.html.style.fact = {width: '50%'};
+        return self;
     };
 
-    // param: Object state
-    // function: get Month data over http, if month update is needed.
-    // return: self, so method can be chained.
-    self.updateTotals = function(state) {
+    self.setTotals = function(totals) {
+        var all = function () {
+            return self.html.totals.fact + self.html.totals.plan;
+        };
 
-        if(Shared.check('updatedMonths', self.monthString)){
-            var shared = Shared.getInstance();
-            var http = shared.service.http;
-            var setValues = shared.fns.setValues;
+        self.html.totals.fact = totals.fact;
+        self.html.totals.plan = totals.plan;
 
-            http.get(this.getUrl).then(function success(response){
-                setValues(response, self.html);
-                var all = function () {
-                    return self.html.totals.fact + self.html.totals.plan;
-                };
-                if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
-                    setDefaultTotalsStyle();
-                }
-                else {
-                    self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
-                    self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
-                }
-                Shared.remove('updatedMonths', self.monthString);
-                return self;
-            }, function error(response) {
-                throw new Error('failed to get data from ' + self.getUrl);
-            });
+        if(totals.plan === 0 && totals.fact === 0) {
+            self.setDefaultTotalsStyle();
         }
         else {
-            if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
-                setDefaultTotalsStyle();
-            }
+            self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
+            self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
         }
+
+        return self;
     };
 
-    // param: Object state
-    // function: change self.html parameters according to 'state'
-    // return: self, so method can be chained
-    self.update = function (state) {
-        self.setIsSelected(state)
-            .updateTotals(state);
+    self.update = function (totals) {
+        self.setIsSelected()
+            .setTotals(totals);
         return self;
     };
 
     // MAIN LOOP
-    self.setUp(t, state)
-        .initHTML();
-        // .update(state);
+    self.setUp(t)
+        .initHTML()
+        .setDefaultTotalsStyle();
 };
 
 
 module.exports = Month;
-},{"./MyDates":15,"./Shared":17,"./TimeWindow":18}],14:[function(require,module,exports){
+},{"./MyDates":15,"./TimeWindow":17}],14:[function(require,module,exports){
 /**
  * Created by py on 24/07/16.
  */
@@ -944,7 +1164,6 @@ var MonthSwitch;
 
 var Month = require('./Month');
 var MyDates = require('./MyDates');
-var Shared = require('./Shared');
 
 // param: Object state
 // function: object constructor
@@ -952,54 +1171,68 @@ var Shared = require('./Shared');
 MonthSwitch = function(state) {
 
     var self = this;
+    self.state = state;
 
     // param: Object state
     // function: constructs the array of 6 Months: 1 back, current, 4 forward.
     // return: void
-    var init = function(state) {
+    var init = function() {
         self.months = [];
-        var months = MyDates.headingsArray(MyDates.neighbours(state.currentMonth, [-2, 3]),'');
-        Shared.change('updatedMonths', months);
+        var months = MyDates.headingsArray(MyDates.neighbours(self.state.init.month, [-2, 3]),'');
+        self.state.updatedMonths = months;
         for(var i = 0; i < months.length; i++) {
-            self.months.unshift(new Month(months[i], state));
+            var month = new Month(months[i], self.state);
+            self.months.unshift(month);
+            if(i === 3){
+                self.monthRef = month;
+            }
         }
     };
 
     // param: String t - current time window from state object
     // function: decide, whether or not to renew the months in MonthSwitch
     // return: Bool result
-    var isRenewSwitch = function(t) {
+    var isRenewSwitch = function() {
         var result = false;
         var last = self.months.length - 1;
-        if(t === self.months[0].monthString || t === self.months[last].monthString) {
+        if(self.monthRef.monthString === self.months[0].monthString || self.monthRef.monthString === self.months[last].monthString) {
             result = true;
         }
         return result;
     };
 
-    var update = function(state){
+    var update = function() {
         for(var i = 0; i < self.months.length; i++) {
             self.months[i].isSelected = false;
-            self.months[i].update(state);
+            self.months[i].update();
         }
     };
 
-    this.update = function(state) {
-        if(isRenewSwitch(state.currentMonth)) {
-            init(state);
-            update(state);
+    this.update = function() {
+        if(isRenewSwitch()) {
+            init();
+            update();
         }
         else {
-            update(state);
+            update();
         }
     };
 
     // MAIN LOOP
-    init(state);
+    init(self.state);
+};
+
+MonthSwitch.prototype.getURLArray = function() {
+    var result = [];
+    var self = this;
+    for (var i in self.months) {
+        result.push(self.months[i].getUrl);
+    }
+    return result;
 };
 
 module.exports = MonthSwitch;
-},{"./Month":13,"./MyDates":15,"./Shared":17}],15:[function(require,module,exports){
+},{"./Month":13,"./MyDates":15}],15:[function(require,module,exports){
 /**
  * Created by py on 23/07/16.
  */
@@ -1433,19 +1666,17 @@ MyDates = (function() {
 })();
 
 module.exports = MyDates;
-},{"../common/TimeWindow":18}],16:[function(require,module,exports){
+},{"../common/TimeWindow":17}],16:[function(require,module,exports){
 /**
  * Created by py on 13/07/16.
  */
 
 var PusherClient;
 
-var Shared = require('../common/Shared');
-
 // param: String id - id of the message for which we want to be notified back
 // function: object constructor
 // return: PusherClient object
-PusherClient = function(id) {
+PusherClient = function(id, callback) {
     var io = require('socket.io-client');
 
     var socket = io('http://localhost');
@@ -1455,9 +1686,7 @@ PusherClient = function(id) {
     });
 
     socket.on("client-payload-new-1", function (data) {
-        console.log(data);
-        Shared.push('updatedDays', data.dateCode); // -> this should happen only after Push has been arrived
-        Shared.change('isUpdated', true);
+        callback(data);
     });
 
     console.log("Pusher Client with token " + id + " is initialized");
@@ -1492,201 +1721,7 @@ PusherClient = function(id) {
 };
 
 module.exports = PusherClient;
-},{"../common/Shared":17,"socket.io-client":22}],17:[function(require,module,exports){
-/**
- * Created by py on 23/07/16.
- */
-
-var Shared;
-
-var MyDates = require('../common/MyDates');
-
-// param: void
-// function: Shared module constructor. Module returns Singleton state object,
-// which is used to share data between all instances, nested in views.
-// return: Shared module
-Shared = (function() {
-
-    var singleton;
-
-    // param: HttpResponse res - http response, or any other object with some keys;
-    // param: Object obj - object, that we set from response
-    // function: sets all values from obj[keys] to values from res with the same keys
-    // return: modified obj.
-    var setValues = function(res, obj) {
-        var data;
-        if(res.data) {
-            data = res.data;
-
-        }
-        else if(!res.data) {
-            data = res;
-        }
-
-        var keys = Object.keys(data);
-        // console.log(keys);
-        for(var i = 0; i < keys.length; i++) {
-            var key = keys[i];
-            if(!obj[key]) {
-                throw new Error('Key, you are trying to set, does not exists in obj. Check you response.data and compare it with object.');
-            }
-            else {
-                obj[key] = data[key];
-            }
-        }
-
-        return obj;
-    };
-
-    // param: HttpService http - reference to Angular $http service. Ignored, if singleton already exists.
-    // param: MyDates md - reference to MyDates service. Ignored, if singleton already exists.
-    // param: String tw - string representation of 'all' timewindow. Ignored, if singleton already exists.
-    // param: int sid - subview id, index of subview currently visible on MainView.
-    // Starts with 1. Ignored, if singleton already exists.
-    // function: return instance, if it exists. If not, create new singleton instance and return it.
-    // return: singleton object with shared values and functions
-    var init = function() {
-        singleton = {service: undefined, fns: undefined, state: undefined};
-        singleton.service = {
-            http: {},
-            MyDates: MyDates
-        };
-        singleton.fns = {
-            setValues: setValues
-        };
-        singleton.state = {
-            currentMonth: MyDates.dateToString(new Date(), {y:1, m:1, d: undefined}),
-            currentWeek: MyDates.numberOfWeek(new Date()),
-            currentDay: MyDates.dateToString(new Date()),
-            currentItem: undefined,
-            updatedDays:[],
-            updatedMonths:[],
-            isUpdated: false
-        };
-
-        // singleton.state = {
-        //     currentMonth: "201502",
-        //     currentWeek: 0,
-        //     currentDay: "20150201"
-        // };
-        singleton.user = {};
-        return singleton;
-    };
-
-    // param: void
-    // function: returns singleton instance
-    // return: singleton
-    var get = function() {
-        if(singleton) {
-            return singleton;
-        }
-        else {
-            init();
-        }
-    };
-
-    // param: String key - the name of attribute you want to change
-    // param: Object value - the value of parameter, you want to change
-    // function: changes the internal parameter of Shared service to new value
-    // return: Shared object, so method can be chained.
-    var change = function(key, value) {
-        var allowedKeys = ["currentMonth", "currentWeek", "currentDay", "currentItem", "updatedMonths", "isUpdated", "http", "user"];
-        var isAllowedKey = function(element, index, array) {
-            return element === key;
-        };
-        if(!allowedKeys.some(isAllowedKey)) {
-            throw new Error('Wrong key string. Allowed keys are: ' + allowedKeys.toString());
-        }
-        else if(key === "http"){
-            singleton.service.http = value;
-        }
-        else if(key === 'user'){
-            singleton[key] = value;
-        }
-        else {
-            singleton.state[key] = value;
-        }
-        return singleton;
-    };
-
-    var log = function(){
-        console.log(singleton);
-    };
-
-    // param: String arrayKey - the variable name of Array, we want to update
-    // param: Object valueToAdd - the value, we are going to push into Array with name 'key'
-    // function: pushes value to Array 'key'
-    // return: Shared object, so method can be chained.
-    var push = function(arrayKey, valueToAdd) {
-        var isInArray = function(element, index, array){
-            return element === valueToAdd;
-        };
-        if(!singleton.state[arrayKey].some(isInArray)){
-            singleton.state[arrayKey].push(valueToAdd);
-        }
-        return singleton;
-    };
-
-    // param: String key - the variable name of Array in state, where we want to pop last element
-    // function: removes given element
-    // return: void
-    var remove = function (arrayKey, valueToRemove) {
-        var isInArray = function(element, index, array){
-            return element === valueToRemove;
-        };
-        var indexToRemove = singleton.state[arrayKey].findIndex(isInArray);
-        singleton.state[arrayKey].splice(indexToRemove,1);
-    };
-
-    // param: String arrayKey - the array in state, where we want to check the key
-    // param: Object valueToCheck - the value that we want to check (is it in given array in state)
-    // function: checks if given valueToCheck is in Shared.state[arrayKey].
-    // return: Bool status
-    var check = function(arrayKey, valueToCheck) {
-        var result;
-        var isInArray;
-        if(valueToCheck.length === 8){
-            isInArray = function(element, index, array) {
-                return element === valueToCheck;
-            };
-            result = singleton.state[arrayKey].some(isInArray) ? true : false;
-        }
-        else if(valueToCheck.length === 6){
-            var monthArray = [];
-            var transformToMonthString = function (element, index, array) {
-                monthArray.push(element.slice(0,6));
-            };
-            singleton.state[arrayKey].forEach(transformToMonthString);
-            isInArray = function(element, index, array) {
-                return element === valueToCheck;
-            };
-            result = monthArray.some(isInArray) ? true : false;
-        }
-        return result;
-
-    };
-
-    var clear = function(arrayKey) {
-        singleton.state[arrayKey] = [];
-    };
-
-    // initialize singleton internally, so it exists every time, I call require('../common/Shared)
-    init();
-
-    return {
-        getInstance: get,
-        change: change,
-        log: log,
-        push: push,
-        remove: remove,
-        check: check,
-        clear: clear
-    }
-
-})();
-
-module.exports = Shared;
-},{"../common/MyDates":15}],18:[function(require,module,exports){
+},{"socket.io-client":22}],17:[function(require,module,exports){
 
 var TimeWindow;
 
@@ -1770,6 +1805,45 @@ TimeWindow.prototype = {
 };
 
 module.exports = TimeWindow;
+},{}],18:[function(require,module,exports){
+/**
+ * Created by py on 02/09/16.
+ */
+
+class UIItem {
+    constructor(type, amount, description, dayCode, labels, isSaved) {
+        this.type = type;
+        this.amount = amount;
+        this.description = description;
+        this.dayCode = dayCode;
+        this.labels = labels;
+        this.isSaved = isSaved || false;
+    }
+
+    setItemFromForm(form){
+        this.amount = form.html.amount.value;
+        this.description = form.html.description.value;
+        this.labels.isPlan = form.html.isPlanned;
+        this.labels.isDeleted = form.html.isDeleted;
+    }
+
+    static transformToUIItem (obj){
+        let item = new UIItem(obj.type, obj.amount, obj.description, obj.dayCode, obj.labels);
+        item._id = obj._id;
+        item.__v = obj.__v;
+        item.campaignId = obj.campaignId;
+        item.messageId = obj.messageId;
+        item.occuredAt = obj.occuredAt;
+        item.sourceId = obj.sourceId;
+        item.storedAt = obj.storedAt;
+        item.userId = obj.userId;
+        item.userToken = obj.userToken;
+        return item;
+    }
+
+}
+
+module.exports = UIItem;
 },{}],19:[function(require,module,exports){
 /**
  * Created by py on 25/07/16.
@@ -1779,7 +1853,6 @@ var Week;
 
 var MyDates = require('./MyDates');
 var Day = require('./Day');
-var Shared = require('./Shared');
 
 // param: int weekNum - the number of week in month (from 0 to 3-5)
 // param: String month - the string-encoded TimeWindow, which is on month level.
@@ -1789,16 +1862,18 @@ var Shared = require('./Shared');
 // return: Week object
 Week = function(weekNum, month, state, isTransformRequired) {
     var self = this;
+    self.state = state;
 
     // param: int weekNum - the number of week in month (from 0 to 3-5), where day belongs to.
     // param: Bool isTransformRequired - tells constructor to apply transformation for Bootstrap grid.
     // param: Object state
     // function: setup static parameters of Week object
     // return: self, so method can be chained.
-    self.setUp = function(weekNum, month, state, isTransformRequired) {
+    self.setUp = function(weekNum, month, isTransformRequired) {
         self.month = month;
         self.weekNum = weekNum;
         self.isTransformed = isTransformRequired;
+        self.days = [];
         return self;
     };
 
@@ -1816,40 +1891,40 @@ Week = function(weekNum, month, state, isTransformRequired) {
     // param: Object state
     // function: create Day objects and stash them into self.html.days (array)
     // return: self, so method can be chained
-    self.setDays = function (state) {
+    self.setDays = function () {
         // param: Object state
         // function: create Days in first week (which has weekNum = 0)
         // return: void
-        var setFirstWeek = function (state) {
+        var setFirstWeek = function () {
             var firstDayDelta = MyDates.firstDay(self.month);
             for(var i = 0; i < firstDayDelta; i++){
-                self.html.days.push(null);
+                self.days.push(null);
             }
             var dayNum;
             for(var k = firstDayDelta; k < 7; k ++) {
                 dayNum = k - firstDayDelta + 1;
-                self.html.days.push(new Day(dayNum, 0, self.month, state));
+                self.days.push(new Day(dayNum, 0, self.month, self.state));
             }
         };
 
         // param: Object state
         // function: create Days in other weeks (which has weekNum in range [1:5])
         // return: void
-        var setOtherWeeks = function(state){
+        var setOtherWeeks = function(){
             var firstDay = MyDates.firstDay(self.month);
             var maxDays = MyDates.daysInMonth(self.month);
             var dayNum;
             for(var j = 0; j < 7; j++) {
                 dayNum = j + self.weekNum * 7 + 1 - firstDay;
                 if(dayNum < maxDays){
-                    self.html.days.push(new Day(dayNum, self.weekNum, self.month, state));
+                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state));
                 }
                 else if(dayNum === maxDays){
                     self.html.daysRange[1] = dayNum;
-                    self.html.days.push(new Day(dayNum, self.weekNum, self.month, state));
+                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state));
                 }
                 else {
-                    self.html.days.push(null);
+                    self.days.push(null);
                 }
             }
         };
@@ -1862,17 +1937,17 @@ Week = function(weekNum, month, state, isTransformRequired) {
             var transformedWeek = [];
             var cell = [];
             if(cells === 3) {
-                w.html.days.unshift(null);
-                w.html.days.push(null);
-                for(var i = 0; i < w.html.days.length; i = i + 3){
-                    cell = w.html.days.slice(i, i + 3);
+                w.days.unshift(null);
+                w.days.push(null);
+                for(var i = 0; i < w.days.length; i = i + 3){
+                    cell = w.days.slice(i, i + 3);
                     transformedWeek.push(cell);
                 }
             }
             if(cells === 2){
-                w.html.days.push(null);
-                for(var j = 0; j < w.html.days.length; j = j + 4){
-                    cell = w.html.days.slice(j, j + 4);
+                w.days.push(null);
+                for(var j = 0; j < w.days.length; j = j + 4){
+                    cell = w.days.slice(j, j + 4);
                     transformedWeek.push(cell);
                 }
             }
@@ -1882,10 +1957,10 @@ Week = function(weekNum, month, state, isTransformRequired) {
 
         // MAIN LOOP SET DAYS
         if(self.weekNum === 0) {
-            setFirstWeek(state);
+            setFirstWeek();
         }
         else {
-            setOtherWeeks(state);
+            setOtherWeeks();
         }
 
         if(self.isTransformed) {
@@ -1913,21 +1988,17 @@ Week = function(weekNum, month, state, isTransformRequired) {
     // param: Object state
     // function: updates Week object after state change
     // return: self, so method can be chained
-    self.update = function(state) {
+    self.update = function() {
 
         // param: Object state
         // function: ask Day objects in self.html.days to update
         // return: self, so method can be chained
-        self.updateDays = function (state) {
+        self.updateDays = function () {
             if(self.isTransformed === true) {
                 for(var c = 0; c < self.html.days.length; c++){
                     for(var d = 0; d < self.html.days[0].length; d++){
                         if(self.html.days[c][d] !== null) {
-                            // if(Shared.check('updatedDays', self.html.days[c][d].timeWindow)){
-                            //     self.html.days[c][d].update(state);
-                            //     Shared.remove('updatedDays', self.html.days[c][d].timeWindow);
-                            // }
-                            self.html.days[c][d].update(state);
+                            self.html.days[c][d].update();
 
                         }
                     }
@@ -1936,7 +2007,7 @@ Week = function(weekNum, month, state, isTransformRequired) {
             else {
                 for(var i = 0; i < self.html.days.length; i++){
                     if(self.html.days[i] !== null) {
-                        self.html.days[i].update(state);
+                        self.html.days[i].update();
                     }
                 }
             }
@@ -1946,30 +2017,60 @@ Week = function(weekNum, month, state, isTransformRequired) {
         // param: Object state
         // function: decides, whether Week should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
         // return: self, so method can be chained
-        self.setIsSelected = function(state) {
-            if(state.currentWeek){
-                self.weekNum === state.currentWeek.weekNum ? self.html.isSelected = true : self.html.isSelected = false;
+        self.setIsSelected = function() {
+            if(self.state.weekRef){
+                self.weekNum === self.state.weekRef.weekNum ? self.html.isSelected = true : self.html.isSelected = false;
             }
             return self;
         };
 
         // MAIN LOOP FOR UPDATE
-        self.setIsSelected(state)
-            .updateDays(state);
+        self.setIsSelected()
+            .updateDays();
         return self;
     };
 
     
     // MAIN LOOP
-    self.setUp(weekNum, month, state, isTransformRequired)
+    self.setUp(weekNum, month, isTransformRequired)
         .initHTML()
-        .setDays(state)
+        .setDays()
         .setDayRange(weekNum, MyDates.firstDay(self.month));
-        // .update(state);
+};
+
+Week.prototype.getDayRef = function(dayCode) {
+    if(this.isTransformed === true){
+        for(var c = 0; c < this.html.days.length; c++){
+            for(var d = 0; d < this.html.days[0].length; d++){
+                if(this.html.days[c][d] !== null) {
+                    if(this.html.days[c][d].timeWindow === dayCode) {
+                        return this.html.days[c][d];
+                    }
+                }
+            }
+        }
+    }
+    else if(this.isTransformed === false) {
+        for(var i = 0; i < this.html.days.length; i++){
+            if(this.html.days[i].timeWindow === dayCode) {
+                return this.html.days[i];
+            }
+        }
+    }
+};
+
+Week.prototype.getFlatDays = function(){
+    var result = [];
+    this.days.forEach(function(item){
+        if(item !== null){
+            result.push(item);
+        }
+    });
+    return result;
 };
 
 module.exports = Week;
-},{"./Day":8,"./MyDates":15,"./Shared":17}],20:[function(require,module,exports){
+},{"./Day":8,"./MyDates":15}],20:[function(require,module,exports){
 /**
  * Created by py on 12/02/16.
  */

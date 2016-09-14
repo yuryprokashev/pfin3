@@ -9,28 +9,33 @@ var Calendar = require('../../common/Calendar');
 var Dashboard = require('../../common/Dashboard');
 var MessagePoster = require('../../common/MessagePoster');
 
-AppView = function(httpService) {
+AppView = function() {
 
-    var Shared = require('../../common/Shared');
-    Shared.change("http", httpService);
-    var state = Shared.getInstance().state;
-
-    this.state = state;
-
-    this.monthSwitch = new MonthSwitch(state);
-    this.calendarView = new Calendar(state);
-    this.dashboardView = new Dashboard(state);
-    this.expensePoster = new MessagePoster(state);
-
-    this.update = function(state) {
-        this.monthSwitch.update(state);
-        this.calendarView.update(state);
-        this.dashboardView.update(state);
-        this.expensePoster.update(state);
+    this.init = function(state) {
+        this.state = state;
+        this.monthSwitch = new MonthSwitch(state);
+        // this.calendarView = new Calendar(state);
+        // this.dashboardView = new Dashboard(state);
+        // this.expensePoster = new MessagePoster(state);
+        console.log(this);
     };
 
-    this.update(state);
-    console.log(this);
+    this.initCalendarView = function() {
+        this.calendarView = new Calendar(this.state);
+    };
+
+    this.initExpensePoster = function() {
+        this.expensePoster = new MessagePoster(this.state);
+    };
+
+
+    this.update = function() {
+        this.monthSwitch.update();
+        this.calendarView.update();
+        // this.dashboardView.update(state);
+        this.expensePoster.update();
+        // console.log(this);
+    };
 };
 
 module.exports = AppView;

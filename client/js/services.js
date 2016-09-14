@@ -7,9 +7,10 @@ exports.$views = function($http) {
 
     var s = {};
 
-    var appView = new AppView($http);
+    var appView = new AppView();
 
-    s.initAppView = function() {
+    s.initAppView = function(state) {
+        appView.init(state);
         return appView;
     };
 

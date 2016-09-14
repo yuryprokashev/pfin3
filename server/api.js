@@ -20,6 +20,9 @@ const myEmitter = new MyEmitter();
 // NEW VERSION OF REQUIRE
 var MessageService = require('./services/MessageService'); // -> to serve POST '/message/:t' calls from Client.
 
+import WorkerFactory from './modules/WorkerFactory';
+const workerFactory = new WorkerFactory();
+
 var routes = function( wagner ) {
 
     var api = express.Router();
@@ -108,15 +111,6 @@ var routes = function( wagner ) {
 
                 if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
                     var month = mId.length === 6 ? mId.substring(4,6) : mId.substring(4,5);
-                    // var agg = [
-                    //     {$match: {user: user._id.toString(), "labels.isDeleted": false}},
-                    //     {$project: {_id:1, amount:1, description:1, date:1, labels:1, month: {$month: "$date"}}},
-                    //     {$match: {month: Number(month) + 1}},
-                    //     {$project: { _id:1, amount:1, description:1, labels:1, day: {$dayOfMonth: "$date"}}},
-                    //     {$group: {_id:"$day", dayTotal: {$sum: "$amount"}, dayCount:{$eq:{"labels.isConfirmed": false, $sum: 1}}, expenses: {$push:{_id:"$_id", amount:"$amount", description:"$description", labels: "$labels"}}}},
-                    //     {$sort: {_id: 1}}
-                    // ];
-
 
                     var agg = [{$match: {user: user._id.toString(), "labels.isDeleted": false}},
                         {$project: {_id:1, amount:1, labels:1, month: {$month: "$date"}}},
@@ -186,7 +180,7 @@ var routes = function( wagner ) {
         }
     }));
 
-    // param: String t - timewindow in string representation. In this case strictly 6 chars required.
+    // @param: String t - timewindow in string representation. In this case strictly 6 chars required.
     api.get( '/day/:t', wagner.invoke(function(Expense) {
         return function( req, res ) {
             var user = req.user;
@@ -217,14 +211,21 @@ var routes = function( wagner ) {
         }
     }));
 
-    // param: HttpRequest req
-    // param: HttpResponse res
-    // function: replies to Client, that no user is prodived with request, if no user is provided.
+    // @param: HttpRequest req
+    // @param: HttpResponse res
+    // @function: replies to Client, that no user is prodived with request, if no user is provided.
     // in case of user is not provided, it replies nothing.
-    // return: Bool true, if NoUser, else returns false.
+    // @return: Bool true, if NoUser, else returns false.
     var handleNoUser = function (req, res) {
         var reply;
-        if(!req.body.user) {
+        // console.log(req.user);
+        // console.log(req.body.user);
+        if(req.method === "POST" && req.body.user === undefined) {
+            reply = {error: "Please, log in."};
+            res.json(reply);
+            return true;
+        }
+        else if(req.method === "GET" && req.user === undefined) {
             reply = {error: "Please, log in."};
             res.json(reply);
             return true;
@@ -234,14 +235,40 @@ var routes = function( wagner ) {
         }
     };
 
+    // @param: String dayCode - daycode in YYYYMMDD format
+    // @function: POST new Message from User to from MessageService via async query.
+    // @return: HttpResponse with Message save status: {status: true} or {status: false, error: Error}
     api.post('/message/:t', function(req, res){
 
         var isNoUser = handleNoUser(req,res);
 
         if(isNoUser === false) {
-            MessageService.handle(req, function(result){
+            MessageService.handle(req, function(result) {
                 res.json(result);
             });
+        }
+    });
+
+    // @param: String dayCode - daycode in YYYYMMDD format
+    // @param: String payloadType - type of payload, client wants (1 for Expenses)
+    // @param: String sortParan - name of the field, by which to sort the result array.
+    // @param: String sortOrder - sort order for 'sortParam'. Either 1, or -1.
+    // @function: GET data from PayloadService via async query. Return payload data synchronously.
+    // @return: HttpResponse with JSON array of payload objects for authorized user.
+    api.get('/payload/:dayCode/:payloadType/:sortParam/:sortOrder', function (req, res) {
+
+        var isNoUser = handleNoUser(req,res);
+        if(isNoUser === false) {
+            var worker = workerFactory.worker('payload');
+            worker.handle(req, res)
+                .then(
+                    function(result) {
+                        res.json(result);
+                        workerFactory.purge(worker.id);
+                    },
+                    function(error) {
+                        console.log(error);
+                    });
         }
     });
 

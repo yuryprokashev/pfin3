@@ -5,7 +5,6 @@
 var Month;
 
 var TimeWindow = require('./TimeWindow');
-var Shared = require('./Shared');
 var MyDates = require('./MyDates');
 
 // param: String t - string representation of timeWindow object
@@ -14,18 +13,18 @@ var MyDates = require('./MyDates');
 // return: Month object
 Month = function (t, state) {
     var self = this;
+    self.state = state;
 
     // param: String month - the string-encoded TimeWindow, which is on month level.
     // Formatted as "YYYYMM".
     // param: Object state
     // function: setup static parameters of Month object
     // return: self, so method can be chained.
-    self.setUp = function(t, state) {
+    self.setUp = function(t) {
         self.monthString = t;
-        self.getUrl = 'api/v1/month/'.concat(t);
+        self.getUrl = `api/v1/month/${self.monthString}`;
         return self;
     };
-
 
     // param: void, since it is just initialization
     // function: init self.html object, which is exposed to HTML template
@@ -48,66 +47,53 @@ Month = function (t, state) {
     // param: Object state
     // function: decides, whether Month should be shown as 'selected' in HTML. Writes decision to self.html.isSelected
     // return: self, so method can be chained
-    self.setIsSelected = function (state) {
-        if(state.currentMonth !== undefined){
-            self.monthString === state.currentMonth ? self.html.isSelected = true : self.html.isSelected = false;
+    self.setIsSelected = function () {
+        if(self.state.init.month !== undefined) {
+            self.monthString === self.state.init.month ? self.html.isSelected = true : self.html.isSelected = false
+        }
+
+        else if(self.state.init.month === undefined) {
+            self.monthString === self.state.monthRef.monthString ? self.html.isSelected = true : self.html.isSelected = false;
+
         }
         return self;
     };
 
-    var setDefaultTotalsStyle = function() {
+    self.setDefaultTotalsStyle = function() {
         self.html.style.plan = {width: '50%'};
         self.html.style.fact = {width: '50%'};
+        return self;
     };
 
-    // param: Object state
-    // function: get Month data over http, if month update is needed.
-    // return: self, so method can be chained.
-    self.updateTotals = function(state) {
+    self.setTotals = function(totals) {
+        var all = function () {
+            return self.html.totals.fact + self.html.totals.plan;
+        };
 
-        if(Shared.check('updatedMonths', self.monthString)){
-            var shared = Shared.getInstance();
-            var http = shared.service.http;
-            var setValues = shared.fns.setValues;
+        self.html.totals.fact = totals.fact;
+        self.html.totals.plan = totals.plan;
 
-            http.get(this.getUrl).then(function success(response){
-                setValues(response, self.html);
-                var all = function () {
-                    return self.html.totals.fact + self.html.totals.plan;
-                };
-                if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
-                    setDefaultTotalsStyle();
-                }
-                else {
-                    self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
-                    self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
-                }
-                Shared.remove('updatedMonths', self.monthString);
-                return self;
-            }, function error(response) {
-                throw new Error('failed to get data from ' + self.getUrl);
-            });
+        if(totals.plan === 0 && totals.fact === 0) {
+            self.setDefaultTotalsStyle();
         }
         else {
-            if(self.html.totals.plan === 0 && self.html.totals.fact === 0) {
-                setDefaultTotalsStyle();
-            }
+            self.html.style.plan = {width: Math.floor(100 * self.html.totals.plan/ all()) + '%'};
+            self.html.style.fact = {width: Math.ceil(100 * self.html.totals.fact/ all()) + '%'};
         }
+
+        return self;
     };
 
-    // param: Object state
-    // function: change self.html parameters according to 'state'
-    // return: self, so method can be chained
-    self.update = function (state) {
-        self.setIsSelected(state)
-            .updateTotals(state);
+    self.update = function (totals) {
+        self.setIsSelected()
+            .setTotals(totals);
         return self;
     };
 
     // MAIN LOOP
-    self.setUp(t, state)
-        .initHTML();
-        // .update(state);
+    self.setUp(t)
+        .initHTML()
+        .setDefaultTotalsStyle();
 };
 
 
