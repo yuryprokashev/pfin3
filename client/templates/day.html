@@ -5,12 +5,35 @@
             <span class="badge progress-bar-primary badge-calendar-day"
                   ng-show = "self.html.isSelected">{{self.dayNum}}</span>
             <span class="badge progress-bar-muted light badge-calendar-day"
-                  ng-show = "!self.html.isSelected && !self.html.isFuture">{{self.dayNum}}</span>
+                  ng-show = "!self.html.isSelected && !self.html.isFuture">
+                <span class="small">
+                    {{self.dayNum}}
+                </span>
+            </span>
             <span class="badge progress-bar-primary light badge-calendar-day"
-                  ng-show = "!self.html.isSelected && self.html.isFuture">{{self.dayNum}}</span>
-            <span class="text-muted small">
-                {{self.html.sum("amount", self.html.items) | number : 0}}
-                <i class="fa fa-rub" aria-hidden="true"></i>
+                  ng-show = "!self.html.isSelected && self.html.isFuture">
+                <span class="small">
+                    {{self.dayNum}}
+                </span>
+            </span>
+            <span ng-class = "{'text-muted': !self.html.isInSelectedWeek, 'badge progress-bar-success badge-calendar-day': self.html.isInSelectedWeek}">
+                <span class = "small">
+                    {{self.html.sum("amount", self.html.items) | number : 0}}
+                    <i class="fa fa-rub" aria-hidden="true"></i>
+                </span>
+            </span>
+        </p>
+        <p ng-show = "self.html.isInSelectedWeek && self.html.sum('amount', self.html.items) !== 0">
+            <span class="badge progress-bar-muted badge-calendar-day light">
+                <span class = "small">
+                    {{self.html.sum("amount", self.html.items) - self.html.sumIf("isPlan", "amount", self.html.items) | number : 0}}
+                </span>
+            </span>
+            <span class="small"> </span>
+            <span class = "badge progress-bar-primary badge-calendar-day light">
+                <span class = "small">
+                    {{self.html.sumIf("isPlan", "amount", self.html.items) | number : 0}}
+                </span>
             </span>
         </p>
         <div class = "list-group">

@@ -21,7 +21,7 @@ AppView = function() {
     };
 
     this.initCalendarView = function() {
-        this.calendarView = new Calendar(this.state);
+        return new Calendar(this.state);
     };
 
     this.initExpensePoster = function() {

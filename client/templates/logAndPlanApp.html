@@ -2,6 +2,10 @@
     <not-logged-in></not-logged-in>
 </div>
 <div class = "row" ng-show = "state.user._id">
+    <div class="col-md-12 spinner"
+         ng-show = "false">
+        <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
+    </div>
     <div class="col-md-12">
         <message-form ext-message = "view.expensePoster"></message-form>
     </div>
@@ -10,6 +14,9 @@
     </div>
     <div class = "col-md-10" style = "padding-left: 0px">
         <calendar ext-calendar = "view.calendarView"></calendar>
+    </div>
+    <div class = "col-md-12">
+        <ctx-menu ext-ctx-menu = "view.ctxMenuView"></ctx-menu>
     </div>
 </div>
 

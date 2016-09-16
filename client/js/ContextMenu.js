@@ -1,0 +1,48 @@
+/**
+ * Created by py on 15/09/16.
+ */
+
+class ContextMenu {
+
+    constructor(state, target) {
+        this.state = state;
+        this.target = target;
+        this.setUp().setHTML();
+    }
+
+    setUp() {
+        this.options = [
+            {id: "copy", name: `copy budget from previous month` , getUrl: "" },
+            {id: "clear", name: `clear this month`, getUrl: ""}
+        ];
+        return this;
+    }
+
+    setHTML() {
+        this.html = {};
+        this.html.isShown = false;
+        this.html.style = {};
+        return this;
+    }
+
+    setOptionsAsync() {
+        let cm = this.target;
+        let pm = this.state.getPreviousMonthRef(cm);
+        this.options[0].name = `copy budget from ${pm.html.formattedMonth}`;
+        this.options[0].getUrl = `api/v1/message/command/copy/${pm.monthString}`;
+        this.options[1].name = `clear ${cm.html.formattedMonth}`;
+        this.options[1].getUrl = `api/v1/message/command/clear/${cm.monthString}`;
+    }
+
+    show() {
+        this.html.isShown = true;
+        return this;
+    }
+
+    hide(){
+        this.html.isShown = false;
+    }
+
+}
+
+module.exports = ContextMenu;

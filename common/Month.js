@@ -6,6 +6,7 @@ var Month;
 
 var TimeWindow = require('./TimeWindow');
 var MyDates = require('./MyDates');
+var ContextMenu = require('../client/js/ContextMenu');
 
 // param: String t - string representation of timeWindow object
 // param: Object state
@@ -23,6 +24,7 @@ Month = function (t, state) {
     self.setUp = function(t) {
         self.monthString = t;
         self.getUrl = `api/v1/month/${self.monthString}`;
+        self.ctxMenu = new ContextMenu(self.state, self);
         return self;
     };
 

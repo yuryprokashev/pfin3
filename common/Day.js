@@ -72,6 +72,14 @@ Day = function (dayNum, weekNum, month, state) {
             return s;
         };
 
+        self.html.sumIf = function (flag, arg, arr) {
+            var s = 0;
+            var isFlag = function(arrItem){
+                return arrItem.labels[flag] === true;
+            };
+            var filteredArr = arr.filter(isFlag);
+            return self.html.sum(arg, filteredArr);
+        };
         return self;
     };
 

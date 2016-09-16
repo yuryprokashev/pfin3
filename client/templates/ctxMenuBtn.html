@@ -1,0 +1,16 @@
+<div class = "context-menu-btn">
+    <i class="fa fa-ellipsis-v fa-lg"
+       ng-mouseenter = "isHoverContext = true"
+       ng-mouseleave = "isHoverContext = false"
+       ng-class = "{'is-planned': isHoverContext}"
+       aria-hidden="true"></i>
+</div>
+<div class = "context-menu small">
+    <ul class="list-group" ng-show = "self.html.isShown">
+        <li class="list-group-item"
+            ng-repeat = "o in self.options track by $index"
+            ng-click = "$emit('clicked::ctxMenu::option', {option: o})">
+            {{o.name}}
+        </li>
+    </ul>
+</div>

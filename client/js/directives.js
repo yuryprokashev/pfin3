@@ -1,3 +1,11 @@
+exports.notLoggedIn = function() {
+    return {
+        templateUrl: "/assets/templates/notLoggedIn.html",
+        link: function(scope, el, attr, ctrl) {
+        }
+    }
+};
+
 exports.monthSwitch = function () {
     return {
         scope: {
@@ -100,3 +108,21 @@ exports.item = function() {
         }
     }
 };
+
+
+exports.ctxMenuBtn = function(){
+    return {
+        scope: {
+            self: "=extCtxMenu"
+        },
+        templateUrl: "/assets/templates/ctxMenuBtn.html",
+        link: function (scope, el, attr, ctrl) {
+            el.on('click', function(event){
+                // event.stopImmediatePropagation();
+                console.log('ctx menu clicked');
+                scope.self.rect = el[0].getBoundingClientRect();
+                scope.$emit('clicked::ctxMenu', {ctxMenu: scope.self})
+            });
+        }
+    }
+}
