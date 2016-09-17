@@ -54,31 +54,3 @@ var getPayloadFromKafkaMessage = function (msg) {
 };
 
 module.exports = PayloadWorker;
-
-// if(isNoUser === false) {
-//     var Bus = require('./services/BusService');
-//     var requestId = require('../common/guid')();
-//     // console.log('request id in payload-request');
-//     // console.log(requestId);
-//
-//     Bus.subscribe('payload-response', function (msg) {
-//         // console.log('request id in payload-response');
-//         // console.log(msg.value.requestId);
-//         // console.log(JSON.parse(msg.value).requestId);
-//         var responseRequestId = JSON.parse(msg.value).requestId;
-//         if(responseRequestId === requestId) {
-//             res.json(getPayloadFromKafkaMessage(msg));
-//         }
-//         Bus.unsubscribe('payload-response', function(){});
-//     });
-//     var getQuery = {
-//         requestId: requestId,
-//         user: req.user._id.toString(),
-//         dayCode: req.params.dayCode,
-//         payloadType: Number(req.params.payloadType)
-//     };
-//     getQuery.sortOrder = {};
-//     getQuery.sortOrder[req.params.sortParam] = Number(req.params.sortOrder);
-//     // console.log(getQuery);
-//     Bus.send('payload-request', getQuery);
-// }

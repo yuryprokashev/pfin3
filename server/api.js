@@ -5,20 +5,20 @@ var status = require( 'http-status' );
 var _ = require( 'underscore' );
 
 var MonthData = require('../common/MonthData');
-var ExpenseData = require('../common/Expense');
+// var ExpenseData = require('../common/Expense');
 var MyDates = require('../common/MyDates');
 
-const EventEmitter = require('events');
+// const EventEmitter = require('events');
 const util = require('util');
 
-function MyEmitter() {
-    EventEmitter.call(this);
-}
-util.inherits( MyEmitter, EventEmitter );
-const myEmitter = new MyEmitter();
+// function MyEmitter() {
+//     EventEmitter.call(this);
+// }
+// util.inherits( MyEmitter, EventEmitter );
+// const myEmitter = new MyEmitter();
 
 // NEW VERSION OF REQUIRE
-var MessageService = require('./services/MessageService'); // -> to serve POST '/message/:t' calls from Client.
+// var MessageService = require('./services/MessageService'); // -> to serve POST '/message/:t' calls from Client.
 
 import WorkerFactory from './modules/WorkerFactory';
 const workerFactory = new WorkerFactory();
@@ -235,17 +235,43 @@ var routes = function( wagner ) {
         }
     };
 
+    api.get('/message/command/:commandType/:target', function(req,res){
+
+        res.json({commandType: req.params.commandType, target: req.params.target});
+    });
+
     // @param: String dayCode - daycode in YYYYMMDD format
     // @function: POST new Message from User to from MessageService via async query.
     // @return: HttpResponse with Message save status: {status: true} or {status: false, error: Error}
+    // api.post('/message/:t', function(req, res){
+    //
+    //     var isNoUser = handleNoUser(req,res);
+    //
+    //     if(isNoUser === false) {
+    //         MessageService.handle(req, function(result) {
+    //             res.json(result);
+    //         });
+    //     }
+    // });
+
     api.post('/message/:t', function(req, res){
 
         var isNoUser = handleNoUser(req,res);
 
         if(isNoUser === false) {
-            MessageService.handle(req, function(result) {
-                res.json(result);
-            });
+            var worker = workerFactory.worker('message');
+            worker.handle(req,res)
+                .then(
+                    function(result){
+                        console.log(result);
+                        res.json(result);
+                        workerFactory.purge(worker.id);
+                    },
+                    function(error) {
+                        res.json({error: error});
+                    }
+                )
+
         }
     });
 
@@ -268,6 +294,7 @@ var routes = function( wagner ) {
                     },
                     function(error) {
                         console.log(error);
+                        workerFactory.purge(worker.id);
                     });
         }
     });
