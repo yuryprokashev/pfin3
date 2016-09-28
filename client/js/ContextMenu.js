@@ -2,6 +2,8 @@
  * Created by py on 15/09/16.
  */
 
+const guid = require('../../common/guid');
+
 class ContextMenu {
 
     constructor(state, target) {
@@ -28,10 +30,12 @@ class ContextMenu {
     setOptionsAsync() {
         let cm = this.target;
         let pm = this.state.getPreviousMonthRef(cm);
+        let payloadType = this.state.payloadType;
         this.options[0].name = `copy budget from ${pm.html.formattedMonth}`;
-        this.options[0].getUrl = `api/v1/message/command/copy/${pm.monthString}`;
-        this.options[1].name = `clear ${cm.html.formattedMonth}`;
-        this.options[1].getUrl = `api/v1/message/command/clear/${cm.monthString}`;
+        // this.options[0].getUrl = `api/v1/command/copy/${pm.monthString}/${payloadType}`;
+        this.options[0].getUrl = `api/v1/command/copy/${cm.monthString}/${pm.monthString}/${payloadType}`;
+        this.options[1].name = `clear ${cm.html.formattedMonth}/${payloadType}`;
+        this.options[1].getUrl = `api/v1/command/clear/${cm.monthString}`;
     }
 
     show() {

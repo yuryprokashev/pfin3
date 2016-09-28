@@ -1,7 +1,7 @@
 var mongoose = require( 'mongoose' );
-var User = require( './user.schema' );
-var Category = require( './category.schema' );
-var Currency = require( './currency.schema' );
+var User = require( './user.schema.js' );
+var Category = require( './category.schema.js' );
+var Currency = require( './currency.schema.js' );
 var MyDates = require('../../common/MyDates');
 
 // exports expense object model

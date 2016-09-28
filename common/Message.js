@@ -12,7 +12,7 @@ var MyDates = require('../common/MyDates');
 // param: ExpenseMessagePayload emp - payload object
 // function: constructs Message object
 // return: Message object
-Message = function(user, sourceId, type, emp, userToken) {
+Message = function(user, sourceId, type, emp, userToken, commandId) {
     if(user === undefined || typeof user !== 'string') {
         throw new Error('user is either undefined or not String');
     }
@@ -43,6 +43,8 @@ Message = function(user, sourceId, type, emp, userToken) {
     }
 
     this.userToken = userToken;
+
+    this.commandId = commandId;
 
     this.occuredAt = MyDates.now();
 };

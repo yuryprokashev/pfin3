@@ -1,21 +1,19 @@
 /**
  * Created by py on 06/09/16.
  */
-
-import Worker from './Worker';
-
-import Bus from '../services/BusService';
+"use strict"
+const Worker = require('./Worker');
+const Bus = require('../services/BusService');
 
 class MessageWorker extends Worker{
-    constructor(id){
-        super(id);
+    constructor(id, commandId){
+        super(id, commandId);
     }
 
     handle (request, response){
-
         super.extract(request);
-        // console.log(this.busValue);
         var self = this;
+        this.response = response;
 
         function handleNewMessageAsync(resolve, reject) {
 
@@ -40,13 +38,12 @@ class MessageWorker extends Worker{
             }
 
             function sendAckMessageSaved(msg) {
-                console.log(msg);
                 if(isMyResponse(msg)) {
                     if(isErrors(msg)){
                         reject(assembleErrors(msg));
                     }
                     else {
-                        resolve(assembleAck(msg));
+                        resolve({worker: self, msg: assembleAck(msg)});
                     }
                 }
             }

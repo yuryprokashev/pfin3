@@ -45,6 +45,8 @@ module.exports = AppView;
  * Created by py on 15/09/16.
  */
 
+const guid = require('../../common/guid');
+
 class ContextMenu {
 
     constructor(state, target) {
@@ -71,10 +73,12 @@ class ContextMenu {
     setOptionsAsync() {
         let cm = this.target;
         let pm = this.state.getPreviousMonthRef(cm);
+        let payloadType = this.state.payloadType;
         this.options[0].name = `copy budget from ${pm.html.formattedMonth}`;
-        this.options[0].getUrl = `api/v1/message/command/copy/${pm.monthString}`;
-        this.options[1].name = `clear ${cm.html.formattedMonth}`;
-        this.options[1].getUrl = `api/v1/message/command/clear/${cm.monthString}`;
+        // this.options[0].getUrl = `api/v1/command/copy/${pm.monthString}/${payloadType}`;
+        this.options[0].getUrl = `api/v1/command/copy/${cm.monthString}/${pm.monthString}/${payloadType}`;
+        this.options[1].name = `clear ${cm.html.formattedMonth}/${payloadType}`;
+        this.options[1].getUrl = `api/v1/command/clear/${cm.monthString}`;
     }
 
     show() {
@@ -89,7 +93,7 @@ class ContextMenu {
 }
 
 module.exports = ContextMenu;
-},{}],3:[function(require,module,exports){
+},{"../../common/guid":22}],3:[function(require,module,exports){
 var controllers = require( './controllers.js' );
 var directives = require( './directives.js' );
 var services = require( './services.js' );
@@ -122,11 +126,11 @@ client.config( function( $routeProvider ){
     });
 
 });
-},{"./controllers.js":4,"./directives.js":5,"./services.js":6,"underscore":70}],4:[function(require,module,exports){
+},{"./controllers.js":4,"./directives.js":5,"./services.js":6,"underscore":71}],4:[function(require,module,exports){
 exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     const MyDates = require('../../common/MyDates');
     const UIItem = require('../../common/UIItem');
-    const PusherClient = require('../../common/PusherClient');
+    const PusherClient = require('../../common/PusherClient2');
     const guid = require('../../common/guid');
 
     $scope.state = {
@@ -153,6 +157,8 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     $scope.cache = {
         calendars: new Map()
     };
+
+    $scope.pushListener = new PusherClient();
 
     $user.getUser(function success(){
         $scope.state.user = $user.user;
@@ -196,6 +202,12 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return (targetMonthIndex - 1) >= 0 ? $scope.view.monthSwitch.months[targetMonthIndex - 1] : targetMonth;
     };
 
+    var stopCommandProcessing = function(){
+        if($scope.state.isCommandProcessing === true) {
+            $scope.state.isCommandProcessing = false;
+        }
+    };
+
     $scope.state.getPreviousMonthRef = getPreviousMonthRef;
 
     var setContextMenuOptions = function(){
@@ -230,6 +242,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
                 });
                 days[i].day.html.items = result;
                 days[i].day.update();
+                stopCommandProcessing();
             }
         };
 
@@ -277,7 +290,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     }
     
     function copyCommandCallback(response){
-        console.log(response);
+        // console.log(response);
+        hideContextMenu();
+        getDaysAsync();
+        stopCommandProcessing();
     }
 
     function clearCommandCallback(response) {
@@ -285,7 +301,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     }
 
     function sendCommandAsync(option, callback){
-        $http.get(option.getUrl)
+        let cmdId = guid();
+        // $scope.pushListener.register(cmdId, getDaysAsync);
+        console.log(`${option.getUrl}/${cmdId}`);
+        $http.get(`${option.getUrl}/${cmdId}`)
             .then(function(response){
                 callback(response);
             });
@@ -314,6 +333,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     function isClearOption(option){
         return option.id === "clear";
     }
+
 
 
     $scope.$on('directive::monthSwitch::ready', function(event, args){
@@ -495,10 +515,11 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             // - read dayCode from push
             // - trigger http get for the dayCode
             // - all items arrived from http call will have status 'isSaved'
-            console.log(`pushCallback on ${pushData.dayCode}`);
-            let dayNum = MyDates.getDateFromString(pushData.dayCode);
+            // console.log(pushData);
+            console.log(`pushCallback on ${pushData}`);
+            let dayNum = MyDates.getDateFromString(pushData);
             let week = setWeekRef(dayNum);
-            let day = week.getDayRef(pushData.dayCode);
+            let day = week.getDayRef(pushData);
             $http.get(day.getUrl)
                 .then(function(res){
                     let items = res.data;
@@ -549,7 +570,9 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         // const PusherClient = require('../../common/PusherClient');
         // const guid = require('../../common/guid');
         var token = guid();
-        $scope.pushListener = new PusherClient(token, pushCallback); // -> set change of state when push arrives
+        // $scope.pushListener = new PusherClient(token, pushCallback); // -> set change of state when push arrives
+
+        $scope.pushListener.register(token, pushCallback);
         var message = args.form.assembleMessage(args.btn, token);
         $http.post(args.form.postUrl, message)
             .then(saveCallback);
@@ -577,6 +600,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     $scope.$on('clicked::ctxMenu::option', function(event, args){
         if(isCopyOption(args.option)) {
             sendCommandAsync(args.option, copyCommandCallback);
+            $scope.state.isCommandProcessing = true;
         }
 
         if(isClearOption(args.option)) {
@@ -586,7 +610,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     });
 
 };
-},{"../../common/MyDates":16,"../../common/PusherClient":17,"../../common/UIItem":19,"../../common/guid":21}],5:[function(require,module,exports){
+},{"../../common/MyDates":16,"../../common/PusherClient2":18,"../../common/UIItem":20,"../../common/guid":22}],5:[function(require,module,exports){
 exports.notLoggedIn = function() {
     return {
         templateUrl: "/assets/templates/notLoggedIn.html",
@@ -753,7 +777,7 @@ exports.$user = function( $http ) {
     };
     return s;
 };
-},{"./AppView.js":1,"http-status":22}],7:[function(require,module,exports){
+},{"./AppView.js":1,"http-status":23}],7:[function(require,module,exports){
 /**
  * Created by py on 24/07/16.
  */
@@ -826,7 +850,7 @@ Calendar.prototype.getFlatDays = function(){
 };
 
 module.exports = Calendar;
-},{"./MyDates":16,"./Week":20}],8:[function(require,module,exports){
+},{"./MyDates":16,"./Week":21}],8:[function(require,module,exports){
 /**
  * Created by py on 24/07/16.
  */
@@ -1015,6 +1039,7 @@ var ExpenseMessagePayload;
 ExpenseMessagePayload = function (p, amount, desc, id) {
     // this.messagePayload = p;
     this.dayCode = p.dayCode;
+    this.monthCode = p.monthCode;
     this.labels = p.labels;
 
     if(amount === undefined || typeof amount !== 'number' || amount < 0) {
@@ -1055,7 +1080,7 @@ var MyDates = require('../common/MyDates');
 // param: ExpenseMessagePayload emp - payload object
 // function: constructs Message object
 // return: Message object
-Message = function(user, sourceId, type, emp, userToken) {
+Message = function(user, sourceId, type, emp, userToken, commandId) {
     if(user === undefined || typeof user !== 'string') {
         throw new Error('user is either undefined or not String');
     }
@@ -1087,6 +1112,8 @@ Message = function(user, sourceId, type, emp, userToken) {
 
     this.userToken = userToken;
 
+    this.commandId = commandId;
+
     this.occuredAt = MyDates.now();
 };
 
@@ -1108,6 +1135,7 @@ MessagePayload = function(dayCode, labels) {
     }
     else {
         this.dayCode = dayCode;
+        this.monthCode = dayCode.substring(0,6);
     }
     if(labels.isPlan === undefined || labels.isDeleted === undefined) {
         throw new Error('labels object does not have mandatory key-values (isPlan and isDeleted expected)');
@@ -1268,7 +1296,7 @@ MessagePoster.prototype.setSelectedItem = function(){
 
 
 module.exports = MessagePoster;
-},{"../common/ExpenseMessagePayload":10,"../common/Message":11,"../common/MessagePayload":12,"../common/MyDates":16,"../common/PusherClient":17,"../common/guid":21}],14:[function(require,module,exports){
+},{"../common/ExpenseMessagePayload":10,"../common/Message":11,"../common/MessagePayload":12,"../common/MyDates":16,"../common/PusherClient":17,"../common/guid":22}],14:[function(require,module,exports){
 /**
  * Created by py on 24/07/16.
  */
@@ -1371,7 +1399,7 @@ Month = function (t, state) {
 
 
 module.exports = Month;
-},{"../client/js/ContextMenu":2,"./MyDates":16,"./TimeWindow":18}],15:[function(require,module,exports){
+},{"../client/js/ContextMenu":2,"./MyDates":16,"./TimeWindow":19}],15:[function(require,module,exports){
 /**
  * Created by py on 24/07/16.
  */
@@ -1882,7 +1910,7 @@ MyDates = (function() {
 })();
 
 module.exports = MyDates;
-},{"../common/TimeWindow":18}],17:[function(require,module,exports){
+},{"../common/TimeWindow":19}],17:[function(require,module,exports){
 /**
  * Created by py on 13/07/16.
  */
@@ -1908,7 +1936,7 @@ PusherClient = function(id, callback) {
     console.log("Pusher Client with token " + id + " is initialized");
 
 
-    var channels = {};
+    var sockets = {};
 
     // param: String channel - channel name to listen
     // param: String event - event name to listen
@@ -1937,7 +1965,56 @@ PusherClient = function(id, callback) {
 };
 
 module.exports = PusherClient;
-},{"socket.io-client":23}],18:[function(require,module,exports){
+},{"socket.io-client":24}],18:[function(require,module,exports){
+/**
+ * Created by py on 18/09/16.
+ */
+
+const io = require('socket.io-client');
+
+class PusherClient {
+    constructor() {
+        this.pushServer = {url: "http://localhost"};
+        // this.sockets = {};
+        this.sockets = new Map();
+
+    }
+
+    register(id, callback){
+        var socket = io(this.pushServer.url, {multiplex: false});
+        var _this = this;
+
+        function handlePayloadDone(data){
+            console.log(`this is push data`);
+            console.log(data);
+            callback(data);
+        }
+
+        function setUniqueId(data) {
+            socket.emit('set-id', {_id: id});
+
+            // _this.sockets[id] = socket;
+            _this.sockets.set(id, socket);
+            console.log(_this.sockets);
+            socket.on(`client-payload-new-${id}`, handlePayloadDone);
+        }
+
+        function clearSocket(data){
+            console.log(data);
+            _this.sockets.delete(data._id);
+            console.log(_this.sockets);
+        }
+
+        socket.on('connect', setUniqueId);
+
+        socket.on('reset-id', clearSocket);
+        
+    }
+
+}
+
+module.exports = PusherClient;
+},{"socket.io-client":24}],19:[function(require,module,exports){
 
 var TimeWindow;
 
@@ -2021,7 +2098,7 @@ TimeWindow.prototype = {
 };
 
 module.exports = TimeWindow;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * Created by py on 02/09/16.
  */
@@ -2060,7 +2137,7 @@ class UIItem {
 }
 
 module.exports = UIItem;
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /**
  * Created by py on 25/07/16.
  */
@@ -2286,7 +2363,7 @@ Week.prototype.getFlatDays = function(){
 };
 
 module.exports = Week;
-},{"./Day":9,"./MyDates":16}],21:[function(require,module,exports){
+},{"./Day":9,"./MyDates":16}],22:[function(require,module,exports){
 /**
  * Created by py on 12/02/16.
  */
@@ -2303,7 +2380,7 @@ var guid = function () {
 };
 
 module.exports = guid;
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 // Generated by CoffeeScript 1.7.1
 module.exports = {
   100: 'Continue',
@@ -2392,7 +2469,7 @@ module.exports = {
   HTTP_VERSION_NOT_SUPPORTED: 505
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -2486,7 +2563,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":24,"./socket":26,"./url":27,"debug":31,"socket.io-parser":64}],24:[function(require,module,exports){
+},{"./manager":25,"./socket":27,"./url":28,"debug":32,"socket.io-parser":65}],25:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -3045,7 +3122,7 @@ Manager.prototype.onreconnect = function(){
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":25,"./socket":26,"backo2":28,"component-bind":29,"component-emitter":30,"debug":31,"engine.io-client":34,"indexof":61,"socket.io-parser":64}],25:[function(require,module,exports){
+},{"./on":26,"./socket":27,"backo2":29,"component-bind":30,"component-emitter":31,"debug":32,"engine.io-client":35,"indexof":62,"socket.io-parser":65}],26:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -3071,7 +3148,7 @@ function on(obj, ev, fn) {
   };
 }
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -3485,7 +3562,7 @@ Socket.prototype.compress = function(compress){
   return this;
 };
 
-},{"./on":25,"component-bind":29,"component-emitter":30,"debug":31,"has-binary":59,"socket.io-parser":64,"to-array":69}],27:[function(require,module,exports){
+},{"./on":26,"component-bind":30,"component-emitter":31,"debug":32,"has-binary":60,"socket.io-parser":65,"to-array":70}],28:[function(require,module,exports){
 (function (global){
 
 /**
@@ -3565,7 +3642,7 @@ function url(uri, loc){
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":31,"parseuri":62}],28:[function(require,module,exports){
+},{"debug":32,"parseuri":63}],29:[function(require,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -3652,7 +3729,7 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -3677,7 +3754,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -3840,7 +3917,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -4010,7 +4087,7 @@ function localstorage(){
   } catch (e) {}
 }
 
-},{"./debug":32}],32:[function(require,module,exports){
+},{"./debug":33}],33:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -4209,7 +4286,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":33}],33:[function(require,module,exports){
+},{"ms":34}],34:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -4336,11 +4413,11 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 
 module.exports =  require('./lib/');
 
-},{"./lib/":35}],35:[function(require,module,exports){
+},{"./lib/":36}],36:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -4352,7 +4429,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":36,"engine.io-parser":46}],36:[function(require,module,exports){
+},{"./socket":37,"engine.io-parser":47}],37:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -5084,7 +5161,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":37,"./transports":38,"component-emitter":44,"debug":31,"engine.io-parser":46,"indexof":61,"parsejson":56,"parseqs":57,"parseuri":62}],37:[function(require,module,exports){
+},{"./transport":38,"./transports":39,"component-emitter":45,"debug":32,"engine.io-parser":47,"indexof":62,"parsejson":57,"parseqs":58,"parseuri":63}],38:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -5241,7 +5318,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":44,"engine.io-parser":46}],38:[function(require,module,exports){
+},{"component-emitter":45,"engine.io-parser":47}],39:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -5298,7 +5375,7 @@ function polling(opts){
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling-jsonp":39,"./polling-xhr":40,"./websocket":42,"xmlhttprequest-ssl":43}],39:[function(require,module,exports){
+},{"./polling-jsonp":40,"./polling-xhr":41,"./websocket":43,"xmlhttprequest-ssl":44}],40:[function(require,module,exports){
 (function (global){
 
 /**
@@ -5540,7 +5617,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":41,"component-inherit":45}],40:[function(require,module,exports){
+},{"./polling":42,"component-inherit":46}],41:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -5956,7 +6033,7 @@ function unloadHandler() {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":41,"component-emitter":44,"component-inherit":45,"debug":31,"xmlhttprequest-ssl":43}],41:[function(require,module,exports){
+},{"./polling":42,"component-emitter":45,"component-inherit":46,"debug":32,"xmlhttprequest-ssl":44}],42:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -6205,7 +6282,7 @@ Polling.prototype.uri = function(){
   return schema + '://' + (ipv6 ? '[' + this.hostname + ']' : this.hostname) + port + this.path + query;
 };
 
-},{"../transport":37,"component-inherit":45,"debug":31,"engine.io-parser":46,"parseqs":57,"xmlhttprequest-ssl":43,"yeast":58}],42:[function(require,module,exports){
+},{"../transport":38,"component-inherit":46,"debug":32,"engine.io-parser":47,"parseqs":58,"xmlhttprequest-ssl":44,"yeast":59}],43:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -6497,7 +6574,7 @@ WS.prototype.check = function(){
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../transport":37,"component-inherit":45,"debug":31,"engine.io-parser":46,"parseqs":57,"ws":71,"yeast":58}],43:[function(require,module,exports){
+},{"../transport":38,"component-inherit":46,"debug":32,"engine.io-parser":47,"parseqs":58,"ws":72,"yeast":59}],44:[function(require,module,exports){
 // browser shim for xmlhttprequest module
 var hasCORS = require('has-cors');
 
@@ -6535,7 +6612,7 @@ module.exports = function(opts) {
   }
 }
 
-},{"has-cors":55}],44:[function(require,module,exports){
+},{"has-cors":56}],45:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -6701,7 +6778,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -6709,7 +6786,7 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -7307,7 +7384,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":47,"after":48,"arraybuffer.slice":49,"base64-arraybuffer":50,"blob":51,"has-binary":52,"utf8":54}],47:[function(require,module,exports){
+},{"./keys":48,"after":49,"arraybuffer.slice":50,"base64-arraybuffer":51,"blob":52,"has-binary":53,"utf8":55}],48:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -7328,7 +7405,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -7358,7 +7435,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -7389,7 +7466,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -7450,7 +7527,7 @@ module.exports = function(arraybuffer, start, end) {
   };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -7550,7 +7627,7 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 (function (global){
 
 /*
@@ -7612,12 +7689,12 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":53}],53:[function(require,module,exports){
+},{"isarray":54}],54:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/utf8js v2.0.0 by @mathias */
 ;(function(root) {
@@ -7865,7 +7942,7 @@ module.exports = Array.isArray || function (arr) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -7884,7 +7961,7 @@ try {
   module.exports = false;
 }
 
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -7919,7 +7996,7 @@ module.exports = function parsejson(data) {
   }
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -7958,7 +8035,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 'use strict';
 
 var alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('')
@@ -8028,7 +8105,7 @@ yeast.encode = encode;
 yeast.decode = decode;
 module.exports = yeast;
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 (function (global){
 
 /*
@@ -8091,9 +8168,9 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":60}],60:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"dup":53}],61:[function(require,module,exports){
+},{"isarray":61}],61:[function(require,module,exports){
+arguments[4][54][0].apply(exports,arguments)
+},{"dup":54}],62:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -8104,7 +8181,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -8145,7 +8222,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -8290,7 +8367,7 @@ exports.removeBlobs = function(data, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":65,"isarray":67}],64:[function(require,module,exports){
+},{"./is-buffer":66,"isarray":68}],65:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -8692,7 +8769,7 @@ function error(data){
   };
 }
 
-},{"./binary":63,"./is-buffer":65,"component-emitter":66,"debug":31,"isarray":67,"json3":68}],65:[function(require,module,exports){
+},{"./binary":64,"./is-buffer":66,"component-emitter":67,"debug":32,"isarray":68,"json3":69}],66:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -8709,11 +8786,11 @@ function isBuf(obj) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],66:[function(require,module,exports){
-arguments[4][44][0].apply(exports,arguments)
-},{"dup":44}],67:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"dup":53}],68:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
+arguments[4][45][0].apply(exports,arguments)
+},{"dup":45}],68:[function(require,module,exports){
+arguments[4][54][0].apply(exports,arguments)
+},{"dup":54}],69:[function(require,module,exports){
 (function (global){
 /*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
 ;(function () {
@@ -9619,7 +9696,7 @@ arguments[4][53][0].apply(exports,arguments)
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -9634,7 +9711,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -11184,6 +11261,6 @@ function toArray(list, index) {
   }
 }.call(this));
 
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 
 },{}]},{},[3]);

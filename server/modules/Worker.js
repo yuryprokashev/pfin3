@@ -1,12 +1,11 @@
 /**
  * Created by py on 06/09/16.
  */
-
-import guid from '../../common/guid';
-
+"use strict"
 class Worker {
-    constructor(id){
+    constructor(id, commandId){
         this.id = id;
+        this.commandId = commandId || undefined;
         this.busValue = {
             requestId: id,
             requestPayload: {},
@@ -44,6 +43,11 @@ class Worker {
 
     parseResponsePayload(msg, key) {
         return JSON.parse(JSON.parse(msg.value).responsePayload[key]);
+    }
+
+    isMyResponse(msg){
+        let responseRequestId = JSON.parse(msg.value).requestId;
+        return responseRequestId === self.busValue.requestId;
     }
 
 }

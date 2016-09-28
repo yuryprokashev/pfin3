@@ -13,6 +13,7 @@ var ExpenseMessagePayload;
 ExpenseMessagePayload = function (p, amount, desc, id) {
     // this.messagePayload = p;
     this.dayCode = p.dayCode;
+    this.monthCode = p.monthCode;
     this.labels = p.labels;
 
     if(amount === undefined || typeof amount !== 'number' || amount < 0) {

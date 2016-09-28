@@ -23,7 +23,7 @@ PusherClient = function(id, callback) {
     console.log("Pusher Client with token " + id + " is initialized");
 
 
-    var channels = {};
+    var sockets = {};
 
     // param: String channel - channel name to listen
     // param: String event - event name to listen

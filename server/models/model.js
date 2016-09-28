@@ -10,15 +10,15 @@ module.exports = function(wagner){
 
     // get all schemas
     // compile then into the models
-    var Expense = mongoose.model('Expense', require( './expense.schema' ), 'expenses' );
+    var Expense = mongoose.model('Expense', require( './expense.schema.js' ), 'expenses' );
 
-    var Currency = mongoose.model('Currency', require( './currency.schema' ), 'currencies' );
+    var Currency = mongoose.model('Currency', require( './currency.schema.js' ), 'currencies' );
 
-    var Category = mongoose.model('Category', require( './category.schema' ), 'categories' );
+    var Category = mongoose.model('Category', require( './category.schema.js' ), 'categories' );
 
-    var User = mongoose.model('User', require( './user.schema' ), 'users' );
+    var User = mongoose.model('User', require( './user.schema.js' ), 'users' );
 
-    var Message = mongoose.model('Message', require('./message.schema'), 'messages');
+    var Message = mongoose.model('Message', require('./message.schema.js'), 'messages');
 
     // var Payload = mongoose.model('Payload', require('./payload.schema'), 'payloads');
 

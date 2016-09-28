@@ -2,26 +2,13 @@
 var bodyparser = require( 'body-parser' );
 var express = require( 'express' );
 var status = require( 'http-status' );
-var _ = require( 'underscore' );
 
 var MonthData = require('../common/MonthData');
-// var ExpenseData = require('../common/Expense');
 var MyDates = require('../common/MyDates');
 
-// const EventEmitter = require('events');
 const util = require('util');
-
-// function MyEmitter() {
-//     EventEmitter.call(this);
-// }
-// util.inherits( MyEmitter, EventEmitter );
-// const myEmitter = new MyEmitter();
-
-// NEW VERSION OF REQUIRE
-// var MessageService = require('./services/MessageService'); // -> to serve POST '/message/:t' calls from Client.
-
-import WorkerFactory from './modules/WorkerFactory';
-const workerFactory = new WorkerFactory();
+const Manager = require('../server/modules/Manager');
+var manager = new Manager();
 
 var routes = function( wagner ) {
 
@@ -235,43 +222,45 @@ var routes = function( wagner ) {
         }
     };
 
-    api.get('/message/command/:commandType/:target', function(req,res){
+    api.get('/command/:commandType/:dayCode/:payloadType/:commandId', function(req,res){
 
-        res.json({commandType: req.params.commandType, target: req.params.target});
+        var isNoUser = handleNoUser(req,res);
+
+        if(isNoUser === false) {
+            manager.manage(req, res)
+                .then(
+                    manager.returnResultA,
+                    manager.returnError
+                );
+        }
+    });
+    
+    api.get('/command/:commandType/:targetPeriod/:sourcePeriod/:payloadType/:commandId', function (req, res){
+        var isNoUser = handleNoUser(req,res);
+
+        if(isNoUser === false){
+            manager.manage(req, res)
+                .then(
+                    manager.returnCommandResult,
+                    manager.returnError
+                )
+        }
     });
 
     // @param: String dayCode - daycode in YYYYMMDD format
     // @function: POST new Message from User to from MessageService via async query.
     // @return: HttpResponse with Message save status: {status: true} or {status: false, error: Error}
-    // api.post('/message/:t', function(req, res){
-    //
-    //     var isNoUser = handleNoUser(req,res);
-    //
-    //     if(isNoUser === false) {
-    //         MessageService.handle(req, function(result) {
-    //             res.json(result);
-    //         });
-    //     }
-    // });
 
     api.post('/message/:t', function(req, res){
 
         var isNoUser = handleNoUser(req,res);
 
         if(isNoUser === false) {
-            var worker = workerFactory.worker('message');
-            worker.handle(req,res)
+            manager.manage(req, res)
                 .then(
-                    function(result){
-                        console.log(result);
-                        res.json(result);
-                        workerFactory.purge(worker.id);
-                    },
-                    function(error) {
-                        res.json({error: error});
-                    }
-                )
-
+                    manager.returnResult,
+                    manager.returnError
+                );
         }
     });
 
@@ -285,19 +274,14 @@ var routes = function( wagner ) {
 
         var isNoUser = handleNoUser(req,res);
         if(isNoUser === false) {
-            var worker = workerFactory.worker('payload');
-            worker.handle(req, res)
+            manager.manage(req, res)
                 .then(
-                    function(result) {
-                        res.json(result);
-                        workerFactory.purge(worker.id);
-                    },
-                    function(error) {
-                        console.log(error);
-                        workerFactory.purge(worker.id);
-                    });
+                    manager.returnResult,
+                    manager.returnError
+                );
         }
     });
+
 
     return api;
 };

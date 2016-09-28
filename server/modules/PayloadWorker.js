@@ -1,48 +1,35 @@
 /**
  * Created by py on 06/09/16.
  */
+"use strict"
+const Worker = require('./Worker');
 
-import Worker from './Worker';
+const Bus = require('../services/BusService');
 
-import Bus from '../services/BusService';
-
-import guid from '../../common/guid';
+const guid = require('../../common/guid');
 
 class PayloadWorker extends Worker {
-    constructor(id) {
-        super(id);
+    constructor(id, commandId) {
+        super(id,commandId);
     }
 
-    handle(request, response) {
-        let params = super.extract(request);
-        var requestId = guid();
+    handle(getQuery, response) {
+        getQuery.requestId = this.id;
+        this.response = response;
+        var _this = this;
 
-        var promise = new Promise(function(resolve, reject){
-            // setTimeout(function(){
-            //     resolve({wow: 'this is promise'});
-            // }, 300);
+        return new Promise(function(resolve, reject){
 
             Bus.subscribe('payload-response', function (msg) {
                 var responseRequestId = JSON.parse(msg.value).requestId;
-                if(responseRequestId === requestId) {
-                    resolve(getPayloadFromKafkaMessage(msg));
+                if(responseRequestId === _this.id) {
+                    resolve({worker: _this, msg: getPayloadFromKafkaMessage(msg)});
                 }
             });
-
-            var getQuery = {
-                requestId: requestId,
-                user: request.user._id.toString(),
-                dayCode: request.params.dayCode,
-                payloadType: Number(request.params.payloadType),
-                sortOrder: {}
-            };
-            getQuery.sortOrder[request.params.sortParam] = Number(request.params.sortOrder);
 
             Bus.send('payload-request', getQuery);
 
         });
-        
-        return promise;
     }
 }
 

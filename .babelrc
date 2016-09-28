@@ -1,4 +1,7 @@
 {
   "presets": ["es2015"],
-  "sourceMaps": "both"
+  "sourceMaps": "both",
+  "plugins": [
+    "add-module-exports"
+  ]
 }

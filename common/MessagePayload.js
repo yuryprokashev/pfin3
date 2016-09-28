@@ -14,6 +14,7 @@ MessagePayload = function(dayCode, labels) {
     }
     else {
         this.dayCode = dayCode;
+        this.monthCode = dayCode.substring(0,6);
     }
     if(labels.isPlan === undefined || labels.isDeleted === undefined) {
         throw new Error('labels object does not have mandatory key-values (isPlan and isDeleted expected)');

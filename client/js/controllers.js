@@ -1,7 +1,7 @@
 exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     const MyDates = require('../../common/MyDates');
     const UIItem = require('../../common/UIItem');
-    const PusherClient = require('../../common/PusherClient');
+    const PusherClient = require('../../common/PusherClient2');
     const guid = require('../../common/guid');
 
     $scope.state = {
@@ -28,6 +28,8 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     $scope.cache = {
         calendars: new Map()
     };
+
+    $scope.pushListener = new PusherClient();
 
     $user.getUser(function success(){
         $scope.state.user = $user.user;
@@ -71,6 +73,12 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return (targetMonthIndex - 1) >= 0 ? $scope.view.monthSwitch.months[targetMonthIndex - 1] : targetMonth;
     };
 
+    var stopCommandProcessing = function(){
+        if($scope.state.isCommandProcessing === true) {
+            $scope.state.isCommandProcessing = false;
+        }
+    };
+
     $scope.state.getPreviousMonthRef = getPreviousMonthRef;
 
     var setContextMenuOptions = function(){
@@ -105,6 +113,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
                 });
                 days[i].day.html.items = result;
                 days[i].day.update();
+                stopCommandProcessing();
             }
         };
 
@@ -152,7 +161,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     }
     
     function copyCommandCallback(response){
-        console.log(response);
+        // console.log(response);
+        hideContextMenu();
+        getDaysAsync();
+        stopCommandProcessing();
     }
 
     function clearCommandCallback(response) {
@@ -160,7 +172,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     }
 
     function sendCommandAsync(option, callback){
-        $http.get(option.getUrl)
+        let cmdId = guid();
+        // $scope.pushListener.register(cmdId, getDaysAsync);
+        console.log(`${option.getUrl}/${cmdId}`);
+        $http.get(`${option.getUrl}/${cmdId}`)
             .then(function(response){
                 callback(response);
             });
@@ -189,7 +204,6 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     function isClearOption(option){
         return option.id === "clear";
     }
-
 
     $scope.$on('directive::monthSwitch::ready', function(event, args){
 
@@ -370,10 +384,11 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             // - read dayCode from push
             // - trigger http get for the dayCode
             // - all items arrived from http call will have status 'isSaved'
-            console.log(`pushCallback on ${pushData.dayCode}`);
-            let dayNum = MyDates.getDateFromString(pushData.dayCode);
+            // console.log(pushData);
+            console.log(`pushCallback on ${pushData}`);
+            let dayNum = MyDates.getDateFromString(pushData);
             let week = setWeekRef(dayNum);
-            let day = week.getDayRef(pushData.dayCode);
+            let day = week.getDayRef(pushData);
             $http.get(day.getUrl)
                 .then(function(res){
                     let items = res.data;
@@ -424,7 +439,9 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         // const PusherClient = require('../../common/PusherClient');
         // const guid = require('../../common/guid');
         var token = guid();
-        $scope.pushListener = new PusherClient(token, pushCallback); // -> set change of state when push arrives
+        // $scope.pushListener = new PusherClient(token, pushCallback); // -> set change of state when push arrives
+
+        $scope.pushListener.register(token, pushCallback);
         var message = args.form.assembleMessage(args.btn, token);
         $http.post(args.form.postUrl, message)
             .then(saveCallback);
@@ -452,6 +469,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     $scope.$on('clicked::ctxMenu::option', function(event, args){
         if(isCopyOption(args.option)) {
             sendCommandAsync(args.option, copyCommandCallback);
+            $scope.state.isCommandProcessing = true;
         }
 
         if(isClearOption(args.option)) {
