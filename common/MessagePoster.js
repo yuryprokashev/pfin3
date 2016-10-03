@@ -18,6 +18,10 @@ MessagePoster = function (state) {
     var self = this;
     self.state = state;
 
+    function isLastDayOfWeekSelected (day){
+        return day.weekDayNum === 6;
+    }
+
     // param: Object state
     // function: setup static parameters of Day object
     // return: self, so method can be chained.
@@ -53,6 +57,9 @@ MessagePoster = function (state) {
             width: 0,
             'z-index': 1
         };
+        self.html.isLastDayOfWeekSelected = function (){
+            return isLastDayOfWeekSelected(self.state.dayRef);
+        };
         return self;
     };
 
@@ -81,13 +88,20 @@ MessagePoster = function (state) {
     // return: self, so method can be chained.
     self.setPopUpStyle = function () {
         if(state.isFormShown === true) {
+            // console.log(self.state.dayRef);
             var clickedRect = self.state.itemRef.boundingClientRect;
-            self.html.style.left = clickedRect.left + clickedRect.width;
             self.html.style.top = clickedRect.top - 42;
             self.html.style.width = clickedRect.width * 1.5;
+            if(isLastDayOfWeekSelected(self.state.dayRef)){
+                self.html.style.left = clickedRect.left - 1.45 * clickedRect.width;
+            }
+            else {
+                self.html.style.left = clickedRect.left + clickedRect.width;
+            }
         }
         return self;
     };
+
 
     // param: void
     // function: assemble expected ExpenseData from 'self'

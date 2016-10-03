@@ -24,6 +24,17 @@ var userSchema = new mongoose.Schema( {
         picture: {
             type: String,
             match: /^https:\/\//i
+        },
+
+        settings: {
+            defaults: {
+                currency: {
+                    type: String,
+                    required: true,
+                    enum: ["USD", "RUB", "EUR", "GBP", "JPY"],
+                    default: "USD"
+                }
+            }
         }
     },
 

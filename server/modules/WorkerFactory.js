@@ -5,6 +5,8 @@
 const PayloadWorker = require('./PayloadWorker');
 const MessageWorker = require('./MessageWorker');
 const CopyPayloadWorker = require('./CopyPayloadWorker');
+const ClearPayloadWorker = require('./ClearPayloadWorker');
+const MonthDataWorker = require('./MonthDataWorker');
 const guid = require('../../common/guid');
 
 class WorkerFactory {
@@ -12,7 +14,9 @@ class WorkerFactory {
         this.availableWorkerTypes = {
             payload: PayloadWorker,
             message: MessageWorker,
-            copyPayload: CopyPayloadWorker
+            copyPayload: CopyPayloadWorker,
+            clearPayload: ClearPayloadWorker,
+            monthData: MonthDataWorker
         };
 
         this.currentWorkers = {};

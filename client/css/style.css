@@ -64,36 +64,6 @@ expense-calendar-day .list-group-item p, expense-calendar-day-item p {
     -moz-border-radius: 10px;
 }
 
-/* Right triangle, left side slightly down */
-.tri-right.border.left-in:before {
-    content: ' ';
-    position: absolute;
-    width: 0;
-    height: 0;
-    left: -1em;
-    right: auto;
-    top: 4.0em;
-    bottom: auto;
-    border: 0.5em solid;
-    border-color: #666 #666 transparent transparent;
-    z-index: 4;
-}
-.tri-right.left-in:after{
-    content: ' ';
-    position: absolute;
-    width: 0;
-    height: 0;
-    left: -0.7em;
-    /*left: -0.5em;*/
-    right: auto;
-    top: 4.12em;
-    bottom: auto;
-    border: 0.4em solid;
-    border-color: white white transparent transparent;
-    z-index: 4;
-
-}
-
 /*Classes for expense pop up in calendar*/
 .talk-bubble .panel {
     margin-bottom: 0px;
@@ -210,21 +180,8 @@ textarea {
     z-index: 2;
 }
 
-expense-calendar-day .new-recommendations-badge {
-    left: 7.5em;
-    top: 1.5em;
-}
-
-expense-calendar-selected-day .new-recommendations-badge {
-    left: 16.5em;
-    top: 1em;
-}
-
 .red{
     border-color: red;
-}
-expense-calendar-selected-day {
-    width: 18.5em;
 }
 
 .expense-dashboard-progress {
@@ -409,4 +366,64 @@ item p {
     left: 94%;
     top: -1%;
     z-index: 4;
+}
+
+/*MESSAGE FORM WITH TRIANGLE TO THE RIGHT SIDE*/
+/* Right triangle, right side slightly down*/
+.tri-right.border.right-in:before {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: auto;
+    right: -1em;
+    top: 4em;
+    bottom: auto;
+    border: 0.5em solid;
+    border-color: #666 transparent transparent #666;
+    z-index: 4;
+}
+.tri-right.right-in:after{
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: auto;
+    right: -0.8em;
+    top: 4.10em;
+    bottom: auto;
+    border: 0.48em solid;
+    border-color: white transparent transparent white;
+    z-index: 4;
+}
+
+/*MESSAGE FORM WITH TRIANGLE TO THE LEFT SIDE*/
+/* Right triangle, left side slightly down */
+.tri-right.border.left-in:before {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: -1em;
+    right: auto;
+    top: 4.0em;
+    bottom: auto;
+    border: 0.5em solid;
+    border-color: #666 #666 transparent transparent;
+    z-index: 4;
+}
+.tri-right.left-in:after{
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: -0.7em;
+    /*left: -0.5em;*/
+    right: auto;
+    top: 4.12em;
+    bottom: auto;
+    border: 0.4em solid;
+    border-color: white white transparent transparent;
+    z-index: 4;
+
 }

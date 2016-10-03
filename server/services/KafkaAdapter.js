@@ -19,6 +19,9 @@ KafkaAdapter = function () {
         self.producer.on('ready', function () {
             console.log('NodeJS Kafka Producer Ready...');
         });
+        self.producer.on('error', function(){
+            throw new Error('Kafka disconnected');
+        })
     };
 
     var setUpConsumer = function(kafkaClient){

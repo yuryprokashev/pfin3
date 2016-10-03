@@ -167,6 +167,17 @@ var routes = function( wagner ) {
         }
     }));
 
+    api.get('/payload/monthData/:targetPeriod', function(req, res){
+        var isNoUser = handleNoUser(req, res);
+        if(isNoUser === false){
+            manager.manage(req, res)
+                .then(
+                    manager.returnResult,
+                    manager.returnError
+                )
+        }
+    });
+
     // @param: String t - timewindow in string representation. In this case strictly 6 chars required.
     api.get( '/day/:t', wagner.invoke(function(Expense) {
         return function( req, res ) {

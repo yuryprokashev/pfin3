@@ -56,7 +56,7 @@ Week = function(weekNum, month, state, isTransformRequired) {
             var dayNum;
             for(var k = firstDayDelta; k < 7; k ++) {
                 dayNum = k - firstDayDelta + 1;
-                self.days.push(new Day(dayNum, 0, self.month, self.state));
+                self.days.push(new Day(dayNum, 0, self.month, self.state, k));
             }
         };
 
@@ -70,11 +70,11 @@ Week = function(weekNum, month, state, isTransformRequired) {
             for(var j = 0; j < 7; j++) {
                 dayNum = j + self.weekNum * 7 + 1 - firstDay;
                 if(dayNum < maxDays){
-                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state));
+                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state, j));
                 }
                 else if(dayNum === maxDays){
                     self.html.daysRange[1] = dayNum;
-                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state));
+                    self.days.push(new Day(dayNum, self.weekNum, self.month, self.state, j));
                 }
                 else {
                     self.days.push(null);

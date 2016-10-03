@@ -34,8 +34,8 @@ class ContextMenu {
         this.options[0].name = `copy budget from ${pm.html.formattedMonth}`;
         // this.options[0].getUrl = `api/v1/command/copy/${pm.monthString}/${payloadType}`;
         this.options[0].getUrl = `api/v1/command/copy/${cm.monthString}/${pm.monthString}/${payloadType}`;
-        this.options[1].name = `clear ${cm.html.formattedMonth}/${payloadType}`;
-        this.options[1].getUrl = `api/v1/command/clear/${cm.monthString}`;
+        this.options[1].name = `clear ${cm.html.formattedMonth}`;
+        this.options[1].getUrl = `api/v1/command/clear/${cm.monthString}/${undefined}/${payloadType}`;
     }
 
     show() {

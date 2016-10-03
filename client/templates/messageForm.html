@@ -2,7 +2,8 @@
 <div class="row" ng-show = "self.html.isShown" ng-style = "self.html.style">
     <div class="form-group">
         <div class="col-md-12">
-            <div class="talk-bubble tri-right border round-10 left-in">
+            <div class="talk-bubble tri-right border round-10"
+                 ng-class = "{'left-in': self.html.isLastDayOfWeekSelected() === false, 'right-in': self.html.isLastDayOfWeekSelected() === true}">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         <!-- Expense Amount -->

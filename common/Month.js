@@ -23,7 +23,7 @@ Month = function (t, state) {
     // return: self, so method can be chained.
     self.setUp = function(t) {
         self.monthString = t;
-        self.getUrl = `api/v1/month/${self.monthString}`;
+        self.getUrl = `api/v1/payload/monthData/${self.monthString}`;
         self.ctxMenu = new ContextMenu(self.state, self);
         return self;
     };
@@ -43,6 +43,7 @@ Month = function (t, state) {
         };
         self.html.formattedMonth = MyDates.monthAsLabel(self.monthString, false);
         self.html.style = {plan:{},fact:{}};
+        self.html.currency = self.state.user.public.settings.defaults.currency.toLowerCase();
         return self;
     };
 

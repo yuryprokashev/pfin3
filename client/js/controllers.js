@@ -31,11 +31,6 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
 
     $scope.pushListener = new PusherClient();
 
-    $user.getUser(function success(){
-        $scope.state.user = $user.user;
-    });
-
-    $scope.view = $views.initAppView($scope.state);
 
     // param: String newDay - the day in string format "YYYYMMDD" for which we want to get week number (from 0 to 3-5)
     // function: calculate the number of week, where given day belongs to.
@@ -79,7 +74,9 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         }
     };
 
-    $scope.state.getPreviousMonthRef = getPreviousMonthRef;
+    var startCommandProcessing = function(){
+        $scope.state.isCommandProcessing = true;
+    };
 
     var setContextMenuOptions = function(){
         $scope.view.monthSwitch.months.forEach(function(item){
@@ -113,8 +110,8 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
                 });
                 days[i].day.html.items = result;
                 days[i].day.update();
-                stopCommandProcessing();
             }
+            stopCommandProcessing();
         };
 
         days.forEach(function(item){
@@ -134,8 +131,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     }
 
     function hideContextMenu() {
-        $scope.state.ctxMenuRef.hide();
-        $scope.state.ctxMenuRef = undefined;
+        if(isContextMenuShown()){
+            $scope.state.ctxMenuRef.hide();
+            $scope.state.ctxMenuRef = undefined;
+        }
     }
 
     function selectMonthAsync(month){
@@ -159,16 +158,13 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             $scope.state.dayRef = setDayRef(dayCode);
         })
     }
-    
-    function copyCommandCallback(response){
-        // console.log(response);
-        hideContextMenu();
-        getDaysAsync();
-        stopCommandProcessing();
-    }
 
-    function clearCommandCallback(response) {
-        console.log(response);
+    function commandCallback(response) {
+        hideContextMenu();
+        $scope.$applyAsync(function(){
+            getDaysAsync();
+            getMonthDataAsync();
+        });
     }
 
     function sendCommandAsync(option, callback){
@@ -178,6 +174,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         $http.get(`${option.getUrl}/${cmdId}`)
             .then(function(response){
                 callback(response);
+                // stopCommandProcessing();
             });
     }
 
@@ -197,13 +194,43 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return $scope.state.ctxMenuRef.target === $scope.state.monthRef;
     }
 
-    function isCopyOption(option){
-        return option.id === "copy";
+    function getMonthDataAsync(){
+        let m = $scope.state.monthRef;
+        function setMonthDataFromResponse(response){
+            // console.log(response);
+            m.update(response.data.totals);
+        }
+        function logError(err){
+            console.log(err);
+        }
+        $http.get(m.getUrl)
+            .then(
+                setMonthDataFromResponse,
+                logError
+            )
     }
-    
-    function isClearOption(option){
-        return option.id === "clear";
+
+    function getMonthDataAsync2(month){
+        function setMonthDataFromResponse(response){
+            // console.log(response);
+            month.update(response.data.totals);
+        }
+        function logError(err){
+            console.log(err);
+        }
+        $http.get(month.getUrl)
+            .then(
+                setMonthDataFromResponse,
+                logError
+            )
     }
+
+    $user.getUser(function success(){
+        $scope.state.user = $user.user;
+        $scope.view = $views.initAppView($scope.state);
+    });
+
+    $scope.state.getPreviousMonthRef = getPreviousMonthRef;
 
     $scope.$on('directive::monthSwitch::ready', function(event, args){
 
@@ -241,7 +268,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
                     }
                 })
         });
-        console.log('directive::monthSwitch::ready');
+        // console.log('directive::monthSwitch::ready');
         $scope.state.monthRef = args.monthRef;
         $scope.state.init.month = undefined;
 
@@ -381,11 +408,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     $scope.$on('clicked::item::btn', function(event, args){
 
         var pushCallback = function(pushData) {
-            // - read dayCode from push
-            // - trigger http get for the dayCode
-            // - all items arrived from http call will have status 'isSaved'
-            // console.log(pushData);
-            console.log(`pushCallback on ${pushData}`);
+            // console.log(`pushCallback on ${pushData}`);
             let dayNum = MyDates.getDateFromString(pushData);
             let week = setWeekRef(dayNum);
             let day = week.getDayRef(pushData);
@@ -411,36 +434,17 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         // @param: Object target - the object, that has to be updated with updateData
         // @return: void
         var saveCallback = function(response) {
-            console.log(`saveCallback on ${response.data._id}`);
+            // console.log(`saveCallback on ${response.data._id}`);
             $scope.state.itemRef.setItemFromForm(args.form);
             $scope.state.itemRef.isItemProcessing = true;
             $scope.state.itemRef.isSaved = false;
             $scope.state.isFormShown = false;
             $scope.view.calendarView.update();
             $scope.view.expensePoster.update();
-            // $scope.state.monthRef.update();
-            // - change item amount and description to user input
-            // - close form
-
+            getMonthDataAsync();
         };
 
-        // This process is async
-        // This process changes state
-        // This process relies on data in event to be done.
-        // start: user click button in directive -> 'clicked::item::btn' fires
-        // then: we connect to push socket and register message push arrival handler (set item to 'saved' state)
-        // then: we post message to api.message
-        // then: after api reply (message post status) has arrived we execute callback, which have to
-        // - close form
-        // - set item to 'processing state'
-        // - change item amount and description to user input
-        // - update the monthSwitch with date from server
-        //
-        // const PusherClient = require('../../common/PusherClient');
-        // const guid = require('../../common/guid');
         var token = guid();
-        // $scope.pushListener = new PusherClient(token, pushCallback); // -> set change of state when push arrives
-
         $scope.pushListener.register(token, pushCallback);
         var message = args.form.assembleMessage(args.btn, token);
         $http.post(args.form.postUrl, message)
@@ -467,15 +471,15 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     });
 
     $scope.$on('clicked::ctxMenu::option', function(event, args){
-        if(isCopyOption(args.option)) {
-            sendCommandAsync(args.option, copyCommandCallback);
-            $scope.state.isCommandProcessing = true;
-        }
+        sendCommandAsync(args.option, commandCallback);
+        startCommandProcessing();
+    });
 
-        if(isClearOption(args.option)) {
-            sendCommandAsync(args.option, clearCommandCallback);
-
-        }
+    $scope.$on('clicked::chevron', function(event, args){
+        let createdMonths = args.monthSwitch.moveWindow(args.step);
+        $scope.$applyAsync(function(){
+            createdMonths.forEach(getMonthDataAsync2);
+        });
     });
 
 };

@@ -14,7 +14,7 @@ var MyDates = require('./MyDates');
 // param: Object state
 // function: object constructor
 // return: Day object
-Day = function (dayNum, weekNum, month, state) {
+Day = function (dayNum, weekNum, month, state, weekDayNum) {
     var self = this;
     self.state = state;
 
@@ -28,6 +28,7 @@ Day = function (dayNum, weekNum, month, state) {
     self.setUp = function(dayNum, weekNum, month) {
         self.dayNum = dayNum;
         self.weekNum = weekNum;
+        self.weekDayNum = weekDayNum;
         self.month = month;
         self.timeWindow = self.month + MyDates.dayToString(dayNum);
         var dayCode = self.timeWindow;
@@ -73,7 +74,6 @@ Day = function (dayNum, weekNum, month, state) {
         };
 
         self.html.sumIf = function (flag, arg, arr) {
-            var s = 0;
             var isFlag = function(arrItem){
                 return arrItem.labels[flag] === true;
             };
@@ -114,6 +114,12 @@ Day = function (dayNum, weekNum, month, state) {
         return self;
     };
 
+    self.setCurrency = function(){
+        self.html.currency = self.state.user.public.settings.defaults.currency.toLowerCase();
+        return self;
+    };
+    
+
     // param: Object state
     // function: change self.html parameters according to 'state'
     // return: void
@@ -121,13 +127,15 @@ Day = function (dayNum, weekNum, month, state) {
         self.setIsInSelectedWeek()
             .setIsSelected()
             .setMaxItems()
-            .setIsFuture();
+            .setIsFuture()
+            .setCurrency();
             // .updateItems(state);
     };
 
     // MAIN LOOP
     self.setUp(dayNum, weekNum, month)
-        .initHTML();
+        .initHTML()
+        .setCurrency();
 };
 
 Day.prototype.addItem = function(item) {

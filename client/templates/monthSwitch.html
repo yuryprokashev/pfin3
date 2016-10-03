@@ -1,5 +1,15 @@
 <div class = "row">
-    <div class = "col-md-12" ng-repeat = "m in self.months track by $index">
+    <div class="col-md-12">
+        <p class="text-center"
+           ng-class = "{'text-primary': isHoverIcon, 'text-muted': !isHoverIcon}">
+            <i class="fa fa-chevron-up fa-2x"
+               ng-mouseenter = "isHoverIcon = true"
+               ng-mouseleave = "isHoverIcon = false"
+               ng-click = "$emit('clicked::chevron', {monthSwitch: self, step: -2})"
+               aria-hidden="true"></i>
+        </p>
+    </div>
+    <div class = "col-md-12" ng-repeat = "m in self.months.slice(self.html.window[0], self.html.window[1])  track by $index">
         <ctx-menu-btn ext-ctx-menu = "m.ctxMenu"
                       ng-show = "true"></ctx-menu-btn>
         <div class = "panel" ng-class = "{'panel-primary': m.html.isSelected, 'panel-default': !m.html.isSelected}"
@@ -14,33 +24,21 @@
                 <div style="height: 2.5em">
                     <p class="text-muted text-center" ng-show = "!m.html.isSelected">
                         {{m.html.all() | number : 0}}
-                        <i class="fa fa-rub" aria-hidden="true"></i>
+                        <i class="fa fa-{{self.html.currency}}" aria-hidden="true"></i>
                     </p>
                     <progress ext-progress = "m.html" ng-show = "m.html.isSelected"></progress>
                 </div>
-                <div style = "height: 5em; position: absolute; top: -34%; left: 42%; z-index: 1" ng-if = "$index === 0" ng-show = "isHover.chevron">
-                    <div style = "height: 1.5em"></div>
-                    <p class="text-center"
-                       ng-class = "{'text-primary': isHoverIcon, 'text-muted': !isHoverIcon}">
-                        <i class="fa fa-chevron-up fa-2x"
-                           ng-mouseenter = "isHoverIcon = true"
-                           ng-mouseleave = "isHoverIcon = false"
-                           aria-hidden="true"></i>
-                    </p>
-                    <div style = "height: 1.5em"></div>
-                </div>
-                <div style = "height: 5em; position: absolute; top: 66%; left: 42%; z-index: 1" ng-if = "$index === 5" ng-show = "isHover.chevron">
-                    <div style = "height: 1.5em"></div>
-                    <p class="text-center"
-                       ng-class = "{'text-primary': isHoverIcon, 'text-muted': !isHoverIcon}">
-                        <i class="fa fa-chevron-down fa-2x"
-                           ng-mouseenter = "isHoverIcon = true"
-                           ng-mouseleave = "isHoverIcon = false"
-                           aria-hidden="true"></i>
-                    </p>
-                    <div style = "height: 1.5em"></div>
-                </div>
             </div>
         </div>
+    </div>
+    <div class = "col-md-12">
+        <p class="text-center"
+           ng-class = "{'text-primary': isHoverIcon, 'text-muted': !isHoverIcon}">
+            <i class="fa fa-chevron-down fa-2x"
+               ng-mouseenter = "isHoverIcon = true"
+               ng-mouseleave = "isHoverIcon = false"
+               ng-click = "$emit('clicked::chevron', {monthSwitch: self, step: 2})"
+               aria-hidden="true"></i>
+        </p>
     </div>
 </div>

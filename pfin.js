@@ -13,10 +13,9 @@ var server = require('./server');
 // configure port, that server will listen: try to use environment variables (if any). Otherwise, use 3000.
 var port = wagner.invoke( function(Config) { return Config }).express.serverPort || 3000;
 
-// start listening to port
-server.listen( port );
+server.listen(port);
 
-console.log("Personal Finance Server started!");
+console.log("api pfin started!");
 
 
 
