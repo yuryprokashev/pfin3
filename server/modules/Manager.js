@@ -114,7 +114,6 @@ class Manager {
             let task = this.factory.worker('monthData', undefined);
             this.currentWorkers.set(task.id, task);
             return task.handle(query, response);
-
         }
     }
 

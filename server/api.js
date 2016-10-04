@@ -1,4 +1,5 @@
 //var m = require( './models/model.js');
+"use strict";
 var bodyparser = require( 'body-parser' );
 var express = require( 'express' );
 var status = require( 'http-status' );
@@ -15,15 +16,6 @@ var routes = function( wagner ) {
     var api = express.Router();
 
     api.use(bodyparser.json());
-
-
-    // api to get default data for charts.
-    api.get( '/charts/meta', wagner.invoke( function( Config ) {
-        return function( req, res ){
-            res.json( Config.plotly );
-        }
-    }));
-
 
     // API commands for internal use
     // api method for arbitrary quantity of guids generation and saving it to file.
@@ -50,8 +42,6 @@ var routes = function( wagner ) {
     // api method for translating the strings to dates objects in expenses collection
     api.get( '/transformdate', wagner.invoke( function( Expense ) {
         return function( req, res ) {
-
-            // console.log(qty);
 
             Expense.find().exec( function( err, data ){
                 //var dates = [];
@@ -80,39 +70,11 @@ var routes = function( wagner ) {
         }
     }));
 
-
     // API to provide guid generation to external systems.
     api.get( '/guid', function (req,res) {
         res.format = "application/json";
         res.json({ guid: require('../common/guid')() });
     });
-
-    // api that gets all expenses for given user and specified monthId.
-    api.get( '/total/:monthId', wagner.invoke( function( Expense ) {
-        return function( req, res ){
-            var user = req.user;
-            if (!user) { res.json({ error: "Please, log in" }); }
-
-            else {
-                var mId = req.params.monthId;
-
-                if ( ( mId.length === 6 ) || ( mId.length === 5 ) ) {
-                    var month = mId.length === 6 ? mId.substring(4,6) : mId.substring(4,5);
-
-                    var agg = [{$match: {user: user._id.toString(), "labels.isDeleted": false}},
-                        {$project: {_id:1, amount:1, labels:1, month: {$month: "$date"}}},
-                        {$match: {month: Number(month) + 1}},
-                        {$group: {_id:"$month", monthTotalFact: {$sum: {$cond: [{$eq:["$labels.isConfirmed", true]}, "$amount", 0]}}, monthTotalPlan: {$sum: {$cond: [{$eq:["$labels.isConfirmed", false]}, "$amount", 0]}}}}]
-
-                    Expense.aggregate(agg).exec( function(err, result){
-                        if(err) { console.log(err) }
-                        res.json(result);
-                    });
-                }
-                else { console.error('wrong monthId length is passed to api'); }
-            }
-        }
-    }));
 
     // NEW VERSION OF API!!!
 
@@ -124,49 +86,6 @@ var routes = function( wagner ) {
         res.json( { user: req.user } );
     });
 
-    // param: String t - timewindow in string representation. In this case strictly 6 chars required.
-    api.get( '/month/:t', wagner.invoke(function(Expense) {
-        return function( req, res ) {
-            var user = req.user;
-            if(!user) {
-                res.json({ error: "Please, log in" });
-            }
-            else {
-                var t = req.params.t;
-                if(t.length !== 6){
-                    res.json({error: "wrong month length. 8 chars expected."});
-                }
-                else {
-                    var m = MyDates.getMonthFromString(t);
-                    var y = MyDates.getYearFromString(t);
-                    var agg = [
-                        {$match: {user: user._id.toString(), "labels.isDeleted": false}},
-                        {$project: {_id:1, amount:1, description:1, date:1, labels:1, year: {$year:"$date"}, month: {$month:"$date"},day: {$dayOfMonth: "$date"}, isPlanned: {$cond:{if:{$eq:["$labels.isConfirmed",false]}, then:"plan", else:"fact"}}}},
-                        {$match: {year: y, month: m}},
-                        {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
-                        {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}
-                    ];
-                    Expense.aggregate(agg).exec( function(err, result){
-                        if(err) { console.log(err) }
-
-                        var monthData;
-                        function findPlan(item) {
-                            return item._id === 'plan';
-                        }
-
-                        function findFact(item) {
-                            return item._id === 'fact';
-                        }
-                        var fact = result.find(findFact) || {_id: 'fact', total: 0};
-                        var plan = result.find(findPlan) || {_id: 'plan', total: 0};
-                        monthData = new MonthData(fact.total, plan.total);
-                        res.json(monthData);
-                    });
-                }
-            }
-        }
-    }));
-
     api.get('/payload/monthData/:targetPeriod', function(req, res){
         var isNoUser = handleNoUser(req, res);
         if(isNoUser === false){
@@ -177,38 +96,7 @@ var routes = function( wagner ) {
                 )
         }
     });
-
-    // @param: String t - timewindow in string representation. In this case strictly 6 chars required.
-    api.get( '/day/:t', wagner.invoke(function(Expense) {
-        return function( req, res ) {
-            var user = req.user;
-            if(!user) {
-                res.json({ error: "Please, log in" });
-            }
-            else {
-                var t = req.params.t;
-                if(t.length !== 8){
-                    res.json({error: "wrong day length. 8 chars expected."});
-                }
-                else {
-                    var d = MyDates.getDateFromString(t);
-                    var m = MyDates.getMonthFromString(t);
-                    var y = MyDates.getYearFromString(t);
-                    var agg = [
-                        {$match: {user: user._id.toString(), "labels.isDeleted": false}},
-                        {$project: {_id:1, amount:1, description:1, date:1, labels:1, year: {$year:"$date"}, month: {$month:"$date"},day: {$dayOfMonth: "$date"}, isPlanned: {$cond:{if:{$eq:["$labels.isConfirmed",false]}, then:1, else:0}}}},
-                        {$match: {year: y, month: m, day: d}},
-                        {$project: { _id:1, amount:1, description:1, labels:1, date: "$date",isPlanned: "$isPlanned"}}
-                    ];
-                    Expense.aggregate(agg).exec( function(err, result){
-                        if(err) { console.log(err) }
-                        res.json(result);
-                    });
-                }
-            }
-        }
-    }));
-
+    
     // @param: HttpRequest req
     // @param: HttpResponse res
     // @function: replies to Client, that no user is prodived with request, if no user is provided.
@@ -293,6 +181,57 @@ var routes = function( wagner ) {
         }
     });
 
+    api.get('/migrate', wagner.invoke(function(Expense){
+        let WorkerFactory = require('./modules/WorkerFactory');
+        let f = new WorkerFactory();
+        let MessagePayload = require('../common/MessagePayload');
+        let ExpenseMessagePayload = require('../common/ExpenseMessagePayload');
+        let Message = require('../common/Message');
+        let MyDates =require('../common/MyDates');
+        let guid = require('../common/guid');
+
+        return function(req, res){
+            Expense.find()
+                // .limit(2)
+                .exec(
+                    function(err, data){
+                        let commandId = `migrate-${guid()}`;
+                        let w = f.worker('message', commandId);
+                        let messages = data.map(function(expense){
+                            let requestLikePayload = {
+                                method: "POST",
+                                body: {}
+                            };
+                            let p = new MessagePayload(
+                                MyDates.dateToString(expense.date),
+                                {
+                                    isPlan: !expense.labels.isConfirmed,
+                                    isDeleted: expense.labels.isDeleted
+                                }
+                            );
+                            let emp = new ExpenseMessagePayload(
+                                p,
+                                expense.amount,
+                                expense.description,
+                                expense._id
+                            );
+                            requestLikePayload.body = new Message(
+                                expense.user,
+                                1,
+                                1,
+                                emp,
+                                undefined,
+                                commandId
+                            );
+                            return w.handle(requestLikePayload);
+                        });
+                        Promise.all(messages)
+                            .then(res.json({success: true}));
+                    }
+                )
+
+        }
+    }));
 
     return api;
 };

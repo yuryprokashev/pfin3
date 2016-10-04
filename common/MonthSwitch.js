@@ -109,6 +109,9 @@ MonthSwitch.prototype.moveWindow = function(step){
             }
             return m;
         }
+        else if(isInCache(month)){
+            return _this.cache.get(month);
+        }
     }
 
     function changeWindow(step){
