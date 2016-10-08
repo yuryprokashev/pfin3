@@ -6,16 +6,18 @@
 var KafkaAdapter;
 
 const MyDates = require('../../common/MyDates');
+const wagner = require('wagner-core');
+const Config = wagner.invoke( function(Config) { return Config });
 
 KafkaAdapter = function () {
 
     var self = this;
 
     var kafka = require('kafka-node');
-    var kafkaClient = new kafka.Client('localhost:2181/', 'kafka-node-client');
+    var kafkaClient = new kafka.Client(`${Config.kafka.hostURL}:2181/`, Config.kafka.hostName);
 
     var setUpProducer = function (kafkaClient) {
-        self.producer = new kafka.Producer(kafkaClient, {partitionerType: 2});
+        self.producer = new kafka.Producer(kafkaClient, {partitionerType: Config.kafka.partitionerType});
         self.producer.on('ready', function () {
             console.log('NodeJS Kafka Producer Ready...');
         });

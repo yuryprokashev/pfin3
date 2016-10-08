@@ -254,6 +254,58 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         });
     };
 
+    var getDaysAsync2 = function(){
+        // HELPERS
+        function getAllItemsForMonth(fnSuccess, fnError){
+            $http.get(`/api/v1/payload/${$scope.state.monthRef.monthString}/1/dayCode/-1`).
+                then(fnSuccess)
+                .catch(fnError);
+        }
+        function setItemsToDays(response){
+            // let days = $scope.view.calendarView.getFlatDays();
+            let groupedItems = [];
+            function isDataForDayExists(day){
+                return groupedItems[day.timeWindow] !== undefined;
+            }
+            response.data.map(function(item){
+                if(groupedItems[item.dayCode] === undefined){
+                    groupedItems[item.dayCode] = {dayCode: item.dayCode, items: [] };
+                }
+                groupedItems[item.dayCode].items.push(item);
+            });
+            // console.log(groupedItems);
+            days.forEach(function(day){
+                // console.log(day.day);
+                // console.log(groupedItems[day.day.timeWindow]);
+                if(isDataForDayExists(day.day)){
+                    day.day.html.items = groupedItems[day.day.timeWindow].items.map(function(item){
+                        let transformedItem = UIItem.transformToUIItem(item);
+                        transformedItem.isItemProcessing = false;
+                        transformedItem.isSaved = true;
+                        return transformedItem;
+                    });
+
+                }
+                else{
+                    day.day.html.items = [];
+                }
+                day.day.update();
+                stopCommandProcessing();
+            });
+        }
+
+        function logError(err){
+            console.log(err);
+        }
+        
+        // MAIN FLOW
+        let days = $scope.view.calendarView.getFlatDays();
+        $scope.$applyAsync(function(){
+            getAllItemsForMonth(setItemsToDays, logError);
+        });
+
+    };
+
     function showContextMenu(ctxMenu) {
         $scope.state.ctxMenuRef = ctxMenu;
         $scope.state.ctxMenuRef.show();
@@ -278,21 +330,22 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             else {
                 let newCalendar = $scope.view.initCalendarView();
                 $scope.view.calendarView = newCalendar;
-                getDaysAsync();
+                getDaysAsync2();
                 $scope.cache.calendars.set($scope.state.monthRef.monthString, newCalendar);
             }
-
             var dayCode = getDayCode();
             $scope.state.weekRef = setWeekRef(dayCode);
             $scope.state.dayRef = setDayRef(dayCode);
+            $scope.view.calendarView.update();
         })
     }
 
     function commandCallback(response) {
         hideContextMenu();
         $scope.$applyAsync(function(){
-            getDaysAsync();
+            getDaysAsync2();
             getMonthDataAsync();
+            $scope.view.calendarView.update();
         });
     }
 
@@ -382,8 +435,9 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             }
             let newCalendar = $scope.view.initCalendarView($scope.state);
             $scope.view.calendarView = newCalendar;
-            getDaysAsync();
             $scope.cache.calendars.set($scope.state.monthRef.monthString, newCalendar);
+
+            getDaysAsync2();
             $scope.$emit('directive::calendarView::ready');
 
         };
@@ -397,7 +451,6 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
                     }
                 })
         });
-        // console.log('directive::monthSwitch::ready');
         $scope.state.monthRef = args.monthRef;
         $scope.state.init.month = undefined;
 
@@ -416,7 +469,6 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     });
 
     $scope.$on('clicked::month', function (event, args) {
-        // console.log('clicked::month');
 
         if(isMessageFormShown()) {
             $scope.state.isFormShown = false;
@@ -1535,6 +1587,9 @@ MonthSwitch.prototype.moveWindow = function(step){
                 _this.months.push(m);
             }
             return m;
+        }
+        else if(isInCache(month)){
+            return _this.cache.get(month);
         }
     }
 

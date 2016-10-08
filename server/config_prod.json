@@ -102,5 +102,10 @@
   "exprec": {
     "hostURL": "http://exprec.edufun.me:80",
     "timeout": 5000
+  },
+  "kafka": {
+    "hostURL": "ec2-54-171-231-214.eu-west-1.compute.amazonaws.com",
+    "hostName": "api-pfin-kafka-client",
+    "partitionerType": 2
   }
 }
