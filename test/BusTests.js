@@ -5,7 +5,7 @@
 var chai = require("chai");
 var expect = require('chai').expect;
 
-var Bus = require('../server/services/BusService');
+var Bus = require('./BusService');
 var chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 
