@@ -6,8 +6,7 @@ const io = require('socket.io-client');
 
 class PusherClient {
     constructor() {
-        this.pushServer = {url: "http://localhost"};
-        // this.sockets = {};
+        this.pushServer = {url: `http://pf.edufun.me:50000`};
         this.sockets = new Map();
 
     }
