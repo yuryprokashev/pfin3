@@ -6,13 +6,13 @@ const io = require('socket.io-client');
 
 class PusherClient {
     constructor() {
-        this.pushServer = {url: `http://pf.edufun.me:50000`};
+        this.pushServer = {url: `http://pf.edufun.me`};
         this.sockets = new Map();
 
     }
 
     register(id, callback){
-        var socket = io(this.pushServer.url, {multiplex: false});
+        var socket = io(this.pushServer.url, {port: 50000, multiplex: false});
         var _this = this;
 
         function handlePayloadDone(data){
