@@ -22,9 +22,8 @@ class PusherClient {
         }
 
         function setUniqueId(data) {
+            console.log('socket connected');
             socket.emit('set-id', {_id: id});
-
-            // _this.sockets[id] = socket;
             _this.sockets.set(id, socket);
             console.log(_this.sockets);
             socket.on(`client-payload-new-${id}`, handlePayloadDone);
