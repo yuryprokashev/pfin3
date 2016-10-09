@@ -12,7 +12,7 @@ class PusherClient {
     }
 
     register(id, callback){
-        var socket = new io.Socket(this.pushServer.url, {port: 50000, multiplex: false});
+        var socket = io(this.pushServer.url, {port: 80, multiplex: false});
         var _this = this;
 
         function handlePayloadDone(data){
