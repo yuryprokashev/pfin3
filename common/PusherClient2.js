@@ -4,28 +4,20 @@
 
 const io = require('socket.io-client');
 // const PUSHER_HOST = "http://localhost";
-const PUSHER_HOST = "http://localhost:50000";
-// const PUSHER_HOST = "http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com";
+// const PUSHER_HOST = "http://localhost:50000";
+const PUSHER_HOST = "http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com:50000";
 
 class PusherClient {
     constructor() {
-<<<<<<< HEAD
-        this.pushServer = {url: `http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com`};
-=======
         this.pushServer = {url: PUSHER_HOST};
->>>>>>> develop
         this.sockets = new Map();
 
     }
 
     register(id, callback){
-<<<<<<< HEAD
-        var socket = io(this.pushServer.url, {port: 80, multiplex: false});
-=======
         // var socket = io(this.pushServer.url, {port: PUSHER_PORT, multiplex: false});
         var socket = io(this.pushServer.url, {multiplex: false});
 
->>>>>>> develop
         var _this = this;
 
         function handlePayloadDone(data){
