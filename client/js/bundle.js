@@ -2128,17 +2128,22 @@ module.exports = PusherClient;
  */
 
 const io = require('socket.io-client');
+const PUSHER_PORT = 50000;
+// const PUSHER_HOST = "http://localhost";
+const PUSHER_HOST = "http://localhost:50000";
+// const PUSHER_HOST = "http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com";
 
 class PusherClient {
     constructor() {
-        this.pushServer = {url: "http://localhost"};
-        // this.sockets = {};
+        this.pushServer = {url: PUSHER_HOST};
         this.sockets = new Map();
 
     }
 
     register(id, callback){
+        // var socket = io(this.pushServer.url, {port: PUSHER_PORT, multiplex: false});
         var socket = io(this.pushServer.url, {multiplex: false});
+
         var _this = this;
 
         function handlePayloadDone(data){
