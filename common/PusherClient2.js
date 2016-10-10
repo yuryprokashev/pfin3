@@ -9,6 +9,7 @@ const PUSHER_HOST = "http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com:5
 
 class PusherClient {
     constructor() {
+        console.log(PUSHER_HOST);
         this.pushServer = {url: PUSHER_HOST};
         this.sockets = new Map();
 
