@@ -32,6 +32,25 @@
     <!--<script type = "text/javascript" src = "/assets/js/bundle.js"></script>-->
     <script type = "text/javascript" src = "/assets/dist/bundle.js"></script>
 
+    <!--Facebook Auth _=_ insertion bug-->
+    <script type="text/javascript">
+        var fbBug = /#-=-/;
+        if (fbBug.test(window.location.hash) && fbBug.test(window.location.hash)) {
+            if (window.history && history.pushState) {
+                window.history.pushState("", document.title, window.location.pathname);
+            } else {
+                // Prevent scrolling by storing the page's current scroll offset
+                var scroll = {
+                    top: document.body.scrollTop,
+                    left: document.body.scrollLeft
+                };
+                window.location.hash = '';
+                // Restore the scroll offset, should be flicker free
+                document.body.scrollTop = scroll.top;
+                document.body.scrollLeft = scroll.left;
+            }
+        }
+    </script>
 </head>
 
 <body>

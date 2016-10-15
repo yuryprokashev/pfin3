@@ -8,23 +8,7 @@ function auth ( User, server, Config ) {
         callbackURL: Config.passport.callbackURL
     },
     function( accessToken, refreshToken, profile, cb ){
-        //console.log(profile);
-
-        // var properties = profile.json.keys();
-        // var cookedProfile = {};
-        // for(var i in properties){
-        //     if(properties[i] !== undefined) {
-        //         cookedProfile[properties[i]] = profile.json[properties[i]];
-        //     }
-        //     else {}
-        // }
-        //
-        // if(profile.json) {
-        //     var familyName = profile.json.name.familyName
-        // }
-        // else {
-        //
-        // }
+        console.log(JSON.stringify(profile._json));
         User.findOneAndUpdate(
             { 'private.oauth': profile.id },
             {
@@ -35,7 +19,9 @@ function auth ( User, server, Config ) {
                     'public.picture': profile._json.image.url || null,
                     'private.google.gender': profile._json.gender || null,
                     'private.google.language': profile._json.language || null,
-                    'private.google.circledByCount': profile._json.circledByCount || 0
+                    'private.google.circledByCount': profile._json.circledByCount || 0,
+                    'private.google.email': profile._json.emails[0].value,
+                    // 'settings.defaults.currency': require('./models/setCurrencyFromLocale')(profile._json.locale),
                 }
             },
             { 'new': true, upsert: true },
@@ -52,7 +38,7 @@ function auth ( User, server, Config ) {
 
     // set server routes for auth process
 
-    server.get( Config.passport.authPATH, passport.authenticate( 'google', { scope: ['profile'] } ));
+    server.get( Config.passport.authPATH, passport.authenticate( 'google', { scope: ['profile', 'email'] } ));
 
     server.get( Config.passport.authCallbackPATH,
         passport.authenticate( 'google', { failureRedirect: Config.passport.failureAuthRedirectPATH }),

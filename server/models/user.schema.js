@@ -40,6 +40,9 @@ var userSchema = new mongoose.Schema( {
 
     private: {
         google: {
+            email: {
+                type: String
+            },
             gender: {
                 type: String
             },
@@ -48,6 +51,14 @@ var userSchema = new mongoose.Schema( {
             },
             circledByCount:{
                 type: Number
+            }
+        },
+        facebook:{
+            email: {
+                type: String
+            },
+            gender: {
+                type: String
             }
         },
         oauth: {

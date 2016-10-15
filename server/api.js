@@ -1,4 +1,3 @@
-//var m = require( './models/model.js');
 "use strict";
 var bodyparser = require( 'body-parser' );
 var express = require( 'express' );
