@@ -5,3 +5,4 @@ spec/helpers/jasmine_examples
 spec/jasmine_examples
 spec/pfin_specs
 test
+client/dist

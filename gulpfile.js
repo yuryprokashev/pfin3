@@ -13,6 +13,8 @@ var sourcemaps = require('gulp-sourcemaps');
 var gutil = require('gulp-util');
 var babelify = require('babelify');
 
+var cleanCSS = require('gulp-clean-css');
+
 gulp.task('default', function(){
     console.log('running gulp tasks');
 });
@@ -34,4 +36,16 @@ gulp.task('javascript', function () {
         .on('error', gutil.log)
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest('./client/dist/'));
+});
+
+
+gulp.task('min-css', function() {
+    return gulp.src('./client/css/*.css')
+        .pipe(sourcemaps.init())
+        .pipe(cleanCSS({debug: true}, function(details) {
+            console.log(details.name + ': ' + details.stats.originalSize);
+            console.log(details.name + ': ' + details.stats.minifiedSize);
+        }))
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest('./client/dist'));
 });
