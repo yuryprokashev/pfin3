@@ -4,7 +4,7 @@
 
 var MyDates;
 
-var TimeWindow = require('../common/TimeWindow');
+var TimeWindow = require('./TimeWindow');
 
 MyDates = (function() {
 

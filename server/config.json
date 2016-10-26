@@ -116,7 +116,7 @@
     "timeout": 5000
   },
   "kafka": {
-    "hostURL": "localhost",
+    "hostURL": "54.154.211.165",
     "hostName": "api-pfin-kafka-client",
     "partitionerType": 2
   }

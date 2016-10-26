@@ -1,5 +1,5 @@
 <div class="panel day-{{self.html.totalWeeks}} expanded-{{self.html.isInSelectedWeek}}"
-     ng-class = "{'panel-primary': self.html.isSelected, 'panel-default no-border': !self.html.isSelected}">
+     ng-class = "{'panel-primary': self.html.isSelected, 'panel-default no-border': !self.html.isSelected, 'over': self.isDragOver}">
     <div class="panel-body">
         <p>
             <span class="badge progress-bar-primary badge-calendar-day"

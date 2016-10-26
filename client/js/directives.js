@@ -1,9 +1,10 @@
-exports.notLoggedIn = function() {
+"use strict";
+
+exports.notLoggedIn = function () {
     return {
         templateUrl: "/assets/templates/notLoggedIn.html",
-        link: function(scope, el, attr, ctrl) {
-        }
-    }
+        link: function link(scope, el, attr, ctrl) {}
+    };
 };
 
 exports.monthSwitch = function () {
@@ -12,117 +13,119 @@ exports.monthSwitch = function () {
             self: "=extMonthSwitch"
         },
         templateUrl: "/assets/templates/monthSwitch.html",
-        link: function (scope, el, attr, ctrl) {
-            scope.$emit('directive::monthSwitch::ready', {monthRef: scope.self.monthRef});
-            el.on('click', function(event){
+        link: function link(scope, el, attr, ctrl) {
+            scope.$emit('directive::monthSwitch::ready', { monthRef: scope.self.monthRef });
+            el.on('click', function (event) {
                 event.target.blur(); // -> remove blue frame (focus) from btn after click
             });
         }
-    }
+    };
 };
 
-exports.progress = function() {
+exports.progress = function () {
     return {
         replace: true,
         scope: {
             self: "=extProgress"
         },
         templateUrl: "/assets/templates/progress.html",
-        link: function(scope, el, attr, ctrl) {
-        }
-    }
+        link: function link(scope, el, attr, ctrl) {}
+    };
 };
 
 exports.calendar = function () {
     return {
-        scope:{
-            self:"=extCalendar"
+        scope: {
+            self: "=extCalendar"
         },
         templateUrl: "/assets/templates/calendar.html",
-        link: function (scope, el, attr, ctrl) {
+        link: function link(scope, el, attr, ctrl) {
             // scope.$emit('directive::calendarView::ready')
         }
-    }
+    };
 };
 
 exports.week = function () {
     return {
-        scope:{
-            self:"=extWeek"
+        scope: {
+            self: "=extWeek"
         },
         templateUrl: "/assets/templates/week.html",
-        link: function (scope, el, attr, ctrl) {
-
-        }
-    }
+        link: function link(scope, el, attr, ctrl) {}
+    };
 };
 
 exports.day = function () {
     return {
-        scope:{
-            self:"=extDay"
+        scope: {
+            self: "=extDay"
         },
         templateUrl: "/assets/templates/day.html",
-        link: function (scope, el, attr, ctrl) {
+        link: function link(scope, el, attr, ctrl) {
+            var enableDrop = require('./enableDrop');
 
-            scope.$emit('compiled::day', {day: scope.self});
+            scope.$emit('compiled::day', { day: scope.self });
 
             el.on('click', function (event) {
                 event.stopImmediatePropagation();
-                scope.$evalAsync(scope.$emit('clicked::day', {day: scope.self}));
+                scope.$evalAsync(scope.$emit('clicked::day', { day: scope.self }));
             });
+            enableDrop(el, scope);
         }
-    }
+    };
 };
 
-exports.messageForm = function() {
+exports.messageForm = function () {
     return {
         scope: {
             self: "=extMessage"
         },
         templateUrl: "/assets/templates/messageForm.html",
-        link: function (scope, el, attr, ctrl) {
-        }
-    }
+        link: function link(scope, el, attr, ctrl) {}
+    };
 };
 
-exports.item = function() {
+exports.item = function () {
     return {
+        replace: true,
         scope: {
             self: "=extItem"
         },
         templateUrl: "/assets/templates/item.html",
-        link: function (scope, el, attr, ctrl) {
+        link: function link(scope, el, attr, ctrl) {
+            var enableDrag = require('./enableDrag');
 
             scope.self.isItemProcessing = false;
             scope.self.boundingClientRect = el[0].getBoundingClientRect();
-            scope.$emit("compiled::item", {item: scope.self});
+            scope.$emit("compiled::item", { item: scope.self });
 
             // this handler selects clicked item
             el.on('click', function (event) {
                 event.stopImmediatePropagation();
                 scope.self.boundingClientRect = el[0].getBoundingClientRect();
-                scope.$emit('clicked::item', {item: scope.self});
+                scope.$emit('clicked::item', { item: scope.self });
             });
 
+            enableDrag(el, scope);
         }
-    }
+    };
 };
 
-
-exports.ctxMenuBtn = function(){
+exports.ctxMenuBtn = function () {
     return {
         scope: {
             self: "=extCtxMenu"
         },
         templateUrl: "/assets/templates/ctxMenuBtn.html",
-        link: function (scope, el, attr, ctrl) {
-            el.on('click', function(event){
+        link: function link(scope, el, attr, ctrl) {
+            el.on('click', function (event) {
                 // event.stopImmediatePropagation();
                 console.log('ctx menu clicked');
                 scope.self.rect = el[0].getBoundingClientRect();
-                scope.$emit('clicked::ctxMenu', {ctxMenu: scope.self})
+                scope.$emit('clicked::ctxMenu', { ctxMenu: scope.self });
             });
         }
-    }
-}
+    };
+};
+
+//# sourceMappingURL=directives.js.map

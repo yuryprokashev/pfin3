@@ -9,15 +9,6 @@
 
 }
 
-expense-calendar-day .panel {
-    margin-bottom: 0px;
-}
-
-expense-calendar-day .list-group-item p, expense-calendar-day-item p {
-    margin-bottom: 0px;
-}
-
-
 .col-cal .panel-body {
     padding-top: 3px;
     padding-bottom: 3px;
@@ -254,9 +245,11 @@ day .panel-body {
     padding-right: 3px;
 }
 day .list-group-item {
-    padding-left: 2px;
-    padding-right: 2px;
-    padding-bottom: 0px;
+    /*padding-left: 2px;*/
+    /*padding-right: 2px;*/
+    /*padding-top: 2px;*/
+    /*padding-bottom: 2px;*/
+    padding: 2px;
     border-style: none;
 }
 
@@ -324,7 +317,11 @@ message-form .panel-heading {
 }
 
 /*REMOVE MARGIN BETWEEN ITEMS IN DAY*/
-item p {
+/*item p {*/
+    /*margin-bottom: 2px;*/
+/*}*/
+
+.item {
     margin-bottom: 2px;
 }
 
@@ -427,4 +424,21 @@ item p {
     border-color: white white transparent transparent;
     z-index: 4;
 
+}
+
+.item.dragged {
+    border-style: dashed;
+    border-width: 1px;
+    border-color: transparent transparent #777 transparent;
+}
+
+.item.dragged.is-planned {
+    border-style: dashed;
+    /*border-color: transparent transparent rgba(66, 139, 202, 1) transparent;*/
+    border-color: rgba(66, 139, 202, 1);
+}
+
+.over {
+    border-style: dashed;
+    border-color: rgba(66, 139, 202, 1);
 }

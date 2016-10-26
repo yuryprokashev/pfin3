@@ -2,8 +2,8 @@
  * Created by py on 09/08/16.
  */
 var mongoose = require( 'mongoose' );
-var User = require( './user.schema.js' );
-var MyDates = require('../../common/MyDates');
+var User = require( './userSchema.es6' );
+var MyDates = require('../../client/js/MyDates');
 
 var messageSchema = new mongoose.Schema( {
 

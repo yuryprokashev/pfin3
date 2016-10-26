@@ -1,12 +1,14 @@
+'use strict';
+
 exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
-    const MyDates = require('../../common/MyDates');
-    const UIItem = require('../../common/UIItem');
-    const PusherClient = require('../../common/PusherClient2');
-    const guid = require('../../common/guid');
+    var MyDates = require('./MyDates');
+    var UIItem = require('./UIItem');
+    var PusherClient = require('./PusherClient2');
+    var guid = require('./guid');
 
     $scope.state = {
         init: {
-            month: MyDates.dateToString(new Date(), {y:1, m:1, d: undefined}),
+            month: MyDates.dateToString(new Date(), { y: 1, m: 1, d: undefined }),
             week: MyDates.numberOfWeek(new Date()),
             day: MyDates.dateToString(new Date())
         },
@@ -20,22 +22,21 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         payloadType: 1,
         sortParam: "occuredAt",
         sortOrder: -1,
-        updatedDays:[],
-        updatedMonths:[],
+        updatedDays: [],
+        updatedMonths: [],
         user: {}
     };
-    
+
     $scope.cache = {
         calendars: new Map()
     };
 
     $scope.pushListener = new PusherClient();
 
-
     // param: String newDay - the day in string format "YYYYMMDD" for which we want to get week number (from 0 to 3-5)
     // function: calculate the number of week, where given day belongs to.
     // return: int weekNum
-    var getWeekForDay = function(newDay) {
+    var getWeekForDay = function getWeekForDay(newDay) {
         var y = MyDates.getYearFromString(newDay);
         var m = MyDates.getMonthFromString(newDay);
         var d = MyDates.getDateFromString(newDay);
@@ -44,13 +45,13 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return MyDates.numberOfWeek(date);
     };
 
-    var getDayCode = function() {
+    var getDayCode = function getDayCode() {
         var d = $scope.state.dayRef !== undefined ? $scope.state.dayRef.timeWindow : $scope.state.init.day;
         return MyDates.getDateFromString(d);
     };
 
-    var setWeekRef = function(dayNum){
-        if(dayNum > MyDates.daysInMonth($scope.state.monthRef.monthString)) {
+    var setWeekRef = function setWeekRef(dayNum) {
+        if (dayNum > MyDates.daysInMonth($scope.state.monthRef.monthString)) {
             dayNum = MyDates.daysInMonth($scope.state.monthRef.monthString);
         }
         var dayCode = $scope.state.monthRef.monthString + MyDates.dayToString(dayNum);
@@ -58,106 +59,105 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return $scope.view.calendarView.weeks[newWeek];
     };
 
-    var setDayRef = function(dayCode){
+    var setDayRef = function setDayRef(dayCode) {
         dayCode = $scope.state.monthRef.monthString + MyDates.dayToString(dayCode);
         return $scope.state.weekRef.getDayRef(dayCode);
     };
 
-    var getPreviousMonthRef = function(targetMonth) {
-        let targetMonthIndex = $scope.view.monthSwitch.months.indexOf(targetMonth);
-        return (targetMonthIndex - 1) >= 0 ? $scope.view.monthSwitch.months[targetMonthIndex - 1] : targetMonth;
+    var getPreviousMonthRef = function getPreviousMonthRef(targetMonth) {
+        var targetMonthIndex = $scope.view.monthSwitch.months.indexOf(targetMonth);
+        return targetMonthIndex - 1 >= 0 ? $scope.view.monthSwitch.months[targetMonthIndex - 1] : targetMonth;
     };
 
-    var stopCommandProcessing = function(){
-        if($scope.state.isCommandProcessing === true) {
+    var stopCommandProcessing = function stopCommandProcessing() {
+        if ($scope.state.isCommandProcessing === true) {
             $scope.state.isCommandProcessing = false;
         }
     };
 
-    var startCommandProcessing = function(){
+    var startCommandProcessing = function startCommandProcessing() {
         $scope.state.isCommandProcessing = true;
     };
 
-    var setContextMenuOptions = function(){
-        $scope.view.monthSwitch.months.forEach(function(item){
+    var setContextMenuOptions = function setContextMenuOptions() {
+        $scope.view.monthSwitch.months.forEach(function (item) {
             item.ctxMenu.setOptionsAsync();
         });
     };
 
-    var getDaysAsync = function() {
+    var getDaysAsync = function getDaysAsync() {
         var days = $scope.view.calendarView.getFlatDays();
         // console.log(days);
-        let completed = 0;
-        let responses = [];
-        
-        var finish = function(){
-            responses.sort(function(a,b) {
-                if(a.dayNum > b.dayNum) {
+        var completed = 0;
+        var responses = [];
+
+        var finish = function finish() {
+            responses.sort(function (a, b) {
+                if (a.dayNum > b.dayNum) {
                     return 1;
-                }
-                else if(a.dayNum < b.dayNum){
+                } else if (a.dayNum < b.dayNum) {
                     return -1;
                 }
             });
-            for(let i = 0; i < days.length; i++) {
-                let items = responses[i].items;
-                let result =  [];
-                items.forEach(function(item){
-                    let transformedItem = UIItem.transformToUIItem(item);
+
+            var _loop = function _loop(i) {
+                var items = responses[i].items;
+                var result = [];
+                items.forEach(function (item) {
+                    var transformedItem = UIItem.transformToUIItem(item);
                     transformedItem.isItemProcessing = false;
                     transformedItem.isSaved = true;
                     result.push(transformedItem);
                 });
                 days[i].day.html.items = result;
                 days[i].day.update();
+            };
+
+            for (var i = 0; i < days.length; i++) {
+                _loop(i);
             }
             stopCommandProcessing();
         };
 
-        days.forEach(function(item){
-            $http.get(item.day.getUrl)
-                .then(function(res){
-                    responses.push({dayNum: item.dayNum, items: res.data});
-                    if(++completed === days.length) {
-                        finish();
-                    }
-                })
+        days.forEach(function (item) {
+            $http.get(item.day.getUrl).then(function (res) {
+                responses.push({ dayNum: item.dayNum, items: res.data });
+                if (++completed === days.length) {
+                    finish();
+                }
+            });
         });
     };
 
-    var getDaysAsync2 = function(){
+    var getDaysAsync2 = function getDaysAsync2() {
         // HELPERS
-        function getAllItemsForMonth(fnSuccess, fnError){
-            $http.get(`/api/v1/payload/${$scope.state.monthRef.monthString}/1/dayCode/-1`).
-                then(fnSuccess)
-                .catch(fnError);
+        function getAllItemsForMonth(fnSuccess, fnError) {
+            $http.get('/api/v1/payload/' + $scope.state.monthRef.monthString + '/1/dayCode/-1').then(fnSuccess).catch(fnError);
         }
-        function setItemsToDays(response){
+        function setItemsToDays(response) {
             // let days = $scope.view.calendarView.getFlatDays();
-            let groupedItems = [];
-            function isDataForDayExists(day){
+            var groupedItems = [];
+            function isDataForDayExists(day) {
                 return groupedItems[day.timeWindow] !== undefined;
             }
-            response.data.map(function(item){
-                if(groupedItems[item.dayCode] === undefined){
-                    groupedItems[item.dayCode] = {dayCode: item.dayCode, items: [] };
+            response.data.map(function (item) {
+                if (groupedItems[item.dayCode] === undefined) {
+                    groupedItems[item.dayCode] = { dayCode: item.dayCode, items: [] };
                 }
                 groupedItems[item.dayCode].items.push(item);
             });
             // console.log(groupedItems);
-            days.forEach(function(day){
+            days.forEach(function (day) {
                 // console.log(day.day);
                 // console.log(groupedItems[day.day.timeWindow]);
-                if(isDataForDayExists(day.day)){
-                    day.day.html.items = groupedItems[day.day.timeWindow].items.map(function(item){
-                        let transformedItem = UIItem.transformToUIItem(item);
+                if (isDataForDayExists(day.day)) {
+                    day.day.html.items = groupedItems[day.day.timeWindow].items.map(function (item) {
+                        var transformedItem = UIItem.transformToUIItem(item);
                         transformedItem.isItemProcessing = false;
                         transformedItem.isSaved = true;
                         return transformedItem;
                     });
-
-                }
-                else{
+                } else {
                     day.day.html.items = [];
                 }
                 day.day.update();
@@ -165,16 +165,15 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             });
         }
 
-        function logError(err){
+        function logError(err) {
             console.log(err);
         }
-        
+
         // MAIN FLOW
-        let days = $scope.view.calendarView.getFlatDays();
-        $scope.$applyAsync(function(){
+        var days = $scope.view.calendarView.getFlatDays();
+        $scope.$applyAsync(function () {
             getAllItemsForMonth(setItemsToDays, logError);
         });
-
     };
 
     function showContextMenu(ctxMenu) {
@@ -183,23 +182,22 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     }
 
     function hideContextMenu() {
-        if(isContextMenuShown()){
+        if (isContextMenuShown()) {
             $scope.state.ctxMenuRef.hide();
             $scope.state.ctxMenuRef = undefined;
         }
     }
 
-    function selectMonthAsync(month){
-        $scope.$applyAsync(function(){
+    function selectMonthAsync(month) {
+        $scope.$applyAsync(function () {
             $scope.state.monthRef.html.isSelected = false;
             $scope.state.monthRef = month;
             $scope.state.monthRef.html.isSelected = true;
 
-            if($scope.cache.calendars.has(month.monthString)){
+            if ($scope.cache.calendars.has(month.monthString)) {
                 $scope.view.calendarView = $scope.cache.calendars.get(month.monthString);
-            }
-            else {
-                let newCalendar = $scope.view.initCalendarView();
+            } else {
+                var newCalendar = $scope.view.initCalendarView();
                 $scope.view.calendarView = newCalendar;
                 getDaysAsync2();
                 $scope.cache.calendars.set($scope.state.monthRef.monthString, newCalendar);
@@ -208,30 +206,29 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             $scope.state.weekRef = setWeekRef(dayCode);
             $scope.state.dayRef = setDayRef(dayCode);
             $scope.view.calendarView.update();
-        })
+        });
     }
 
     function commandCallback(response) {
         hideContextMenu();
-        $scope.$applyAsync(function(){
+        $scope.$applyAsync(function () {
             getDaysAsync2();
             getMonthDataAsync();
             $scope.view.calendarView.update();
         });
     }
 
-    function sendCommandAsync(option, callback){
-        let cmdId = guid();
+    function sendCommandAsync(option, callback) {
+        var cmdId = guid();
         // $scope.pushListener.register(cmdId, getDaysAsync);
-        console.log(`${option.getUrl}/${cmdId}`);
-        $http.get(`${option.getUrl}/${cmdId}`)
-            .then(function(response){
-                callback(response);
-                // stopCommandProcessing();
-            });
+        console.log(option.getUrl + '/' + cmdId);
+        $http.get(option.getUrl + '/' + cmdId).then(function (response) {
+            callback(response);
+            // stopCommandProcessing();
+        });
     }
 
-    function isCurrentMonthClicked(month){
+    function isCurrentMonthClicked(month) {
         return $scope.state.monthRef.monthString === month.monthString;
     }
 
@@ -243,84 +240,73 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return $scope.state.ctxMenuRef !== undefined && $scope.state.ctxMenuRef.html.isShown === true;
     }
 
-    function isContextMenuOfCurrentMonthClicked (){
+    function isContextMenuOfCurrentMonthClicked() {
         return $scope.state.ctxMenuRef.target === $scope.state.monthRef;
     }
 
-    function getMonthDataAsync(){
-        let m = $scope.state.monthRef;
-        function setMonthDataFromResponse(response){
+    function getMonthDataAsync() {
+        var m = $scope.state.monthRef;
+        function setMonthDataFromResponse(response) {
             // console.log(response);
             m.update(response.data.totals);
         }
-        function logError(err){
+        function logError(err) {
             console.log(err);
         }
-        $http.get(m.getUrl)
-            .then(
-                setMonthDataFromResponse,
-                logError
-            )
+        $http.get(m.getUrl).then(setMonthDataFromResponse, logError);
     }
 
-    function getMonthDataAsync2(month){
-        function setMonthDataFromResponse(response){
+    function getMonthDataAsync2(month) {
+        function setMonthDataFromResponse(response) {
             // console.log(response);
             month.update(response.data.totals);
         }
-        function logError(err){
+        function logError(err) {
             console.log(err);
         }
-        $http.get(month.getUrl)
-            .then(
-                setMonthDataFromResponse,
-                logError
-            )
+        $http.get(month.getUrl).then(setMonthDataFromResponse, logError);
     }
 
-    $user.getUser(function success(){
+    $user.getUser(function success() {
         $scope.state.user = $user.user;
         $scope.view = $views.initAppView($scope.state);
     });
 
     $scope.state.getPreviousMonthRef = getPreviousMonthRef;
 
-    $scope.$on('directive::monthSwitch::ready', function(event, args){
+    $scope.$on('directive::monthSwitch::ready', function (event, args) {
 
         var months = $scope.view.monthSwitch.months;
-        let completed = 0;
+        var completed = 0;
         var responses = [];
 
-        var finish = function() {
-            responses.sort(function(a,b) {
-                if(a.index > b.index) {
+        var finish = function finish() {
+            responses.sort(function (a, b) {
+                if (a.index > b.index) {
                     return 1;
-                }
-                else if(a.index < b.index){
+                } else if (a.index < b.index) {
                     return -1;
                 }
             });
 
-            for(var i = 0;i < $scope.view.monthSwitch.months.length; i++) {
+            for (var i = 0; i < $scope.view.monthSwitch.months.length; i++) {
                 $scope.view.monthSwitch.months[i].update(responses[i].totals);
             }
-            let newCalendar = $scope.view.initCalendarView($scope.state);
+            var newCalendar = $scope.view.initCalendarView($scope.state);
             $scope.view.calendarView = newCalendar;
             $scope.cache.calendars.set($scope.state.monthRef.monthString, newCalendar);
 
             getDaysAsync2();
             $scope.$emit('directive::calendarView::ready');
-
         };
 
-        months.forEach(function(m){
-            $http.get(m.getUrl)
-                .then(function (res) {
-                    responses.push({index: months.indexOf(m), totals: res.data.totals});
-                    if(++completed === months.length) {
-                        finish();
-                    }
-                })
+        months.forEach(function (m) {
+            $http.get(m.getUrl).then(function (res) {
+                responses.push({ index: months.indexOf(m), totals: res.data.totals });
+                if (++completed === months.length) {
+                    finish();
+                }
+            });
         });
         $scope.state.monthRef = args.monthRef;
         $scope.state.init.month = undefined;
@@ -328,7 +314,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         setContextMenuOptions();
     });
 
-    $scope.$on('directive::calendarView::ready', function(event, args){
+    $scope.$on('directive::calendarView::ready', function (event, args) {
         console.log('directive::calendarView::ready');
         var dayCode = getDayCode();
         $scope.state.weekRef = setWeekRef(dayCode);
@@ -341,39 +327,36 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
 
     $scope.$on('clicked::month', function (event, args) {
 
-        if(isMessageFormShown()) {
+        if (isMessageFormShown()) {
             $scope.state.isFormShown = false;
         }
 
-        if(isCurrentMonthClicked(args.month) && isContextMenuShown()) {
+        if (isCurrentMonthClicked(args.month) && isContextMenuShown()) {
             hideContextMenu($scope.state.ctxMenuRef);
-        }
-        
-        else if(!isCurrentMonthClicked(args.month) && isContextMenuShown()) {
+        } else if (!isCurrentMonthClicked(args.month) && isContextMenuShown()) {
             selectMonthAsync(args.month);
             hideContextMenu();
-        }
-
-        else {
+        } else {
             selectMonthAsync(args.month);
         }
-
     });
 
     $scope.$on('clicked::item', function (event, args) {
-        console.log('clicked::item');
-        $scope.state.itemRef = args.item;
-        let dayNum = MyDates.getDateFromString(args.item.dayCode);
-        $scope.state.weekRef = setWeekRef(dayNum);
-        $scope.state.dayRef = setDayRef(dayNum);
+        // console.log('clicked::item');
+        // $scope.state.itemRef = args.item;
+        // var dayNum = MyDates.getDateFromString(args.item.dayCode);
+        // $scope.state.weekRef = setWeekRef(dayNum);
+        // $scope.state.dayRef = setDayRef(dayNum);
         // $scope.view.calendarView.update();
+
+        selectItem(args.item);
 
         $scope.state.isFormShown = true;
         // $scope.view.expensePoster.update();
 
         hideContextMenu($scope.state.ctxMenuRef);
-        
-        $scope.$apply(function(){
+
+        $scope.$apply(function () {
             $scope.view.calendarView.update();
             $scope.view.expensePoster.update();
         });
@@ -391,20 +374,20 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         // if promise is rejected we fire 'change::day' event
         console.log('clicked::day');
         clicks.push(event);
-        if(isContextMenuShown()){
+        if (isContextMenuShown()) {
             hideContextMenu($scope.state.ctxMenuRef);
         }
         $scope.state.dayRef = args.day;
         $scope.state.itemRef = undefined;
         $scope.state.weekRef = setWeekRef($scope.state.dayRef.dayNum);
-        if($scope.state.isFormShown === true) {
+        if ($scope.state.isFormShown === true) {
             $scope.state.isFormShown = false;
         }
         $scope.view.calendarView.update();
         $scope.view.expensePoster.update();
 
         $timeout(function () {
-            if(clicks.length === 1){
+            if (clicks.length === 1) {
                 // var newDay = $scope.state.monthRef.monthString + MyDates.dayToString(args.day.dayNum);
                 // $scope.state.itemRef = undefined;
                 // $scope.state.weekRef = setWeekRef($scope.state.dayRef.dayNum);
@@ -414,14 +397,13 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
                 // }
                 // $scope.view.calendarView.update();
                 // $scope.view.expensePoster.update();
-            }
-            else if(clicks.length >= 2) {
-                $scope.$emit('dblclicked::day', {day: args.day})
+            } else if (clicks.length >= 2) {
+                $scope.$emit('dblclicked::day', { day: args.day });
             }
             clicks = [];
         }, 200);
     });
-    
+
     $scope.$on('dblclicked::day', function (event, args) {
 
         // This process is async
@@ -432,10 +414,10 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         console.log('dblclicked::day');
         var day = args.day;
         var isFuture = day.html.isFuture;
-        var item = new UIItem(1, 0, "New item", day.timeWindow, {isPlan: isFuture, isDeleted: false}, false);
+        var item = new UIItem(1, 0, "New item", day.timeWindow, { isPlan: isFuture, isDeleted: false }, false);
         $scope.state.itemRef = item;
         day.addItem(item);
-        $scope.$apply(function(){
+        $scope.$apply(function () {
             $scope.state.dayRef.update();
             $scope.view.expensePoster.update();
         });
@@ -451,41 +433,63 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         // then: if not, we do nothing
         // then: if yes, we must show messageForm.
         console.log('compiled::item');
-        if($scope.state.itemRef === args.item) {
+        if ($scope.state.itemRef === args.item) {
             $scope.state.isFormShown = true;
             $scope.view.expensePoster.update();
         }
     });
 
-    $scope.$on('clicked::item::btn', function(event, args){
+    function sendItemUpdate(form, btn, pushCb) {
 
-        var pushCallback = function(pushData) {
+        // @function: executed after updateData from server has arrived. Updates target object with updateData;
+        // @param: Array [Object] updateData - the result of async http call to server.
+        // @param: Object target - the object, that has to be updated with updateData
+        // @return: void
+        var saveCallback = function saveCallback(response) {
+            // console.log(`saveCallback on ${response.data._id}`);
+            $scope.state.itemRef.setItemFromForm(form);
+            $scope.state.itemRef.isItemProcessing = true;
+            $scope.state.itemRef.isSaved = false;
+            $scope.state.isFormShown = false;
+            $scope.view.calendarView.update();
+            $scope.view.expensePoster.update();
+            getMonthDataAsync();
+        };
+
+        var token = guid();
+        $scope.pushListener.register(token, pushCb);
+        var message = form.assembleMessage(btn, token);
+        $http.post(form.postUrl, message).then(saveCallback);
+    }
+
+    $scope.$on('clicked::item::btn', function (event, args) {
+
+        var pushCallback = function pushCallback(pushData) {
             // console.log(`pushCallback on ${pushData}`);
-            let dayNum = MyDates.getDateFromString(pushData);
-            let week = setWeekRef(dayNum);
-            let day = week.getDayRef(pushData);
-            $http.get(day.getUrl)
-                .then(function(res){
-                    let items = res.data;
-                    let result =  [];
-                    items.forEach(function(item){
-                        let transformedItem = UIItem.transformToUIItem(item);
-                        transformedItem.isItemProcessing = false;
-                        transformedItem.isSaved = true;
-                        result.push(transformedItem);
-                    });
-                    $scope.$applyAsync(function(){
-                        day.html.items = result;
-                        day.update();
-                    });
+            var dayNum = MyDates.getDateFromString(pushData);
+            var week = setWeekRef(dayNum);
+            var day = week.getDayRef(pushData);
+            $http.get(day.getUrl).then(function (res) {
+                var items = res.data;
+                var result = [];
+                items.forEach(function (item) {
+                    var transformedItem = UIItem.transformToUIItem(item);
+                    transformedItem.isItemProcessing = false;
+                    transformedItem.isSaved = true;
+                    result.push(transformedItem);
                 });
+                $scope.$applyAsync(function () {
+                    day.html.items = result;
+                    day.update();
+                });
+            });
         };
 
         // @function: executed after updateData from server has arrived. Updates target object with updateData;
         // @param: Array [Object] updateData - the result of async http call to server.
         // @param: Object target - the object, that has to be updated with updateData
         // @return: void
-        var saveCallback = function(response) {
+        var saveCallback = function saveCallback(response) {
             // console.log(`saveCallback on ${response.data._id}`);
             $scope.state.itemRef.setItemFromForm(args.form);
             $scope.state.itemRef.isItemProcessing = true;
@@ -499,39 +503,128 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         var token = guid();
         $scope.pushListener.register(token, pushCallback);
         var message = args.form.assembleMessage(args.btn, token);
-        $http.post(args.form.postUrl, message)
-            .then(saveCallback);
-
+        $http.post(args.form.postUrl, message).then(saveCallback);
     });
 
-    $scope.$on('clicked::ctxMenu', function(event, args) {
+    $scope.$on('clicked::ctxMenu', function (event, args) {
 
-        if(isContextMenuShown() && !isContextMenuOfCurrentMonthClicked()) {
+        if (isContextMenuShown() && !isContextMenuOfCurrentMonthClicked()) {
             hideContextMenu();
             selectMonthAsync(args.ctxMenu.target);
             showContextMenu(args.ctxMenu);
         }
 
-        if(isContextMenuShown() && isContextMenuOfCurrentMonthClicked()) {
+        if (isContextMenuShown() && isContextMenuOfCurrentMonthClicked()) {
             hideContextMenu();
         }
 
-        if(!isContextMenuShown()) {
+        if (!isContextMenuShown()) {
             selectMonthAsync(args.ctxMenu.target);
             showContextMenu(args.ctxMenu);
         }
     });
 
-    $scope.$on('clicked::ctxMenu::option', function(event, args){
+    $scope.$on('clicked::ctxMenu::option', function (event, args) {
         sendCommandAsync(args.option, commandCallback);
         startCommandProcessing();
     });
 
-    $scope.$on('clicked::chevron', function(event, args){
-        let createdMonths = args.monthSwitch.moveWindow(args.step);
-        $scope.$applyAsync(function(){
+    $scope.$on('clicked::chevron', function (event, args) {
+        var createdMonths = args.monthSwitch.moveWindow(args.step);
+        $scope.$applyAsync(function () {
             createdMonths.forEach(getMonthDataAsync2);
         });
     });
 
+    $scope.$on('dropped::item', handleItemDrop);
+
+    function itemUpdateSuccessPushCallback(pushData) {
+
+        $http.get(day.getUrl).then(function (res) {
+            var items = res.data;
+            var result = [];
+            items.forEach(function (item) {
+                var transformedItem = UIItem.transformToUIItem(item);
+                transformedItem.isItemProcessing = false;
+                transformedItem.isSaved = true;
+                result.push(transformedItem);
+            });
+            $scope.$applyAsync(function () {
+                day.html.items = result;
+                day.update();
+            });
+        });
+    };
+
+    function handleItemDrop(event, args) {
+        // -- запомнить, откуда был drag
+        var dragSource = $scope.state.dayRef;
+        // -- выбрать в UI день, куда был drop.
+        $scope.state.dayRef = args.dropTargetDay;
+        // -- изменить у выбранного item день со старого на новый.
+        $scope.state.itemRef.dayCode = args.dropTargetDay.dayCode;
+        $scope.view.expensePoster.update();
+        // -- собрать Message из item.
+        var clientToken = guid();
+        var message = $scope.view.expensePoster.assembleMessage('save', clientToken);
+        // -- послать Message на сервер POST /message/:dayCode, dayCode - это 'dropTarget'.
+        // -- По приходу 200 на POST надо выполнить saveCallback:
+        var saveCallback = function saveCallback() {
+            //     --- зарегистрировать в $scope.pushListener новый push и ждать, пока он придет.
+            $scope.pushListener.register(clientToken, pushCallback);
+        };
+        $http.post($scope.view.expensePoster.postUrl, message).then(saveCallback);
+
+        var pushCallback = function pushCallback(pushData) {
+            // ---- обновить день dragSource
+            $http.get(dragSource.getUrl).then(function (res) {
+                var items = res.data;
+                var result = [];
+                items.forEach(function (item) {
+                    var transformedItem = UIItem.transformToUIItem(item);
+                    transformedItem.isItemProcessing = false;
+                    transformedItem.isSaved = true;
+                    result.push(transformedItem);
+                });
+                $scope.$applyAsync(function () {
+                    dragSource.html.items = result;
+                    dragSource.update();
+                });
+            });
+
+            // ---- обновить день dropTarget
+            $http.get(args.dropTargetDay.getUrl).then(function (res) {
+                var items = res.data;
+                var result = [];
+                items.forEach(function (item) {
+                    var transformedItem = UIItem.transformToUIItem(item);
+                    transformedItem.isItemProcessing = false;
+                    transformedItem.isSaved = true;
+                    result.push(transformedItem);
+                });
+                $scope.$applyAsync(function () {
+                    args.dropTargetDay.html.items = result;
+                    args.dropTargetDay.update();
+                });
+            });
+        };
+    }
+    $scope.$on('dragged::item::start', handleItemDragStart);
+
+    function selectItem(item) {
+        $scope.state.itemRef = item;
+        var dayNum = MyDates.getDateFromString(item.dayCode);
+        $scope.state.weekRef = setWeekRef(dayNum);
+        $scope.state.dayRef = setDayRef(dayNum);
+    }
+
+    function handleItemDragStart(event, args) {
+        // console.log(args);
+        selectItem(args.item);
+        $scope.view.expensePoster.update();
+    }
 };
+
+//# sourceMappingURL=controllers.es6.map
+
+//# sourceMappingURL=controllers.js.map

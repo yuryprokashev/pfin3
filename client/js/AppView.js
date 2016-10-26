@@ -1,17 +1,19 @@
+'use strict';
+
 /**
  * Created by py on 23/07/16.
  */
 
 var AppView;
 
-var MonthSwitch = require('../../common/MonthSwitch');
-var Calendar = require('../../common/Calendar');
-var Dashboard = require('../../common/Dashboard');
-var MessagePoster = require('../../common/MessagePoster');
+var MonthSwitch = require('./MonthSwitch');
+var Calendar = require('./Calendar');
+// var Dashboard = require('./Dashboard');
+var MessagePoster = require('./MessagePoster');
 
-AppView = function() {
+AppView = function AppView() {
 
-    this.init = function(state) {
+    this.init = function (state) {
         this.state = state;
         this.monthSwitch = new MonthSwitch(state);
         // this.calendarView = new Calendar(state);
@@ -20,16 +22,15 @@ AppView = function() {
         console.log(this);
     };
 
-    this.initCalendarView = function() {
+    this.initCalendarView = function () {
         return new Calendar(this.state);
     };
 
-    this.initExpensePoster = function() {
+    this.initExpensePoster = function () {
         this.expensePoster = new MessagePoster(this.state);
     };
 
-
-    this.update = function() {
+    this.update = function () {
         this.monthSwitch.update();
         this.calendarView.update();
         // this.dashboardView.update(state);
@@ -39,3 +40,5 @@ AppView = function() {
 };
 
 module.exports = AppView;
+
+//# sourceMappingURL=AppView.js.map

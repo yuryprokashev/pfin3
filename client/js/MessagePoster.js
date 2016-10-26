@@ -1,31 +1,32 @@
+'use strict';
+
 /**
  * Created by py on 05/08/16.
  */
 
 var MessagePoster;
 
-var MessagePayload = require('../common/MessagePayload');
-var ExpenseMessagePayload = require('../common/ExpenseMessagePayload');
-var Message = require('../common/Message');
-var MyDates = require('../common/MyDates');
-var PusherClient = require('../common/PusherClient');
-var guid = require('../common/guid');
+var MessagePayload = require('./MessagePayload');
+var ExpenseMessagePayload = require('./ExpenseMessagePayload');
+var Message = require('./Message');
+var MyDates = require('./MyDates');
+var guid = require('./guid');
 
 // param: Object state
 // function: object constructor
 // return: MessagePoster object
-MessagePoster = function (state) {
+MessagePoster = function MessagePoster(state) {
     var self = this;
     self.state = state;
 
-    function isLastDayOfWeekSelected (day){
+    function isLastDayOfWeekSelected(day) {
         return day.weekDayNum === 6;
     }
 
     // param: Object state
     // function: setup static parameters of Day object
     // return: self, so method can be chained.
-    self.setUp = function() {
+    self.setUp = function () {
         self.dateString = self.state.dayRef.timeWindow;
         self.dateUTC = 0;
         self.currentItemId = undefined;
@@ -57,7 +58,7 @@ MessagePoster = function (state) {
             width: 0,
             'z-index': 1
         };
-        self.html.isLastDayOfWeekSelected = function (){
+        self.html.isLastDayOfWeekSelected = function () {
             return isLastDayOfWeekSelected(self.state.dayRef);
         };
         return self;
@@ -77,76 +78,63 @@ MessagePoster = function (state) {
     self.setDateStringPostURL = function () {
         self.dateString = self.state.dayRef.timeWindow;
         // self.postUrl = 'api/v1/message/'.concat(self.dateString);
-        self.postUrl = `api/v1/message/${self.dateString}`;
+        self.postUrl = 'api/v1/message/' + self.dateString;
         return self;
     };
-
-
 
     // param: Object state
     // function: set the expense poster position to near the clicked item
     // return: self, so method can be chained.
     self.setPopUpStyle = function () {
-        if(state.isFormShown === true) {
+        if (state.isFormShown === true) {
             // console.log(self.state.dayRef);
             var clickedRect = self.state.itemRef.boundingClientRect;
             self.html.style.top = clickedRect.top - 42;
             self.html.style.width = clickedRect.width * 1.5;
-            if(isLastDayOfWeekSelected(self.state.dayRef)){
+            if (isLastDayOfWeekSelected(self.state.dayRef)) {
                 self.html.style.left = clickedRect.left - 1.45 * clickedRect.width;
-            }
-            else {
+            } else {
                 self.html.style.left = clickedRect.left + clickedRect.width;
             }
         }
         return self;
     };
 
-
     // param: void
     // function: assemble expected ExpenseData from 'self'
     // return: Message
-    self.assembleMessage = function(btnClicked, clientToken) {
-        if(btnClicked === 'delete'){
+    self.assembleMessage = function (btnClicked, clientToken) {
+        if (btnClicked === 'delete') {
             self.html.isDeleted = true;
         }
         var dayCode = self.dateString;
-        var p = new MessagePayload(
-            dayCode,
-            {
+        var p = new MessagePayload(dayCode, {
             isPlan: self.html.isPlanned,
             isDeleted: self.html.isDeleted
-            }
-        );
+        });
         var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId);
         var user = self.state.user._id;
         // console.log(self.state.user);
         return new Message(user, 1, 1, emp, clientToken);
-
     };
 
     // param: Object state
     // function: change self.html parameters according to 'state'
     // return: void
-    self.update = function(){
-        self.setIsShown()
-            .setDateStringPostURL()
-            .setSelectedItem()
-            .setPopUpStyle();
+    self.update = function () {
+        self.setIsShown().setDateStringPostURL().setSelectedItem().setPopUpStyle();
     };
 
     // MAIN LOOP
-    self.setUp()
-        .initHTML()
-        .update();
+    self.setUp().initHTML().update();
 };
 
 // param: Object state
 // function: set the selected Item from state
 // return: self, so method can be chained.
-MessagePoster.prototype.setSelectedItem = function(){
+MessagePoster.prototype.setSelectedItem = function () {
     var self = this;
-    if(self.state.itemRef !== undefined) {
+    if (self.state.itemRef !== undefined) {
         self.item = self.state.itemRef;
         self.currentItemId = self.item._id;
         self.html.amount.value = self.item.amount;
@@ -157,7 +145,6 @@ MessagePoster.prototype.setSelectedItem = function(){
     return self;
 };
 
-
-
-
 module.exports = MessagePoster;
+
+//# sourceMappingURL=MessagePoster.js.map
