@@ -569,7 +569,8 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         $scope.$apply(function(){
             args.dropTargetDay.update();
             dragSource.update();
-        })
+            $scope.view.calendarView.update();
+        });
         $scope.view.expensePoster.update();
         // -- собрать Message из item.
         let clientToken = guid();
