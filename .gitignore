@@ -6,3 +6,4 @@ spec/jasmine_examples
 spec/pfin_specs
 test
 client/dist
+*.*.map
