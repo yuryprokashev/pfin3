@@ -564,6 +564,12 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         $scope.state.dayRef = args.dropTargetDay;
         // -- изменить у выбранного item день со старого на новый.
         $scope.state.itemRef.dayCode = args.dropTargetDay.dayCode;
+        // -- показать item  полупрозрачным - он ведь еще не сохранился
+        $scope.state.itemRef.isSaved = false;
+        $scope.$apply(function(){
+            args.dropTargetDay.update();
+            dragSource.update();
+        })
         $scope.view.expensePoster.update();
         // -- собрать Message из item.
         let clientToken = guid();

@@ -10,6 +10,7 @@ function enableDrag(e, s){
     let handleDragStart = function(event){
         // console.log('dragstart');
         e.addClass("dragged");
+        e.removeClass('highlight-on-hover');
         s.$emit('dragged::item::start', {item: s.self});
     };
 

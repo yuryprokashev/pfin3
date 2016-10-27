@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * Created by py on 21/10/16.
@@ -12,6 +12,7 @@ function enableDrag(e, s) {
     var handleDragStart = function handleDragStart(event) {
         // console.log('dragstart');
         e.addClass("dragged");
+        e.removeClass('highlight-on-hover');
         s.$emit('dragged::item::start', { item: s.self });
     };
 
