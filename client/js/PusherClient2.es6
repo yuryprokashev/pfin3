@@ -3,8 +3,8 @@
  */
 
 const io = require('socket.io-client');
-const PUSHER_HOST = 'http://localhost:50000';
-// const PUSHER_HOST = "http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com:50000";
+// const PUSHER_HOST = 'http://localhost:50000';
+const PUSHER_HOST = "http://54.154.147.244:50000";
 
 class PusherClient {
     constructor() {
