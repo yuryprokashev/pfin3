@@ -28,5 +28,4 @@ client.config( function( $routeProvider ){
     when ('/log-and-plan', {
         templateUrl: 'assets/templates/logAndPlanApp.html'
     });
-
 });

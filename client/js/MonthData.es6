@@ -21,4 +21,5 @@ MonthData = function (expSumFact, expSumPlan) {
     }
 };
 
+
 module.exports = MonthData;

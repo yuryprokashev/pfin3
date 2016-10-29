@@ -38,4 +38,5 @@ ExpenseMessagePayload = function (p, amount, desc, id) {
     }
 };
 
+
 module.exports = ExpenseMessagePayload;

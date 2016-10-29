@@ -12,7 +12,6 @@ function s4() {
 var guid = function guid() {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 };
-
 module.exports = guid;
 
 //# sourceMappingURL=guid.js.map

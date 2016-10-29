@@ -80,4 +80,5 @@ TimeWindow.prototype = {
     }
 };
 
+
 module.exports = TimeWindow;

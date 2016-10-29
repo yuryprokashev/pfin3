@@ -442,3 +442,31 @@ message-form .panel-heading {
     border-style: dashed;
     border-color: rgba(66, 139, 202, 1);
 }
+
+.copied-true {
+    background-color: rgba(66, 139, 202, 1);
+    color: white;
+}
+.copied-false {
+    /*background-color: inherit;*/
+    /*color: inherit;*/
+}
+
+/*@keyframes tip {*/
+    /*0% {height:1em; opacity:0.5}*/
+    /*25% {height:1em;opacity: 1}*/
+    /*50% {height:1em; opacity: 1}*/
+    /*75% {height:1em;opacity: 0.5}*/
+    /*100% {height:1em; opacity:0}*/
+/*}*/
+
+/*.tip {*/
+    /*animation-name: tip;*/
+    /*animation-duration: 0.5s;*/
+    /*position: absolute;*/
+    /*width: 3em;*/
+    /*height: 0;*/
+    /*background-color: black;*/
+    /*color: white;*/
+    /*z-index: 9999;*/
+/*}*/

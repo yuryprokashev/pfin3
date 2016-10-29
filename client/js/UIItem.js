@@ -18,6 +18,7 @@ var UIItem = function () {
         this.dayCode = dayCode;
         this.labels = labels;
         this.isSaved = isSaved || false;
+        this.isCopied = false;
     }
 
     _createClass(UIItem, [{
@@ -42,6 +43,11 @@ var UIItem = function () {
             item.userId = obj.userId;
             item.userToken = obj.userToken;
             return item;
+        }
+    }, {
+        key: "copy",
+        value: function copy(item) {
+            return new UIItem(item.type, item.amount, item.description, item.dayCode, item.labels, item.isSaved);
         }
     }]);
 

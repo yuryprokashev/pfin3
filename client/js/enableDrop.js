@@ -63,7 +63,6 @@ function enableDrop(e, s) {
     e[0].addEventListener('dragend', handleDragEnd, false);
     e[0].addEventListener('drop', handleDrop, false);
 }
-
 module.exports = enableDrop;
 
 //# sourceMappingURL=enableDrop.es6.map

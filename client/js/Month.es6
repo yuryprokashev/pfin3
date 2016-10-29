@@ -99,5 +99,4 @@ Month = function (t, state) {
         .setDefaultTotalsStyle();
 };
 
-
 module.exports = Month;

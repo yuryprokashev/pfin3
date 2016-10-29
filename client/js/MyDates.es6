@@ -44,6 +44,7 @@ MyDates = (function() {
         }
     };
 
+
     // param: String sting - formatted TimeWindow string in "YYYYMM" or "YYYYMMDD" expected.
     // function: calculate number of days in given month
     // return: integer

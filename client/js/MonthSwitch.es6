@@ -153,4 +153,5 @@ MonthSwitch.prototype.moveWindow = function(step){
     return createdMonths;
 };
 
+
 module.exports = MonthSwitch;

@@ -130,4 +130,20 @@ exports.ctxMenuBtn = function(){
             });
         }
     }
-}
+};
+
+exports.keypressEvents = ["$document", "$rootScope", function($document, $rootScope){
+    return {
+        restrict: 'A',
+        link: function(scope, el, attrs) {
+            let handler = require('./directiveEventHandlers/handleKeyPress');
+            $document.on('keydown',
+                (function(s) {
+                    return function(event) {
+                        handler(event,s);
+                    };
+                })(scope)
+            );
+        }
+    }
+}];

@@ -128,4 +128,18 @@ exports.ctxMenuBtn = function () {
     };
 };
 
+exports.keypressEvents = ["$document", "$rootScope", function ($document, $rootScope) {
+    return {
+        restrict: 'A',
+        link: function link(scope, el, attrs) {
+            var handler = require('./directiveEventHandlers/handleKeyPress');
+            $document.on('keydown', function (s) {
+                return function (event) {
+                    handler(event, s);
+                };
+            }(scope));
+        }
+    };
+}];
+
 //# sourceMappingURL=directives.js.map

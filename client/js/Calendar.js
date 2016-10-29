@@ -13,7 +13,6 @@ var Week = require('./Week');
 // function: object constructor
 // return: Calendar object
 Calendar = function Calendar(state) {
-
     var self = this;
     self.state = state;
     // param: Object state

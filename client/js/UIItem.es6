@@ -10,6 +10,7 @@ class UIItem {
         this.dayCode = dayCode;
         this.labels = labels;
         this.isSaved = isSaved || false;
+        this.isCopied = false;
     }
 
     setItemFromForm(form){
@@ -33,6 +34,18 @@ class UIItem {
         return item;
     }
 
+    static copy(item){
+        return new UIItem(
+            item.type,
+            item.amount,
+            item.description,
+            item.dayCode,
+            item.labels,
+            item.isSaved
+        )
+    }
+
 }
+
 
 module.exports = UIItem;

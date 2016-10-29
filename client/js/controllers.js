@@ -24,7 +24,8 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         sortOrder: -1,
         updatedDays: [],
         updatedMonths: [],
-        user: {}
+        user: {},
+        clipboard: []
     };
 
     $scope.cache = {
@@ -537,25 +538,6 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     });
 
     $scope.$on('dropped::item', handleItemDrop);
-
-    function itemUpdateSuccessPushCallback(pushData) {
-
-        $http.get(day.getUrl).then(function (res) {
-            var items = res.data;
-            var result = [];
-            items.forEach(function (item) {
-                var transformedItem = UIItem.transformToUIItem(item);
-                transformedItem.isItemProcessing = false;
-                transformedItem.isSaved = true;
-                result.push(transformedItem);
-            });
-            $scope.$applyAsync(function () {
-                day.html.items = result;
-                day.update();
-            });
-        });
-    };
-
     function handleItemDrop(event, args) {
         // -- запомнить, откуда был drag
         var dragSource = $scope.state.dayRef;
@@ -616,20 +598,49 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             });
         };
     }
-    $scope.$on('dragged::item::start', handleItemDragStart);
 
+    $scope.$on('dragged::item::start', handleItemDragStart);
     function selectItem(item) {
+        var clip = $scope.state.clipboard;
+        if (clip[0] !== undefined && clip[0].isCopied === true) {
+            console.log('item in clipboard exits = ' + clip[0].isCopied);
+            clip[0].isCopied = false;
+            clip.pop();
+        }
+        if (item.isCopied) {
+            item.isCopied = false;
+        }
         $scope.state.itemRef = item;
         var dayNum = MyDates.getDateFromString(item.dayCode);
         $scope.state.weekRef = setWeekRef(dayNum);
         $scope.state.dayRef = setDayRef(dayNum);
     }
-
     function handleItemDragStart(event, args) {
         // console.log(args);
         selectItem(args.item);
         $scope.view.expensePoster.update();
     }
+
+    var handleCopy = require('./controllerEventHandlers/handleCopy');
+    $scope.$on('pressed::key::copy', function (s) {
+        return function (event, args) {
+            handleCopy(event, args, s);
+        };
+    }($scope));
+
+    var handlePaste = require('./controllerEventHandlers/handlePaste');
+    $scope.$on('pressed::key::paste', function (s, http) {
+        return function (event, args) {
+            handlePaste(event, args, s, http);
+        };
+    }($scope, $http));
+
+    var handleMonthDataChange = require('./controllerEventHandlers/handleMonthDataChange');
+    $scope.$on('monthdata::change', function (s, http) {
+        return function (event, args) {
+            handleMonthDataChange(event, args, s, http);
+        };
+    }($scope, $http));
 };
 
 //# sourceMappingURL=controllers.es6.map

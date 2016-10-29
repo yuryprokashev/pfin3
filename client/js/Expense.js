@@ -42,7 +42,6 @@ Expense = function Expense(args) {
         this.dateCode = dateCode;
     }
 };
-
 module.exports = Expense;
 
 //# sourceMappingURL=Expense.js.map

@@ -222,4 +222,5 @@ Week.prototype.getFlatDays = function(){
     return result;
 };
 
+
 module.exports = Week;

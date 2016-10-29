@@ -45,5 +45,4 @@ Expense = function(args) {
         this.dateCode = dateCode;
     }
 };
-
 module.exports = Expense;

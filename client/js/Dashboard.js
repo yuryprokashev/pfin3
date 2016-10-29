@@ -10,7 +10,6 @@ Dashboard = function Dashboard(state) {
 
   this.update = function (state) {};
 };
-
 module.exports = Dashboard;
 
 //# sourceMappingURL=Dashboard.js.map

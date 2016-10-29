@@ -23,7 +23,6 @@ function enableDrag(e, s) {
     e[0].addEventListener('dragstart', handleDragStart, false);
     e[0].addEventListener('dragend', handleDragEnd, false);
 }
-
 module.exports = enableDrag;
 
 //# sourceMappingURL=enableDrag.js.map

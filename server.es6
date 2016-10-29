@@ -28,5 +28,4 @@ wagner.invoke(require('./server/facebookAuth'), {server: server});
 // grab api version for server
 server.use( '/api/v1', require( './server/api' )( wagner ) );
 
-
 module.exports = server;

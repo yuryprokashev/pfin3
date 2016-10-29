@@ -156,7 +156,4 @@ MessagePoster.prototype.setSelectedItem = function(){
     return self;
 };
 
-
-
-
 module.exports = MessagePoster;

@@ -24,4 +24,5 @@ MessagePayload = function(dayCode, labels) {
     }
 };
 
+
 module.exports = MessagePayload;

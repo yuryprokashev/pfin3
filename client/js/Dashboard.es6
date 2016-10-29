@@ -11,5 +11,4 @@ Dashboard = function (state) {
     };
 
 };
-
 module.exports = Dashboard;

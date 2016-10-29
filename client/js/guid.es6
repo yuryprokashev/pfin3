@@ -12,5 +12,4 @@ function s4() {
 var guid = function () {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 };
-
 module.exports = guid;

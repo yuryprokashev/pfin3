@@ -49,4 +49,5 @@ Message = function(user, sourceId, type, emp, userToken, commandId) {
     this.occuredAt = MyDates.now();
 };
 
+
 module.exports = Message;
