@@ -10,7 +10,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var io = require('socket.io-client');
 // const PUSHER_HOST = 'http://localhost:50000';
-var PUSHER_HOST = "http://ec2-54-154-147-244.eu-west-1.compute.amazonaws.com:50000";
+var PUSHER_HOST = "http://54.154.147.244:50000";
 
 var PusherClient = function () {
     function PusherClient() {
