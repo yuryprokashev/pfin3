@@ -7,3 +7,5 @@ spec/pfin_specs
 test
 client/dist
 *.*.map
+protractor.js
+karma.js
