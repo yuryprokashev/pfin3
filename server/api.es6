@@ -8,6 +8,7 @@ var MyDates = require('../client/js/MyDates');
 const util = require('util');
 const Manager = require('../server/modules/Manager');
 var manager = new Manager();
+var TG_BOT_TOKEN = "283721029:AAFcG5IWeemNqsW_-E3peO3O-elOSaKQ94E";
 
 var routes = function( wagner ) {
 
@@ -200,6 +201,9 @@ var routes = function( wagner ) {
     //
     //     }
     // }));
+    api.post('/bot-' + TG_BOT_TOKEN + '/message:t', function (req, res) {
+        console.log(req);
+    });
 
     return api;
 };
