@@ -1,20 +1,8 @@
 'use strict';
 
-var _createClass = function () {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }return function (Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
-    };
-}();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-    }
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
  * Created by py on 18/09/16.
@@ -22,7 +10,7 @@ function _classCallCheck(instance, Constructor) {
 
 var io = require('socket.io-client');
 // const PUSHER_HOST = 'http://localhost:50000';
-var PUSHER_HOST = "http://54.154.147.244:50000";
+var PUSHER_HOST = "https://54.154.147.244:50000";
 
 var PusherClient = function () {
     function PusherClient() {
@@ -70,7 +58,5 @@ var PusherClient = function () {
 }();
 
 module.exports = PusherClient;
-
-//# sourceMappingURL=PusherClient2.js.map
 
 //# sourceMappingURL=PusherClient2.js.map
