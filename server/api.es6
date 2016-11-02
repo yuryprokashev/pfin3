@@ -201,7 +201,7 @@ var routes = function( wagner ) {
     //
     //     }
     // }));
-    api.post('/bot-' + TG_BOT_TOKEN + '/message:t', function (req, res) {
+    api.post('/bot-' + TG_BOT_TOKEN + '/message/:t', function (req, res) {
         res.json({success: true, t: t});
     });
 
