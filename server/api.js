@@ -179,8 +179,9 @@ var routes = function routes(wagner) {
     //
     //     }
     // }));
-    api.post('/bot-' + TG_BOT_TOKEN + '/message/:t', function (req, res) {
-        res.json({ success: true, t: req.params.t });
+    api.post('/bot-' + TG_BOT_TOKEN + '/message', function (req, res) {
+        console.log(req.body);
+        res.json({ success: true });
     });
 
     return api;
