@@ -18,7 +18,7 @@ module.exports = function(wagner){
 
     var User = mongoose.model('User', require( './userSchema.js' ), 'users' );
 
-    var Message = mongoose.model('Message', require('./messageSchema.js'), 'messages');
+    // var Message = mongoose.model('Message', require('./messageSchema.js'), 'messages');
 
     // var Payload = mongoose.model('Payload', require('./payload.schema'), 'payloads');
 

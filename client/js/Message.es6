@@ -4,7 +4,7 @@
 
 var Message;
 
-var MyDates = require('./MyDates');
+var MyDates = require('./MyDates.es6');
 
 // param: String user - id of the user, who posts the Message
 // param: int sourceId - code for Message sources. 1 - for WebBrowser

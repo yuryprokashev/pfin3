@@ -37,5 +37,4 @@ AppView = function() {
         // console.log(this);
     };
 };
-
 module.exports = AppView;

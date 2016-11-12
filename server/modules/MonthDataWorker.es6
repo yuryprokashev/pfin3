@@ -3,14 +3,15 @@
  */
 "use strict";
 
-const Worker = require('./Worker');
-const Bus = require('../services/BusService');
+const Worker = require('./Worker2.es6');
+// const Bus = require('../services/BusService.es6');
 
 class MonthDataWorker extends Worker {
-    constructor(id, commandId){
-        super(id, commandId);
+    constructor(id, commandId, bus){
+        super(id, commandId, bus);
     }
     handle(query, response){
+        // console.log(query);
         query.requestId = this.id;
         query.commandId = this.commandId;
         this.response = response;
@@ -19,6 +20,10 @@ class MonthDataWorker extends Worker {
         function askMonthData(resolve, reject) {
 
             function isMyResponse(msg){
+                console.log(`MonthDataWorker ${msg}`);
+                if(JSON.parse(msg.value) === null){
+                    return 0;
+                }
                 let responseRequestId = JSON.parse(msg.value).requestId;
                 return responseRequestId === _this.busValue.requestId;
             }
@@ -46,8 +51,8 @@ class MonthDataWorker extends Worker {
                 }
             }
 
-            Bus.subscribe('get-month-data-response', sendMonthData);
-            Bus.send('get-month-data-request', query);
+            _this.subscribe('get-month-data-response', sendMonthData);
+            _this.send('get-month-data-request', query);
             
         }
         return new Promise(askMonthData);

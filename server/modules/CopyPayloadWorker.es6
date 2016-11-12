@@ -4,12 +4,12 @@
 
 "use strict";
 
-const Worker = require('./Worker');
-const Bus = require('../services/BusService');
+const Worker = require('./Worker2.es6');
+// const Bus = require('../services/BusService.es6');
 
 class CopyPayloadWorker extends Worker {
-    constructor(id, commandId){
-        super(id, commandId);
+    constructor(id, commandId, bus){
+        super(id, commandId, bus);
     }
 
     handle(query, response) {
@@ -51,8 +51,8 @@ class CopyPayloadWorker extends Worker {
                 }
             }
 
-            Bus.subscribe('copy-payload-response', sendCopySuccess);
-            Bus.send('copy-payload-request', query);
+            _this.subscribe('copy-payload-response', sendCopySuccess);
+            _this.send('copy-payload-request', query);
         }
         return new Promise(sendCopyCommandAsync);
 

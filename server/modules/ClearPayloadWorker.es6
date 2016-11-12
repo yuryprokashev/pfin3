@@ -3,12 +3,12 @@
  */
 "use strict";
 
-const Worker = require('./Worker');
-const Bus = require('../services/BusService');
+const Worker = require('./Worker2.es6');
+// const Bus = require('../services/BusService.es6');
 
 class ClearPayloadWorker extends Worker {
-    constructor(id, commandId){
-        super(id, commandId);
+    constructor(id, commandId, bus){
+        super(id, commandId, bus);
     }
 
     handle(query, response) {
@@ -50,8 +50,8 @@ class ClearPayloadWorker extends Worker {
                 }
             }
 
-            Bus.subscribe('clear-payload-response', sendCopySuccess);
-            Bus.send('clear-payload-request', query);
+            _this.subscribe('clear-payload-response', sendCopySuccess);
+            _this.send('clear-payload-request', query);
         }
         return new Promise(sendCopyCommandAsync);
 

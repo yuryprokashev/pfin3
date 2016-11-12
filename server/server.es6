@@ -20,12 +20,12 @@ server.get('/', function( req, res ) {
 });
 
 // grab and install auth module to server
-wagner.invoke( require( './server/auth' ), { server: server } );
+wagner.invoke( require( './auth' ), { server: server } );
 
 // server.use(require('./server/facebookAuth'));
 wagner.invoke(require('./server/facebookAuth'), {server: server});
 
 // grab api version for server
-server.use( '/api/v1', require( './server/api' )( wagner ) );
+server.use( '/api/v1', require( './api' )( wagner ) );
 
 module.exports = server;

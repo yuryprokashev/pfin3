@@ -4,88 +4,20 @@
 
 "use strict";
 
-const WorkerFactory = require('./WorkerFactory');
-const MessagePayload = require('../../client/js/MessagePayload');
-const ExpenseMessagePayload = require('../../client/js/ExpenseMessagePayload');
-const Message = require('../../client/js/Message');
-const guid = require('../../client/js/guid');
-const MyDates = require('../../client/js/MyDates');
+const WorkerFactory = require('./WorkerFactory.es6');
+const MessagePayload = require('../../client/js/MessagePayload.es6');
+const ExpenseMessagePayload = require('../../client/js/ExpenseMessagePayload.es6');
+const Message = require('../../client/js/Message.es6');
+const guid = require('../guid.es6');
+const MyDates = require('../../client/js/MyDates.es6');
 
 class Manager {
-    constructor(){
-        this.factory = new WorkerFactory();
+    constructor(bus){
+        this.factory = new WorkerFactory(bus);
         this.currentWorkers = new Map();
     }
 
     manage(request, response){
-        // var _this = this;
-        // function transformToRequest(worker, payload){
-        //
-        //     function findTargetMonthCode(monthCode, delta){
-        //         let year = monthCode.substring(0,4);
-        //         let month = monthCode.substring(4,6) || undefined;
-        //         let day = monthCode.substring(6,8) || undefined;
-        //         if(month !== undefined){
-        //             let monthNum = Number(month) + delta;
-        //             let newMonth = monthNum < 10 ? `0${monthNum}` : `${monthNum}`;
-        //             return `${year}${newMonth}${day}`;
-        //         }
-        //         else {
-        //             throw new Error('monthCode does not contain month (6 chars expected)');
-        //         }
-        //     }
-        //     let requestLikePayload = {
-        //         method: "POST",
-        //         body: {}
-        //     };
-        //      let p = new MessagePayload(
-        //          findTargetMonthCode(payload.dayCode, 1),
-        //          {
-        //              isPlan: true,
-        //              isDeleted: payload.labels.isDeleted
-        //          }
-        //      );
-        //     let emp = new ExpenseMessagePayload(
-        //         p,
-        //         payload.amount,
-        //         `copy of ${payload.description}`,
-        //         undefined
-        //     );
-        //     requestLikePayload.body = new Message(
-        //         payload.userId,
-        //         payload.sourceId,
-        //         payload.type,
-        //         emp,
-        //         undefined,
-        //         payload.commandId
-        //     );
-        //     return requestLikePayload;
-        // } // not needed
-        // function oneMessagePromiseFromPayload(message){
-        //     console.log(message);
-        //     let w = _this.factory.worker('message', message.commandId);
-        //     let transformedPayload = transformToRequest(w, message);
-        //     return w.handle(transformedPayload, response);
-        // } // not needed
-        // function payloadsReceivedCallback(payloads){
-        //     // console.log(payloads.msg);
-        //     let messages = payloads.msg.map(function(item){
-        //         item.commandId = payloads.worker.commandId;
-        //         return item;
-        //     });
-        //     let messagePromises = messages.map(
-        //         oneMessagePromiseFromPayload
-        //     );
-        //     // _this.purge(payloads.worker.id);
-        //     console.log('Message promises');
-        //     console.log(messagePromises);
-        //     return Promise.all(messagePromises);
-        // } // not needed
-        // function setWorker(workerType, query){
-        //     let task = this.factory.worker(workerType, query.commandId);
-        //     this.currentWorkers.set(task.id, task);
-        //     return task.handle(query, response);
-        // }
         if(this.isPayload(request)) {
             let getQuery = this.makeGetQueryFromRequest(request);
             let task1 = this.factory.worker('payload', undefined);

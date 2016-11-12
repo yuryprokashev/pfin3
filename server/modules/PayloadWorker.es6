@@ -1,16 +1,16 @@
 /**
  * Created by py on 06/09/16.
  */
-"use strict"
-const Worker = require('./Worker');
+"use strict";
+const Worker = require('./Worker2.es6');
 
-const Bus = require('../services/BusService');
+// const Bus = require('../services/BusService.es6');
 
-const guid = require('../../client/js/guid');
+const guid = require('../guid.es6');
 
 class PayloadWorker extends Worker {
-    constructor(id, commandId) {
-        super(id,commandId);
+    constructor(id, commandId, bus) {
+        super(id,commandId, bus);
     }
 
     handle(getQuery, response) {
@@ -20,14 +20,14 @@ class PayloadWorker extends Worker {
 
         return new Promise(function(resolve, reject){
 
-            Bus.subscribe('payload-response', function (msg) {
+            _this.subscribe('payload-response', function (msg) {
                 var responseRequestId = JSON.parse(msg.value).requestId;
                 if(responseRequestId === _this.id) {
                     resolve({worker: _this, msg: getPayloadFromKafkaMessage(msg)});
                 }
             });
 
-            Bus.send('payload-request', getQuery);
+            _this.send('payload-request', getQuery);
 
         });
     }
