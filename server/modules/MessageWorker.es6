@@ -1,25 +1,25 @@
 /**
  * Created by py on 06/09/16.
  */
-"use strict"
-const Worker = require('./Worker');
-const Bus = require('../services/BusService');
+"use strict";
+const Worker = require('./Worker2.es6');
+// const Bus = require('../services/BusService.es6');
 
 class MessageWorker extends Worker{
-    constructor(id, commandId){
-        super(id, commandId);
+    constructor(id, commandId, bus){
+        super(id, commandId, bus);
     }
 
     handle (request, response){
         super.extract(request);
-        var self = this;
+        var _this = this;
         this.response = response;
 
         function handleNewMessageAsync(resolve, reject) {
 
             function isMyResponse(msg){
                 let responseRequestId = JSON.parse(msg.value).requestId;
-                return responseRequestId === self.busValue.requestId;
+                return responseRequestId === _this.busValue.requestId;
             }
 
             function isErrors(msg){
@@ -28,8 +28,8 @@ class MessageWorker extends Worker{
 
             function assembleAck(msg) {
                 return {
-                    _id: self.parseMsgValue(msg).responsePayload.id,
-                    dayCode: self.parseResponsePayload(msg, "payload").dayCode
+                    _id: _this.parseMsgValue(msg).responsePayload.id,
+                    dayCode: _this.parseResponsePayload(msg, "payload").dayCode
                 };
             }
 
@@ -43,14 +43,14 @@ class MessageWorker extends Worker{
                         reject(assembleErrors(msg));
                     }
                     else {
-                        resolve({worker: self, msg: assembleAck(msg)});
+                        resolve({worker: _this, msg: assembleAck(msg)});
                     }
                 }
             }
 
-            Bus.subscribe('message-done', sendAckMessageSaved);
+            _this.subscribe('message-done', sendAckMessageSaved);
 
-            Bus.send('message-new', self.busValue);
+            _this.send('message-new', _this.busValue);
         }
 
         return new Promise(handleNewMessageAsync);

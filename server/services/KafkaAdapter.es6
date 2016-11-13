@@ -5,7 +5,7 @@
 
 var KafkaAdapter;
 
-const MyDates = require('../../client/js/MyDates');
+const MyDates = require('../../client/js/MyDates.es6');
 const wagner = require('wagner-core');
 const Config = wagner.invoke( function(Config) { return Config });
 

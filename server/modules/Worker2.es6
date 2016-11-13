@@ -1,16 +1,19 @@
 /**
- * Created by py on 06/09/16.
+ *Created by py on 08/11/2016
  */
 "use strict";
+// const EventEmitter = require('events').EventEmitter;
+
 class Worker {
-    constructor(id, commandId){
+    constructor(id, commandId, bus){
         this.id = id;
         this.commandId = commandId || undefined;
         this.busValue = {
             requestId: id,
             requestPayload: {},
             requestErrors:[]
-        }
+        };
+        this.bus = bus;
     }
 
     handle(request) {
@@ -48,6 +51,12 @@ class Worker {
     isMyResponse(msg){
         let responseRequestId = JSON.parse(msg.value).requestId;
         return responseRequestId === self.busValue.requestId;
+    }
+    subscribe(topic, callback){
+        this.bus.subscribe(topic, callback);
+    }
+    send(topic, message){
+        this.bus.send(topic, message);
     }
 
 }
