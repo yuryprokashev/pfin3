@@ -6,7 +6,7 @@
 
 const kafka = require('kafka-node');
 
-class KafkaAdapter2 {
+class KafkaAdapter3 {
     constructor(kafkaHost, clientName, partitionerType){
         this.kafkaClient = new kafka.Client(`${kafkaHost}:2181/`, clientName);
         this.clientName = clientName;
@@ -17,7 +17,7 @@ class KafkaAdapter2 {
         console.log(`${JSON.stringify(message)}`);
         let producer = new kafka.Producer(this.kafkaClient, {partitionerType: this.partitionerType});
         producer.id = (new Date().valueOf()).toString();
-        producer.on('ready', onProducerReady);
+
         function onProducerReady (){
             let payload = [];
             payload.push(
@@ -26,7 +26,7 @@ class KafkaAdapter2 {
                     messages: JSON.stringify(message)
                 }
             );
-            producer.send(payload, onProducerSent);
+
             function onProducerSent(err, data){
                 if(err){
                     console.log('producer send error');
@@ -36,14 +36,19 @@ class KafkaAdapter2 {
                     // _this.producers.delete(producer.id);
                 }
             }
+
+            producer.send(payload, onProducerSent);
         }
-        producer.on('error', onProducerError);
+
         function onProducerError(err){
                 console.log('producer error');
                 console.log(err);
                 console.log('-------------');
         }
-        // this.producers.set(producer.id, producer);
+
+        producer.on('error', onProducerError);
+
+        producer.on('ready', onProducerReady);
 
     }
     subscribe(topic, callback){
@@ -53,7 +58,6 @@ class KafkaAdapter2 {
             console.log(error);
             console.log('-------------');
         }
-        consumer.on('error', onConsumerError);
 
         let topics = (function(qty){
             let t = [];
@@ -62,20 +66,26 @@ class KafkaAdapter2 {
             }
             return t;
         })(6);
-        consumer.addTopics(topics, onTopicsAdded);
+
         function onTopicsAdded(err, added){
             if(err){
                 console.log('consumer adding topics failed');
                 console.log(err);
             }
         }
-        consumer.on('message', onConsumerMessage);
+
         function onConsumerMessage(m){
             if(m.topic === topic){
                 callback(m);
             }
         }
+
+        consumer.on('error', onConsumerError);
+
+        consumer.addTopics(topics, onTopicsAdded);
+
+        consumer.on('message', onConsumerMessage);
     }
 }
 
-module.exports = KafkaAdapter2;
+module.exports = KafkaAdapter3;
