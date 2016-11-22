@@ -4,7 +4,7 @@
 
 'use strict';
 
-const isContextMenuShown = require('./decideIsContextmenuShown');
+const isContextMenuShown = require('./decideIsContextmenuShown.es6');
 
 function helperShowContextMenu(ctxMenu, scope) {
     scope.state.ctxMenuRef = ctxMenu;

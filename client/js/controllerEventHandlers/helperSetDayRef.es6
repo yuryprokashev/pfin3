@@ -4,7 +4,7 @@
 
 'use strict';
 
-const MyDates = require('../MyDates');
+const MyDates = require('../MyDates.es6');
 
 function helperSetDayRef(dayCode, scope) {
     dayCode = scope.state.monthRef.monthString + MyDates.dayToString(dayCode);

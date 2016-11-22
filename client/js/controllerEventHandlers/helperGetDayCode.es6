@@ -3,7 +3,7 @@
  */
 
 'use strict';
-const MyDates = require('../MyDates');
+const MyDates = require('../MyDates.es6');
 
 function helperGetDayCode(scope) {
     var d = scope.state.dayRef !== undefined ? scope.state.dayRef.timeWindow : scope.state.init.day;

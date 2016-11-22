@@ -2,7 +2,7 @@
  *Created by py on 31/10/2016
  */
 'use strict';
-const guid = require('../guid');
+const guid = require('../guid.es6');
 function helperSendCommandAsync(option, http, callback) {
     var cmdId = guid();
     // $scope.pushListener.register(cmdId, getDaysAsync);

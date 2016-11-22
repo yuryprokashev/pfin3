@@ -6,7 +6,7 @@
 
 var MyDates = require('../MyDates');
 var setWeekRef = require('./helperSetWeekRef');
-var guid = require('../guid');
+var guid = require('../guid.es6');
 var updateDayFromServer = require('./helperUpdateDayFromServer');
 
 function handleClickedItemBtn(event, args, scope, http) {

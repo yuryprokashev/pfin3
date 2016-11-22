@@ -3,8 +3,8 @@
  */
 'use strict';
 
-var guid = require('../guid');
-var UIItem = require('../UIItem');
+var guid = require('../guid.es6');
+var UIItem = require('../UIItem.es6');
 
 function handlePaste(event, args, scope, http) {
     console.log('paste');

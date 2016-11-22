@@ -2,8 +2,8 @@
  *Created by py on 01/11/2016
  */
 'use strict';
-const hideContextMenu = require('./helperHideContextMenu');
-const setWeekRef = require('./helperSetWeekRef');
+const hideContextMenu = require('./helperHideContextMenu.es6');
+const setWeekRef = require('./helperSetWeekRef.es6');
 function handleClickedDay (event, args, scope, timeout) {
 
     scope.clicks.push(event);

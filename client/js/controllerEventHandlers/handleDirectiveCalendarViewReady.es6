@@ -4,9 +4,9 @@
 
 'use strict';
 
-const getDayCode  = require('./helperGetDayCode');
-const setWeekRef = require('./helperSetWeekRef');
-const setDayRef = require('./helperSetDayRef');
+const getDayCode  = require('./helperGetDayCode.es6');
+const setWeekRef = require('./helperSetWeekRef.es6');
+const setDayRef = require('./helperSetDayRef.es6');
 
 function handleDirectiveCalendarViewReady(event, args, scope) {
     console.log('directive::calendarView::ready');

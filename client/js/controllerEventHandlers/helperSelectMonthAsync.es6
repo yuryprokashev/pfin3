@@ -2,10 +2,10 @@
  *Created by py on 01/11/2016
  */
 'use strict';
-const getDaysAsync = require('./helperGetDaysAsync');
-const getDayCode = require('./helperGetDayCode');
-const setWeekRef = require('./helperSetWeekRef');
-const setDayRef = require('./helperSetDayRef');
+const getDaysAsync = require('./helperGetDaysAsync.es6');
+const getDayCode = require('./helperGetDayCode.es6');
+const setWeekRef = require('./helperSetWeekRef.es6');
+const setDayRef = require('./helperSetDayRef.es6');
 
 function helperSelectMonthAsync(month, scope, http) {
     scope.$applyAsync(function () {

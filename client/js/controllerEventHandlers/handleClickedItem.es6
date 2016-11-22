@@ -2,8 +2,8 @@
  *Created by py on 01/11/2016
  */
 'use strict';
-const selectItem = require('./helperSelectItem');
-const hideContextMenu = require('./helperHideContextMenu');
+const selectItem = require('./helperSelectItem.es6');
+const hideContextMenu = require('./helperHideContextMenu.es6');
 function handleClickedItem(event, args, scope) {
 
     selectItem(args.item, scope);

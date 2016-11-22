@@ -4,10 +4,10 @@
 
 var AppView;
 
-var MonthSwitch = require('./MonthSwitch');
-var Calendar = require('./Calendar');
+var MonthSwitch = require('./MonthSwitch.es6');
+var Calendar = require('./Calendar.es6');
 // var Dashboard = require('./Dashboard');
-var MessagePoster = require('./MessagePoster');
+var MessagePoster = require('./MessagePoster.es6');
 
 AppView = function() {
 

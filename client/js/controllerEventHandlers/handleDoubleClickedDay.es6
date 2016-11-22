@@ -3,7 +3,7 @@
  */
 
 'use strict';
-const UIItem = require('../UIItem');
+const UIItem = require('../UIItem.es6');
 
 function handleDoubleClickedDay (event, args, scope) {
     var day = args.day;

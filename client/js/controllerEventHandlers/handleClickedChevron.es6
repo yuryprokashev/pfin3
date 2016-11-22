@@ -3,7 +3,7 @@
  */
 
 'use strict';
-const getMonthDataAsyc = require('./helperGetMonthDataAsync');
+const getMonthDataAsyc = require('./helperGetMonthDataAsync.es6');
 
 function handleClickedChevron(event, args, scope, http) {
     var createdMonths = scope.view.monthSwitch.moveWindow(args.step);

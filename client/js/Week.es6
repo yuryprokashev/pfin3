@@ -4,8 +4,8 @@
 
 var Week;
 
-var MyDates = require('./MyDates');
-var Day = require('./Day');
+var MyDates = require('./MyDates.es6');
+var Day = require('./Day.es6');
 
 // param: int weekNum - the number of week in month (from 0 to 3-5)
 // param: String month - the string-encoded TimeWindow, which is on month level.

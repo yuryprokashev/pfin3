@@ -4,9 +4,9 @@
 
 var Month;
 
-var TimeWindow = require('./TimeWindow');
-var MyDates = require('./MyDates');
-var ContextMenu = require('./ContextMenu');
+var TimeWindow = require('./TimeWindow.es6');
+var MyDates = require('./MyDates.es6');
+var ContextMenu = require('./ContextMenu.es6');
 
 // param: String t - string representation of timeWindow object
 // param: Object state

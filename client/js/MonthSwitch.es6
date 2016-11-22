@@ -4,8 +4,8 @@
 
 var MonthSwitch;
 
-var Month = require('./Month');
-var MyDates = require('./MyDates');
+var Month = require('./Month.es6');
+var MyDates = require('./MyDates.es6');
 
 // param: Object state
 // function: object constructor

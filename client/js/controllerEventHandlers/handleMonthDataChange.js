@@ -4,8 +4,8 @@
 
 'use strict';
 
-var guid = require('../guid');
-var UIItem = require('../UIItem');
+var guid = require('../guid.es6');
+var UIItem = require('../UIItem.es6');
 
 function handleMonthDataChange(event, args, scope, http) {
     function setMonthDataFromResponse(response) {

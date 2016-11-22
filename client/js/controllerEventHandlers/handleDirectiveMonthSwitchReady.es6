@@ -3,8 +3,8 @@
  */
 
 'use strict';
-const getDaysAsync = require('./helperGetDaysAsync');
-const setContextMenuOptions = require('./helperSetContextMenuOptions');
+const getDaysAsync = require('./helperGetDaysAsync.es6');
+const setContextMenuOptions = require('./helperSetContextMenuOptions.es6');
 function handleDirectiveMonthSwitchReady (event, args, scope, http) {
 
     var months = scope.view.monthSwitch.months;

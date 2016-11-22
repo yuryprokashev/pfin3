@@ -4,11 +4,11 @@
 
 'use strict';
 
-const isMessageFormShown = require('./decideIsMessageFormShown');
-const isCurrentMonthClicked = require('./decideIsCurrentMonthClicked');
-const isContextMenuShown = require('./decideIsContextmenuShown');
-const selectMonthAsync = require('./helperSelectMonthAsync');
-const hideContextMenu = require('./helperHideContextMenu');
+const isMessageFormShown = require('./decideIsMessageFormShown.es6');
+const isCurrentMonthClicked = require('./decideIsCurrentMonthClicked.es6');
+const isContextMenuShown = require('./decideIsContextmenuShown.es6');
+const selectMonthAsync = require('./helperSelectMonthAsync.es6');
+const hideContextMenu = require('./helperHideContextMenu.es6');
 
 function handleClickedMonth (event, args, scope, http) {
 

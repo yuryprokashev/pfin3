@@ -4,7 +4,7 @@
 
 'use strict';
 
-const UIItem = require('../UIItem');
+const UIItem = require('../UIItem.es6');
 
 function helperUpdateDateFromServer(day, scope, http) {
     http.get(day.getUrl).then(function (res) {

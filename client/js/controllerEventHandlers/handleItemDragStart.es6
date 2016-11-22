@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const helperSelectItem = require('./helperSelectItem');
+const helperSelectItem = require('./helperSelectItem.es6');
 
 function handleItemDragStart(event, args, scope) {
     helperSelectItem(args.item, scope);

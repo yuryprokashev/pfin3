@@ -1,10 +1,10 @@
 'use strict';
 
 exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
-    var MyDates = require('./MyDates');
-    var UIItem = require('./UIItem');
-    var PusherClient = require('./PusherClient2');
-    var guid = require('./guid');
+    var MyDates = require('./MyDates.es6');
+    var UIItem = require('./UIItem.es6');
+    var PusherClient = require('./PusherClient2.es6');
+    var guid = require('./guid.es6');
 
     $scope.state = {
         init: {
@@ -44,7 +44,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         return targetMonthIndex - 1 >= 0 ? $scope.view.monthSwitch.months[targetMonthIndex - 1] : targetMonth;
     };;
 
-    const handleDirectiveMonthSwitchReady = require('./controllerEventHandlers/handleDirectiveMonthSwitchReady');
+    const handleDirectiveMonthSwitchReady = require('./controllerEventHandlers/handleDirectiveMonthSwitchReady.es6');
     $scope.$on('directive::monthSwitch::ready',
         (function(s,h){
             return function(event, args){
@@ -53,7 +53,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $http)
     );
 
-    const handleDirectiveCalendarViewReady = require('./controllerEventHandlers/handleDirectiveCalendarViewReady');
+    const handleDirectiveCalendarViewReady = require('./controllerEventHandlers/handleDirectiveCalendarViewReady.es6');
     $scope.$on('directive::calendarView::ready',
         (function (s){
             return function(event, args){
@@ -62,7 +62,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope)
     );
 
-    const handleClickedMonth = require('./controllerEventHandlers/handleClickedMonth');
+    const handleClickedMonth = require('./controllerEventHandlers/handleClickedMonth.es6');
     $scope.$on('clicked::month',
         (function(s, h){
             return function(event, args){
@@ -72,7 +72,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
     );
 
     $scope.clicks = [];
-    const handleClickedDay = require('./controllerEventHandlers/handleClickedDay');
+    const handleClickedDay = require('./controllerEventHandlers/handleClickedDay.es6');
     $scope.$on('clicked::day',
         (function(s, t){
             return function(event, args){
@@ -81,7 +81,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $timeout)
     );
 
-    const handleDblClickedDay = require('./controllerEventHandlers/handleDoubleClickedDay')
+    const handleDblClickedDay = require('./controllerEventHandlers/handleDoubleClickedDay.es6')
     $scope.$on('dblclicked::day',
         (function(s){
                 return function (event, args) {
@@ -91,7 +91,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         )($scope)
     );
 
-    const handleClickedItem = require('./controllerEventHandlers/handleClickedItem');
+    const handleClickedItem = require('./controllerEventHandlers/handleClickedItem.es6');
     $scope.$on('clicked::item',
         (function(s){
             return function (event, args){
@@ -100,7 +100,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope)
     );
 
-    const handleCompiledItem = require('./controllerEventHandlers/handleCompiledItem');
+    const handleCompiledItem = require('./controllerEventHandlers/handleCompiledItem.es6');
     $scope.$on("compiled::item",
         (function (s) {
             return function(event, args){
@@ -109,7 +109,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope)
     );
 
-    const handleClickedItemBtn = require('./controllerEventHandlers/handleClickedItemBtn');
+    const handleClickedItemBtn = require('./controllerEventHandlers/handleClickedItemBtn.es6');
     $scope.$on('clicked::item::btn',
         (function(s,h){
                 return function(event, args){
@@ -119,7 +119,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         )($scope, $http)
     );
 
-    const handleClickedCtxMenu = require('./controllerEventHandlers/handleClickedContextMenu');
+    const handleClickedCtxMenu = require('./controllerEventHandlers/handleClickedContextMenu.es6');
     $scope.$on('clicked::ctxMenu',
         (function(s, h){
             return function (event, args){
@@ -128,7 +128,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $http)
     );
 
-    const handleClickedCtxMenuOption = require('./controllerEventHandlers/handleClickedCtxMenuOption');
+    const handleClickedCtxMenuOption = require('./controllerEventHandlers/handleClickedCtxMenuOption.es6');
     $scope.$on('clicked::ctxMenu::option',
         (function(s, http){
             return function (event, args) {
@@ -136,7 +136,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
             };
         })($scope, $http));
 
-    const handleClickedChevron = require('./controllerEventHandlers/handleClickedChevron');
+    const handleClickedChevron = require('./controllerEventHandlers/handleClickedChevron.es6');
     $scope.$on('clicked::chevron',
         (function(s, http){
             return function (event, args) {
@@ -145,7 +145,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $http)
     );
 
-    const handleItemDrop = require('./controllerEventHandlers/handleItemDrop');
+    const handleItemDrop = require('./controllerEventHandlers/handleItemDrop.es6');
     $scope.$on('dropped::item',
         (function(s, http){
             return function (event, args) {
@@ -154,7 +154,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $http)
     );
 
-    const handleItemDragStart = require('./controllerEventHandlers/handleItemDragStart');
+    const handleItemDragStart = require('./controllerEventHandlers/handleItemDragStart.es6');
     $scope.$on('dragged::item::start',
         (function(s){
             return function(event, args){
@@ -163,7 +163,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope));
 
 
-    const handleCopy = require('./controllerEventHandlers/handleCopy');
+    const handleCopy = require('./controllerEventHandlers/handleCopy.es6');
     $scope.$on('pressed::key::copy',
         (function(s){
             return function(event, args){
@@ -172,7 +172,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope)
     );
 
-    const handlePaste = require('./controllerEventHandlers/handlePaste');
+    const handlePaste = require('./controllerEventHandlers/handlePaste.es6');
     $scope.$on('pressed::key::paste',
         (function(s, http){
             return function(event, args){
@@ -181,7 +181,7 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $http)
     );
 
-    const handleMonthDataChange = require('./controllerEventHandlers/handleMonthDataChange');
+    const handleMonthDataChange = require('./controllerEventHandlers/handleMonthDataChange.es6');
     $scope.$on('monthdata::change',
         (function(s, http){
             return function (event, args) {

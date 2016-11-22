@@ -4,8 +4,8 @@
 
 var Calendar;
 
-var MyDates = require('./MyDates');
-var Week = require('./Week');
+var MyDates = require('./MyDates.es6');
+var Week = require('./Week.es6');
 
 // param: Object state
 // function: object constructor

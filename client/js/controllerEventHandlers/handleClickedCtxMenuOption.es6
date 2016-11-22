@@ -4,9 +4,9 @@
 
 'use strict';
 
-const sendCommandAsync = require('./helperSendCommandAsync');
-const commandCallback = require('./helperCommandCallback');
-const startCommandProcessing = require('./helperStartCommandProcessing');
+const sendCommandAsync = require('./helperSendCommandAsync.es6');
+const commandCallback = require('./helperCommandCallback.es6');
+const startCommandProcessing = require('./helperStartCommandProcessing.es6');
 
 function handleClickedCtxMenuOption (event, args, scope, http) {
     sendCommandAsync(args.option, http,

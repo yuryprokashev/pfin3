@@ -3,10 +3,10 @@
  */
 
 'use strict';
-const MyDates = require('../MyDates');
-const setWeekRef = require('./helperSetWeekRef');
-const guid = require('../guid');
-const updateDayFromServer = require('./helperUpdateDayFromServer');
+const MyDates = require('../MyDates.es6');
+const setWeekRef = require('./helperSetWeekRef.es6');
+const guid = require('../guid.es6');
+const updateDayFromServer = require('./helperUpdateDayFromServer.es6');
 
 function handleClickedItemBtn (event, args, scope, http) {
 

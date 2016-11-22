@@ -64,7 +64,7 @@ exports.day = function () {
         },
         templateUrl: "/assets/templates/day.html",
         link: function (scope, el, attr, ctrl) {
-            const enableDrop = require('./enableDrop');
+            const enableDrop = require('./enableDrop.es6');
 
             scope.$emit('compiled::day', {day: scope.self});
 
@@ -96,7 +96,7 @@ exports.item = function() {
         },
         templateUrl: "/assets/templates/item.html",
         link: function (scope, el, attr, ctrl) {
-            const enableDrag = require('./enableDrag');
+            const enableDrag = require('./enableDrag.es6');
 
             scope.self.isItemProcessing = false;
             scope.self.boundingClientRect = el[0].getBoundingClientRect();
@@ -136,7 +136,7 @@ exports.keypressEvents = ["$document", "$rootScope", function($document, $rootSc
     return {
         restrict: 'A',
         link: function(scope, el, attrs) {
-            let handler = require('./directiveEventHandlers/handleKeyPress');
+            let handler = require('./directiveEventHandlers/handleKeyPress.es6');
             $document.on('keydown',
                 (function(s) {
                     return function(event) {

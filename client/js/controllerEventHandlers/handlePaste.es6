@@ -2,8 +2,8 @@
  *Created by py on 29/10/2016
  */
 'use strict';
-const guid = require('../guid');
-const UIItem = require('../UIItem');
+const guid = require('../guid.es6');
+const UIItem = require('../UIItem.es6');
 
 function handlePaste(event, args, scope, http){
     console.log('paste');

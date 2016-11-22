@@ -4,9 +4,9 @@
 
 'use strict';
 
-const setWeekRef = require('./helperSetWeekRef');
-const setDayRef = require('./helperSetDayRef');
-const MyDates = require('../MyDates');
+const setWeekRef = require('./helperSetWeekRef.es6');
+const setDayRef = require('./helperSetDayRef.es6');
+const MyDates = require('../MyDates.es6');
 
 function helperSelectItem(item, scope){
     let clip = scope.state.clipboard;

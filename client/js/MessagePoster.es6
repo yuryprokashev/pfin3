@@ -4,11 +4,11 @@
 
 var MessagePoster;
 
-var MessagePayload = require('./MessagePayload');
-var ExpenseMessagePayload = require('./ExpenseMessagePayload');
-var Message = require('./Message');
-var MyDates = require('./MyDates');
-var guid = require('./guid');
+var MessagePayload = require('./MessagePayload.es6');
+var ExpenseMessagePayload = require('./ExpenseMessagePayload.es6');
+var Message = require('./Message.es6');
+var MyDates = require('./MyDates.es6');
+var guid = require('./guid.es6');
 
 // param: Object state
 // function: object constructor

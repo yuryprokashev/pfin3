@@ -3,8 +3,8 @@
  */
 'use strict';
 
-const getWeekForDay = require('./helperGetWeekForDay');
-const MyDates = require('../MyDates');
+const getWeekForDay = require('./helperGetWeekForDay.es6');
+const MyDates = require('../MyDates.es6');
 
 function helperSetWeekRef(dayNum, scope) {
     if (dayNum > MyDates.daysInMonth(scope.state.monthRef.monthString)) {

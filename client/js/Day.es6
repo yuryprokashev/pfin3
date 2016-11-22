@@ -4,7 +4,7 @@
 
 var Day;
 
-var MyDates = require('./MyDates');
+var MyDates = require('./MyDates.es6');
 
 
 // param: int dayNum - the day number in month (from 1 to 28-31)

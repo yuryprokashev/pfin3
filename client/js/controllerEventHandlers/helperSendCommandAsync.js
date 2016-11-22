@@ -3,7 +3,7 @@
  */
 'use strict';
 
-var guid = require('../guid');
+var guid = require('../guid.es6');
 function helperSendCommandAsync(option, http, callback) {
     var cmdId = guid();
     // $scope.pushListener.register(cmdId, getDaysAsync);

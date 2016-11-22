@@ -4,8 +4,8 @@
 
 'use strict';
 
-const updateDayFromServer = require('./helperUpdateDayFromServer');
-const guid = require('../guid');
+const updateDayFromServer = require('./helperUpdateDayFromServer.es6');
+const guid = require('../guid.es6');
 
 function handleItemDrop(event, args, scope, http) {
     // -- запомнить, откуда был drag

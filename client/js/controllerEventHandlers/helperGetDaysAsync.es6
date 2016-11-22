@@ -4,8 +4,8 @@
 
 'use strict';
 
-const stopCommandProcessing = require('./helperStopCommandProcessing');
-const UIItem = require('../UIItem');
+const stopCommandProcessing = require('./helperStopCommandProcessing.es6');
+const UIItem = require('../UIItem.es6');
 
 function helperGetDaysAsync (scope, http) {
     // HELPERS

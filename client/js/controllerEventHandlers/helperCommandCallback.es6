@@ -3,9 +3,9 @@
  */
 'use strict';
 
-const getDaysAsync = require('./helperGetDaysAsync');
-const getMonthDataAsync = require('./helperGetMonthDataAsync');
-const hideContextMenu = require('./helperHideContextMenu');
+const getDaysAsync = require('./helperGetDaysAsync.es6');
+const getMonthDataAsync = require('./helperGetMonthDataAsync.es6');
+const hideContextMenu = require('./helperHideContextMenu.es6');
 
 function helperCommandCallback(response, scope, http) {
     hideContextMenu(scope);

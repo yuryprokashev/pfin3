@@ -2,11 +2,11 @@
  *Created by py on 01/11/2016
  */
 'use strict';
-const isContextMenuShown = require('./decideIsContextmenuShown');
-const isContextMenuOfCurrentMonthClicked = require('./decideIsContextMenuOfCurrentMonthClicked');
-const hideContextMenu = require('./helperHideContextMenu');
-const showContextMenu = require('./helperShowContextMenu');
-const selectMonthAsync = require('./helperSelectMonthAsync');
+const isContextMenuShown = require('./decideIsContextmenuShown.es6');
+const isContextMenuOfCurrentMonthClicked = require('./decideIsContextMenuOfCurrentMonthClicked.es6');
+const hideContextMenu = require('./helperHideContextMenu.es6');
+const showContextMenu = require('./helperShowContextMenu.es6');
+const selectMonthAsync = require('./helperSelectMonthAsync.es6');
 
 
 function handleClickedContextMenu (event, args, scope, http){

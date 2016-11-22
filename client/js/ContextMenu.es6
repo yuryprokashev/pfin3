@@ -2,7 +2,7 @@
  * Created by py on 15/09/16.
  */
 
-const guid = require('./guid');
+const guid = require('./guid.es6');
 
 class ContextMenu {
 

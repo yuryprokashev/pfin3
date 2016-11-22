@@ -3,8 +3,8 @@
  */
 
 'use strict';
-const guid = require('../guid');
-const UIItem = require('../UIItem');
+const guid = require('../guid.es6');
+const UIItem = require('../UIItem.es6');
 
 function handleMonthDataChange(event, args, scope, http){
     function setMonthDataFromResponse(response) {
