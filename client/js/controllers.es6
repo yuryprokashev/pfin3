@@ -32,11 +32,12 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         calendars: new Map()
     };
 
-    $scope.pushListener = new PusherClient();
+    $scope.pushListener = new PusherClient($http);
 
     $user.getUser(function success() {
         $scope.state.user = $user.user;
         $scope.view = $views.initAppView($scope.state);
+        $scope.$emit('directive::monthSwitch::ready');
     });
 
     $scope.state.getPreviousMonthRef = function (targetMonth) {

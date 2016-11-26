@@ -13,7 +13,9 @@ exports.monthSwitch = function () {
         },
         templateUrl: "/assets/templates/monthSwitch.html",
         link: function (scope, el, attr, ctrl) {
-            scope.$emit('directive::monthSwitch::ready', {monthRef: scope.self.monthRef});
+            // console.log(scope);
+            // scope.$emit('directive::monthSwitch::ready', {monthRef: scope.self.monthRef});
+            // console.log('directive::monthSwitch::ready');
             el.on('click', function(event){
                 event.target.blur(); // -> remove blue frame (focus) from btn after click
             });

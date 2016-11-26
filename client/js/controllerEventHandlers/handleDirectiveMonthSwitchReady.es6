@@ -39,7 +39,7 @@ function handleDirectiveMonthSwitchReady (event, args, scope, http) {
             }
         });
     });
-    scope.state.monthRef = args.monthRef;
+    // scope.state.monthRef = args.monthRef;
     scope.state.init.month = undefined;
 
     setContextMenuOptions(scope);

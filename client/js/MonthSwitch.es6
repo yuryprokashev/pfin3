@@ -28,7 +28,8 @@ MonthSwitch = function(state) {
             self.cache.set(months[i], month);
             self.months.unshift(month);
             if(i === 2){
-                self.monthRef = month;
+                // self.monthRef = month;
+                self.state.monthRef = month;
             }
         }
         self.html = {};

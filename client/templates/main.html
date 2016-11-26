@@ -2,14 +2,19 @@
     <h1>Make First Step to Your Financial Freedom</h1>
     <p>Sign up in with your favourite social network account&#160&#160&#160
         <a class="fa fa-google-plus-square fa-2x text-danger"
-           href="/auth/google"
+           href="/browser/auth/google"
            ng-show = "!state.user._id"
            aria-hidden="true"></a>
         <a class="fa fa-facebook-square fa-2x text-primary"
-           href="/auth/facebook"
+           href="/browser/auth/facebook"
            ng-show = "!state.user._id"
            aria-hidden="true"></a>
     </p>
+    <form action="/browser/test/login" method = "post">
+        <input type = "text" name = "username" value = "test" ng-show = "false"/>
+        <input type = "password" name = "password" value = "test" ng-show = "false"/>
+        <input type="submit" value="" class="fa fa-wrench fa-2x" ng-show = "!state.user._id"/>
+    </form>
 </div>
 <div class="row">
     <div class="col-md-4" ng-mouseenter = "isLeftBlockHighlighted = false" ng-mouseleave = "isLeftBlockHighlighted = false">

@@ -76,7 +76,7 @@ MessagePoster = function (state) {
     self.setDateStringPostURL = function () {
         self.dateString = self.state.dayRef.timeWindow;
         // self.postUrl = 'api/v1/message/'.concat(self.dateString);
-        self.postUrl = `api/v1/message/${self.dateString}`;
+        self.postUrl = `/browser/api/v1/message/${self.dateString}`;
         return self;
     };
 

@@ -22,7 +22,7 @@ exports.$views = function ($http) {
 exports.$user = function ($http) {
     var s = { user: {} };
     s.getUser = function (callback) {
-        $http.get('/api/v1/me').success(function (data) {
+        $http.get('/browser/api/v1/me').success(function (data) {
             s.user = data.user;
             callback();
         }).error(function (data, status) {
