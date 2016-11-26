@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const Worker = require('./Worker2.es6');
+const Worker = require('./Worker.es6');
 // const Bus = require('../services/BusService.es6');
 
 class ClearPayloadWorker extends Worker {
@@ -15,7 +15,7 @@ class ClearPayloadWorker extends Worker {
         query.requestId = this.id;
         query.commandId = this.commandId;
         this.response = response;
-        var _this = this;
+        let _this = this;
 
         function sendCopyCommandAsync (resolve, reject){
 

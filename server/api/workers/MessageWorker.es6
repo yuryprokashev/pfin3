@@ -2,7 +2,7 @@
  * Created by py on 06/09/16.
  */
 "use strict";
-const Worker = require('./Worker2.es6');
+const Worker = require('./Worker.es6');
 // const Bus = require('../services/BusService.es6');
 
 class MessageWorker extends Worker{
@@ -12,7 +12,7 @@ class MessageWorker extends Worker{
 
     handle (request, response){
         super.extract(request);
-        var _this = this;
+        let _this = this;
         this.response = response;
 
         function handleNewMessageAsync(resolve, reject) {

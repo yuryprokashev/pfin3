@@ -1,29 +1,26 @@
 /**
- * Created by py on 29/09/16.
+ * Created by py on 27/09/16.
  */
+
 "use strict";
 
-const Worker = require('./Worker2.es6');
+const Worker = require('./Worker.es6');
 // const Bus = require('../services/BusService.es6');
 
-class MonthDataWorker extends Worker {
+class CopyPayloadWorker extends Worker {
     constructor(id, commandId, bus){
         super(id, commandId, bus);
     }
-    handle(query, response){
-        // console.log(query);
+
+    handle(query, response) {
         query.requestId = this.id;
         query.commandId = this.commandId;
         this.response = response;
-        var _this = this;
+        let _this = this;
 
-        function askMonthData(resolve, reject) {
+        function sendCopyCommandAsync (resolve, reject){
 
             function isMyResponse(msg){
-                console.log(`MonthDataWorker ${msg}`);
-                if(JSON.parse(msg.value) === null){
-                    return 0;
-                }
                 let responseRequestId = JSON.parse(msg.value).requestId;
                 return responseRequestId === _this.busValue.requestId;
             }
@@ -37,9 +34,12 @@ class MonthDataWorker extends Worker {
             }
 
             function assembleAck(msg){
-                return JSON.parse(msg.value).responsePayload;
+                return {
+                    target: JSON.parse(msg.value).responsePayload[0].monthCode
+                }
             }
-            function sendMonthData(msg) {
+
+            function sendCopySuccess(msg){
                 console.log(msg);
                 if(isMyResponse(msg)){
                     if(isErrors(msg)){
@@ -51,12 +51,12 @@ class MonthDataWorker extends Worker {
                 }
             }
 
-            _this.subscribe('get-month-data-response', sendMonthData);
-            _this.send('get-month-data-request', query);
-            
+            _this.subscribe('copy-payload-response', sendCopySuccess);
+            _this.send('copy-payload-request', query);
         }
-        return new Promise(askMonthData);
+        return new Promise(sendCopyCommandAsync);
+
     }
-    
 }
-module. exports = MonthDataWorker;
+
+module.exports = CopyPayloadWorker;
