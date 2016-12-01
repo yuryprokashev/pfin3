@@ -4,7 +4,6 @@
 "use strict";
 
 const Worker = require('./Worker.es6');
-// const Bus = require('../services/BusService.es6');
 
 class MonthDataWorker extends Worker {
     constructor(id, commandId, bus){
@@ -15,14 +14,12 @@ class MonthDataWorker extends Worker {
         query.requestId = this.id;
         query.commandId = this.commandId;
         this.response = response;
-        var _this = this;
+        let _this = this;
 
         function askMonthData(resolve, reject) {
 
             function isMyResponse(msg){
-                // if(JSON.parse(msg.value) === null){
-                //     return 0;
-                // }
+
                 let responseRequestId = JSON.parse(msg.value).requestId;
                 return responseRequestId === _this.busValue.requestId;
             }

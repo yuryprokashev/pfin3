@@ -6,8 +6,6 @@ const Worker = require('./Worker.es6');
 
 // const Bus = require('../services/BusService.es6');
 
-const guid = require('../../helpers/guid.es6');
-
 class PayloadWorker extends Worker {
     constructor(id, commandId, bus) {
         super(id,commandId, bus);

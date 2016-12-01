@@ -2,7 +2,7 @@
  *Created by py on 22/11/2016
  */
 'use strict';
-module.exports = (kafkaService, workerFactory) => {
+module.exports = (workerFactory) => {
     const apiPayloadCtrl = {};
 
     apiPayloadCtrl.getPayloads = (request, response) => {

@@ -10,7 +10,7 @@ module.exports = (authController, config) => {
     const GS = require('passport-google-oauth20').Strategy;
     const FS = require('passport-facebook').Strategy;
     const LS = require('passport-local').Strategy;
-    let authApp = new express.Router();
+
     let gs = new GS({
         clientID: config.passport.google.GOOGLE_CLIENT_ID,
         clientSecret: config.passport.google.GOOGLE_CLIENT_SECRET,
@@ -28,6 +28,8 @@ module.exports = (authController, config) => {
     authController.use(gs);
     authController.use(fs);
     authController.use(ls);
+
+    let authApp = new express.Router();
     authApp.use(cookieParser());
     authApp.use(bodyParser.urlencoded({ extended: false }));
     authApp.use(bodyParser.json());
@@ -38,6 +40,6 @@ module.exports = (authController, config) => {
     authApp.get('/auth/:authProvider', authController.authenticate);
     authApp.get('/auth/:authProvider/callback', authController.login);
     authApp.get('/auth/all/logout', authController.logout);
-    authApp.post('/test/login', authController.loginLocal);
+    authApp.post('/test/login', authController.loginLocal); //TODO. Call authController.login here
     return authApp;
 };

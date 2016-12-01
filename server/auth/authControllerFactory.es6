@@ -2,7 +2,7 @@
  *Created by py on 15/11/2016
  */
 'use strict';
-module.exports = (kafkaService, config) => {
+module.exports = (workerFactory, config) => {
     const passport = require('passport');
     const status = require('http-status');
 
@@ -103,90 +103,78 @@ module.exports = (kafkaService, config) => {
     };
 
     authController.authCallback = (accessToken, refreshToken, profile, cb) => {
-        // console.log('authCallback called');
-        let requestId = new Date().valueOf().toString();
-        authController.subscribe('user-find-one-and-update-response', (message) => {
-            let user = extract('user', message);
-            // console.log(message);
-            let responseRequestId = extract('request.id', message);
-            // console.log(responseRequestId);
-            if(requestId === responseRequestId) {
-                if(!user) {
-                    authController.handleError('user update failed', message);
-                    return cb({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(message)});
-                }
-                // console.log(cb);
-                return cb(null, extract('user', message));
-            }
-        });
-        authController.send('user-find-one-and-update-request', {
-            request: {
-                id : requestId
-            },
-            profile: profile,
+        let query = {
             query: {
                 'private.oauth': profile.id
+            },
+            profile: profile
+    };
+        let worker = workerFactory.worker("updateUser");
+        worker.handle(query).then(
+            (result) => {
+                // console.log('authCallback2 called');
+                // console.log(JSON.stringify(result));
+                cb(null, result.msg);
+                workerFactory.purge(result.worker.id);
+            },
+            (error) => {
+                cb({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(error)});
+                workerFactory.purge(result.worker.id);
             }
-        });
+        );
     };
 
     authController.localAuthCallback = (username, password, done) => {
-        let requestId = new Date().valueOf().toString();
-        authController.subscribe('user-find-one-response', (kafkaResponse) => {
-            let user = extract('user', kafkaResponse);
-            let err = null;
-            if(!user) {
-                err = {errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(kafkaResponse)};
-                return done(null, false, {message: err});
-            }
-            if(user.private.local.password !== password) {
-                return done(null, false, {message: 'Wrong Password'})
-            }
-
-            return done(err, user);
-        });
-        authController.send('user-find-one-request', {
-            query:{
+        // console.log('auth local callback called');
+        let query = {
+            query: {
                 "private.local.login": username
             },
-            profile: {},
-            request: {
-                id: requestId
+            profile: {}
+        };
+        let worker = workerFactory.worker("findUser");
+        worker.handle(query).then(
+            (result) => {
+                if(result.msg.private.local.password !== password) {
+                    return done(null, false, {message: 'Wrong Password'})
+                }
+                done(null, result.msg);
+                workerFactory.purge(result.worker.id);
+            },
+            (error) => {
+                done({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(error)});
+                workerFactory.purge(result.worker.id);
             }
-        });
+        )
+
     };
 
-    authController.send = (topic, message) => {
-        kafkaService.send(topic, message);
-    };
-    authController.subscribe = (topic, callback) => {
-        kafkaService.subscribe(topic, callback);
-    };
+    // authController.send = (topic, message) => {
+    //     kafkaService.send(topic, message);
+    // };
+    // authController.subscribe = (topic, callback) => {
+    //     kafkaService.subscribe(topic, callback);
+    // };
 
     authController.findOne = (id, done) => {
-        let requestId = new Date().valueOf().toString();
-        authController.subscribe('user-find-one-response', (kafkaResponse) => {
-            let user = extract('user', kafkaResponse);
-            let err = null;
-            if(!user) {
-                err = {errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(kafkaResponse)};
-            }
-            return done(err, user);
-        });
-        authController.send('user-find-one-request', {
-            query:{
-                _id: id
+        let query = {query: {_id: id}, profile: {}};
+        let worker = workerFactory.worker("findUser");
+        worker.handle(query).then(
+            (result) => {
+                done(null, result.msg);
+                workerFactory.purge(result.worker.id);
             },
-            profile: {},
-            request: {
-                id: requestId
+            (error) => {
+                done({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(error)});
+                workerFactory.purge(result.worker.id);
             }
-        });
+        )
     };
 
     authController.handleError = (errorName, error) => {
         console.log(`${errorName}: ${JSON.stringify(error)}`);
     };
+
 
     return authController;
 };

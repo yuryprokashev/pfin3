@@ -3,7 +3,6 @@
  */
 "use strict";
 const Worker = require('./Worker.es6');
-// const Bus = require('../services/BusService.es6');
 
 class MessageWorker extends Worker{
     constructor(id, commandId, bus){
@@ -17,15 +16,6 @@ class MessageWorker extends Worker{
 
         function handleNewMessageAsync(resolve, reject) {
 
-            function isMyResponse(msg){
-                let responseRequestId = JSON.parse(msg.value).requestId;
-                return responseRequestId === _this.busValue.requestId;
-            }
-
-            function isErrors(msg){
-                return JSON.parse(msg.value).responseErrors.length !== 0;
-            }
-
             function assembleAck(msg) {
                 return {
                     _id: _this.parseMsgValue(msg).responsePayload.id,
@@ -33,14 +23,10 @@ class MessageWorker extends Worker{
                 };
             }
 
-            function assembleErrors(msg) {
-                return JSON.parse(msg.value).responseErrors;
-            }
-
             function sendAckMessageSaved(msg) {
-                if(isMyResponse(msg)) {
-                    if(isErrors(msg)){
-                        reject(assembleErrors(msg));
+                if(_this.isMyResponse(msg)) {
+                    if(_this.isErrors(msg)){
+                        reject(_this.assembleErrors(msg));
                     }
                     else {
                         resolve({worker: _this, msg: assembleAck(msg)});

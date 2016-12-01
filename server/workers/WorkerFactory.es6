@@ -2,12 +2,16 @@
  * Created by py on 06/09/16.
  */
 "use strict";
-const PayloadWorker = require('./workers/PayloadWorker.es6');
-const MessageWorker = require('./workers/MessageWorker.es6');
-const CopyPayloadWorker = require('./workers/CopyPayloadWorker.es6');
-const ClearPayloadWorker = require('./workers/ClearPayloadWorker.es6');
-const MonthDataWorker = require('./workers/MonthDataWorker.es6');
+const PayloadWorker = require('./PayloadWorker.es6');
+const MessageWorker = require('./MessageWorker.es6');
+const CopyPayloadWorker = require('./CopyPayloadWorker.es6');
+const ClearPayloadWorker = require('./ClearPayloadWorker.es6');
+const MonthDataWorker = require('./MonthDataWorker.es6');
+const FindUserWorker = require('./FindUserWorker.es6');
+const UpdateUserWorker = require('./UpdateUserWorker.es6');
+const BotMessageWorker = require('./BotMessageWorker.es6');
 const guid = require('../helpers/guid.es6');
+
 class WorkerFactory {
     constructor(bus) {
         this.bus = bus;
@@ -16,7 +20,10 @@ class WorkerFactory {
             message: MessageWorker,
             copyPayload: CopyPayloadWorker,
             clearPayload: ClearPayloadWorker,
-            monthData: MonthDataWorker
+            monthData: MonthDataWorker,
+            findUser: FindUserWorker,
+            updateUser: UpdateUserWorker,
+            botMessage: BotMessageWorker
         };
         this.currentWorkers = new Map();
     }

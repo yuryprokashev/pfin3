@@ -50,14 +50,26 @@ class Worker {
 
     isMyResponse(msg){
         let responseRequestId = JSON.parse(msg.value).requestId;
-        return responseRequestId === self.busValue.requestId;
+        return responseRequestId === this.busValue.requestId;
     }
+
+    isErrors (msg) {
+        return JSON.parse(msg.value).errorName !== undefined;
+    }
+
+    assembleErrors(msg) {
+        return JSON.parse(msg.value).errorName;
+    }
+
     subscribe(topic, callback){
         this.bus.subscribe(topic, callback);
     }
     send(topic, message){
         this.bus.send(topic, message);
     }
+
+
+
 
 }
 
