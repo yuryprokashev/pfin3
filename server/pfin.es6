@@ -64,7 +64,7 @@ kafkaBus.producer.on('ready', () => {
     configService = configFactory(kafkaService);
     configService.on('ready', () => {
         config = configService.get();
-        console.log(config);
+        // console.log(config);
 
         httpClient = httpClientFactory(config.bot);
         httpService = httpServiceFactory(httpClient);
