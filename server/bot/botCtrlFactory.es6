@@ -50,14 +50,14 @@ module.exports = (workerFactory, httpCtrl, config) => {
         let worker;
         worker = workerFactory.worker('botMessage');
         query = {
-            occuredAt: item.update.date,
+            occuredAt: item.update.message.date,
             sourceId: 2,
             userId: item.user.msg._id,
             payload: {
-                chatId: item.update.chat.id,
-                messageId: item.update.message_id,
-                text: item.update.text,
-                entities: item.update.entities
+                chatId: item.update.message.chat.id,
+                messageId: item.update.message.message_id,
+                text: item.update.message.text,
+                entities: item.update.message.entities
             }
         };
         worker.handle(query).then(
