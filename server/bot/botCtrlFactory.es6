@@ -32,7 +32,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         worker = workerFactory.worker('findUser');
         userQuery = {
             query: {
-                "private.telegramId": tgUpdate.message.from
+                "private.telegramId": tgUpdate.message.from.id
             }
         };
         return new Promise(
