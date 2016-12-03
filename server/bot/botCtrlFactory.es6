@@ -8,9 +8,10 @@ module.exports = (workerFactory, httpCtrl, config) => {
     //@param: telegram updates array
     //@function: create one kafka message to 'bot-updates-request'
     // for each update and create listeners for 'bot-updates-response'
-    botCtrl.handleUpdates = (updates) => {
-        console.log(updates);
-        updatesWithUsers = updates.map(appendUserToUpdate);
+    botCtrl.handleUpdates = (request) => {
+        let updates;
+        typeof request.body === 'array' ? updates = request.body : updates = [request.body];
+        updatesWithUsers = updates.body.map(appendUserToUpdate);
         Promise.all(updatesWithUsers).then(
             (items) => {
                 items.forEach(handleUpdate);
