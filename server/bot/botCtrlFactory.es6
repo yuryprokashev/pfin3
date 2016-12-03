@@ -45,7 +45,6 @@ module.exports = (workerFactory, httpCtrl, config) => {
                         reject({update: tgUpdate, user: error});
                     });
             });
-        };
     };
 
     handleUpdate = (item) => {
