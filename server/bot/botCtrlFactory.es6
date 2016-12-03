@@ -35,7 +35,17 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 "private.telegramId": tgUpdate.message.from
             }
         };
-        return {update: tgUpdate, user: worker.handle(userQuery)};
+        return new Promise(
+            (resolve, reject) => {
+                worker.handle(userQuery).then(
+                    (result) => {
+                        resolve({update: tgUpdate, user: result});
+                    },
+                    (error) => {
+                        reject({update: tgUpdate, user: error});
+                    });
+            });
+        };
     };
 
     handleUpdate = (item) => {
