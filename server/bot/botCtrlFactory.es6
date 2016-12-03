@@ -52,7 +52,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         query = {
             occuredAt: item.update.message.date,
             sourceId: 2,
-            userId: item.user.msg._id,
+            user: item.user.msg._id,
             payload: {
                 chatId: item.update.message.chat.id,
                 messageId: item.update.message.message_id,

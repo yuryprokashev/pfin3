@@ -13,7 +13,7 @@ class BotMessageWorker extends Worker{
     handle(item){
         let _this = this;
         this.busValue.requestPayload = item;
-        
+
         function handleNewMessageAsync(resolve, reject) {
 
             function assembleAck(msg) {
