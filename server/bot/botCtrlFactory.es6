@@ -15,7 +15,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         update = request.body;
         appendUserToUpdate(update).then(
             (result) => {
-                console.log(result);
+                // console.log(result);
                 handleUpdate(result);
             },
             (error) => {
@@ -52,7 +52,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         query = {
             occuredAt: item.update.date,
             sourceId: 2,
-            userId: item.user._id,
+            userId: item.user.msg._id,
             payload: {
                 chatId: item.update.chat.id,
                 messageId: item.update.message_id,
