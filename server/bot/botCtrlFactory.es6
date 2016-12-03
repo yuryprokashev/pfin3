@@ -3,16 +3,16 @@
  */
 'use strict';
 module.exports = (workerFactory, httpCtrl, config) => {
+    let handleUpdate;
+    let appendUserToUpdate;
     const botCtrl = {};
     let updatesWithUsers = [];
     //@param: telegram updates array
     //@function: create one kafka message to 'bot-updates-request'
     // for each update and create listeners for 'bot-updates-response'
     botCtrl.handleUpdates = (request) => {
-        console.log(request.body.message.from);
-        console.log(request.body.message.chat);
-        let updates = [request.body];
-        console.log(updates);
+        let updates;
+        updates = [request.body];
         updatesWithUsers = updates.map(appendUserToUpdate);
         console.log(updatesWithUsers);
         Promise.all(updatesWithUsers).then(
@@ -26,15 +26,23 @@ module.exports = (workerFactory, httpCtrl, config) => {
 
     };
 
-    let appendUserToUpdate = (tgUpdate) => {
-        let worker = workerFactory.worker('findUser');
-        let userQuery = {query: {telegramId: tgUpdate.from}};
+    appendUserToUpdate = (tgUpdate) => {
+        let userQuery;
+        let worker;
+        worker = workerFactory.worker('findUser');
+        userQuery = {
+            query: {
+                "private.telegramId": tgUpdate.message.from
+            }
+        };
         return {update: tgUpdate, user: worker.handle(userQuery)};
     };
 
-    let handleUpdate = (item) => {
-        let worker = workerFactory.worker('botMessage');
-        let query = {
+    handleUpdate = (item) => {
+        let query;
+        let worker;
+        worker = workerFactory.worker('botMessage');
+        query = {
             occuredAt: item.update.date,
             sourceId: 2,
             userId: item.user._id,
@@ -48,12 +56,14 @@ module.exports = (workerFactory, httpCtrl, config) => {
         worker.handle(query).then(
             (result) => {
                 //send 'saved' to telegram chat
-                let message = "saved";
+                let message;
+                message = "saved";
                 httpCtrl.sendMessage(message);
             },
             (error) => {
                 //send 'error' to telegram chat
-                let message = "error";
+                let message;
+                message = "error";
                 httpCtrl.sendMessage(message);
             }
         );
