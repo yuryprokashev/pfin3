@@ -60,6 +60,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 entities: item.update.message.entities
             }
         };
+        console.log(query);
         worker.handle(query).then(
             (result) => {
                 //send 'saved' to telegram chat
