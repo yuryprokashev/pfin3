@@ -9,8 +9,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
     //@function: create one kafka message to 'bot-updates-request'
     // for each update and create listeners for 'bot-updates-response'
     botCtrl.handleUpdates = (request) => {
-        let updates;
-        typeof request.body === 'array' ? updates = request.body : updates = [request.body];
+        let updates = [request.body];
         updatesWithUsers = updates.body.map(appendUserToUpdate);
         Promise.all(updatesWithUsers).then(
             (items) => {
