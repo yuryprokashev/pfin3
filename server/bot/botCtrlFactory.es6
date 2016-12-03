@@ -11,19 +11,17 @@ module.exports = (workerFactory, httpCtrl, config) => {
     //@function: create one kafka message to 'bot-updates-request'
     // for each update and create listeners for 'bot-updates-response'
     botCtrl.handleUpdates = (request) => {
-        let updates;
-        updates = [request.body];
-        updatesWithUsers = updates.map(appendUserToUpdate);
-        console.log(updatesWithUsers);
-        Promise.all(updatesWithUsers).then(
-            (items) => {
-                items.forEach(handleUpdate);
+        let update;
+        update = request.body;
+        appendUserToUpdate(update).then(
+            (result) => {
+                console.log(result);
+                handleUpdate(result);
             },
             (error) => {
-                console.log(`failed to append users to this update`);
+                console.log(`failed to append users to this update with ${JSON.stringify(error)}`);
             }
         );
-
     };
 
     appendUserToUpdate = (tgUpdate) => {
