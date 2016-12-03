@@ -10,7 +10,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
     // for each update and create listeners for 'bot-updates-response'
     botCtrl.handleUpdates = (request) => {
         let updates = [request.body];
-        updatesWithUsers = updates.body.map(appendUserToUpdate);
+        updatesWithUsers = updates.map(appendUserToUpdate);
         Promise.all(updatesWithUsers).then(
             (items) => {
                 items.forEach(handleUpdate);
