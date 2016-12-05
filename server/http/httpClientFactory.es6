@@ -4,7 +4,7 @@
 
 'use strict';
 module.exports = (hostConfig) => {
-    const http = require('http');
+    const https = require('https');
     const httpClient = {};
 
     httpClient.post = (path, data, responseCallback) => {
@@ -20,7 +20,7 @@ module.exports = (hostConfig) => {
             },
             method: 'POST'
         };
-        let request = http.request(options, responseCallback);
+        let request = https.request(options, responseCallback);
 
         request.on('error', (error)=>{
             console.log(`problem with request: ${error.message}`);
