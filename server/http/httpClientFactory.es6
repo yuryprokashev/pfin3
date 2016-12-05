@@ -26,7 +26,7 @@ module.exports = (hostConfig) => {
             console.log(`problem with request: ${error.message}`);
         });
         request.write(postData);
-        console.log(request);
+        // console.log(request);
         request.end();
 
     };

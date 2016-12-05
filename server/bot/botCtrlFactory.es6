@@ -10,7 +10,9 @@ module.exports = (workerFactory, httpCtrl, config) => {
     //@param: telegram updates array
     //@function: create one kafka message to 'bot-updates-request'
     // for each update and create listeners for 'bot-updates-response'
-    botCtrl.handleUpdates = (request) => {
+    botCtrl.handleUpdates = (request, response) => {
+        response.status(200).json({});
+
         let update;
         update = request.body;
         appendUserToUpdate(update).then(
