@@ -65,13 +65,13 @@ module.exports = (workerFactory, httpCtrl, config) => {
             (result) => {
                 //send 'saved' to telegram chat
                 let message;
-                message = "saved";
+                message = {chat_id: item.update.message.chat.id, text: "saved"};
                 httpCtrl.sendMessage(message);
             },
             (error) => {
                 //send 'error' to telegram chat
                 let message;
-                message = "error";
+                message = {chat_id: item.update.message.chat.id, text: "error"};
                 httpCtrl.sendMessage(message);
             }
         );
