@@ -7,6 +7,7 @@ module.exports = (httpClient) => {
 
     httpService.post = (path, data) => {
         httpClient.post(path, data, (response)=>{
+            response.setEncoding('utf8');
             response.on('error', (error) => {
                 console.log(`post to ${path} failed with error ${error}`);
             });
