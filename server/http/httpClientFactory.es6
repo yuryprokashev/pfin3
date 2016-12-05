@@ -10,6 +10,7 @@ module.exports = (hostConfig) => {
     httpClient.post = (path, data, responseCallback) => {
         let postData = JSON.stringify(data);
         let options = {
+            protocol: hostConfig.protocol,
             hostname: hostConfig.hostUrl,
             port: hostConfig.port,
             path: path,
