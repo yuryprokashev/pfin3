@@ -65,7 +65,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
             (result) => {
                 //send 'saved' to telegram chat
                 let message;
-                message = {chat_id: item.update.message.chat.id, text: "saved"};
+                message = {chat_id: item.update.message.chat.id, text: `Saved: "${item.update.message.text}"`};
                 httpCtrl.sendMessage(message);
             },
             (error) => {
