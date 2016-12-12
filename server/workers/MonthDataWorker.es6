@@ -25,6 +25,7 @@ class MonthDataWorker extends Worker {
             }
 
             function isErrors(msg){
+                console.log(JSON.parse(msg.value).responseErrors);
                 return JSON.parse(msg.value).responseErrors.length !== 0;
             }
 
