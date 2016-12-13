@@ -20,7 +20,7 @@ class MonthDataWorker2 extends Worker2 {
 
         data = undefined;
 
-        super.handle(topic, query, data);
+        return super.handle(topic, query, data);
     }
 }
 module.exports = MonthDataWorker2;
