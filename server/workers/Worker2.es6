@@ -48,7 +48,7 @@ class Worker2 {
             (res, rej) => {
 
                 let context;
-                if(topic === undefined || typeof topic !== 'string') {
+                if(topicPrefix === undefined || typeof topicPrefix !== 'string') {
                     rej({error: 'topic is not defined or not string'});
                 }
                 if(query === undefined || typeof query !== 'object') {
