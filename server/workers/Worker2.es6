@@ -1,6 +1,38 @@
 /**
  *Created by py on 13/12/2016
  */
+/**
+* Worker is responsible for sending queries to particular Kafka topic
+ * and outputs the result of these queries.
+ * Worker 'handle' method, which returns Promise.
+ * 'handle' method gets three things as input:
+ * 1) Topic Prefix
+ * Required.
+ * The Kafka Topic prefix (one without '-request' or '-response').
+ * The one which this Worker instance will subscribe and will send the Query and Data.
+ * If undefined, Worker.handle will resolve to {error: 'topic is not defined'}
+ *
+ * 2) Query object.
+ * Required.
+ * Object with data fields for selection and sorting.
+ * If undefined, Worker.handle will resolve to {error: 'query is not defined'}
+ *
+ * 3) Data object.
+ * Optional. Object with data to write into DB (createOrUpdate operation).
+ *
+ * Returns Promise, that will resolve to MontData object: {total: {plan: 100, fact: 200}}.
+ * Promise will be rejected with errors in following cases:
+ * 1) Payload service replied with KafkaMessage with no Context:
+ * {error: 'kafkaMessage contains no value'}
+ *
+ * 2) Payload service replied with KafkaMessage with Context, but it has empty response property:
+ * {error: 'context.response is empty'}
+ *
+ * 3) Topic is undefined or not string: {error: 'topic is not defined or not string'}
+ *
+ * 4) Query is undefined or not object: {error: 'query is not defined or not object'}
+*/
+
 'use strict';
 class Worker2 {
 
@@ -10,12 +42,18 @@ class Worker2 {
         this.commandId = commandId || undefined;
     };
 
-    handle (topic, query, data) {
+    handle (topicPrefix, query, data) {
         let _this = this;
         return new Promise(
             (res, rej) => {
 
                 let context;
+                if(topic === undefined || typeof topic !== 'string') {
+                    rej({error: 'topic is not defined or not string'});
+                }
+                if(query === undefined || typeof query !== 'object') {
+                    rej({error: 'query is not defined or not object'});
+                }
                 if(data) {
                     context = _this.createWriteContext(query, data);
                 }
@@ -23,14 +61,14 @@ class Worker2 {
                     context = _this.createReadContext(query);
                 }
 
-                _this.subscribe(`${topic}-response`,
+                _this.subscribe(`${topicPrefix}-response`,
                     ((resolve, reject) => {
                     return (kafkaMessage) => {
                         _this.answer(kafkaMessage, resolve, reject);
                     }
                 })(res, rej));
 
-                _this.send(`${topic}-request`, context);
+                _this.send(`${topicPrefix}-request`, context);
             }
         )
 

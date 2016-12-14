@@ -85,14 +85,19 @@ module.exports = (workerFactory) => {
     };
 
     apiPayloadCtrl.getMonthData = (request, response) => {
-        // let query = {
-        //     user: request.user._id.toString(),
-        //     payloadType: Number(request.params.payloadType),
-        //     sortOrder: {},
-        //     targetPeriod: request.params.targetPeriod
-        // };
-        let worker = workerFactory.worker('monthData', undefined);
-        worker.handle('get-month-data', request).then(
+
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+        query = {
+            user: request.user._id.toString(),
+            payloadType: Number(request.params.payloadType),
+            sortOrder: request.params.sortOrder,
+            targetPeriod: request.params.targetPeriod,
+        };
+        data = undefined;
+
+        worker.handle('get-month-data', query, data).then(
             (result) => {
                 response.json(result);
                 workerFactory.purge(worker.id);
