@@ -149,6 +149,7 @@ module.exports = (workerFactory, config) => {
                 workerFactory.purge(worker.id);
             },
             (error) => {
+                console.log(`localAuthCallback error is ${JSON.stringify(error)}`);
                 done({error: `${JSON.stringify(error)}`});
                 workerFactory.purge(result.worker.id);
             }
