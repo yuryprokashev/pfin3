@@ -139,6 +139,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle('user-find-one', query, data).then(
             (result) => {
+                console.log(`localAuthCallback result is ${JSON.stringify(result)}`);
                 if(result.private.local.password !== password) {
                     return done(null, false, {message: 'Wrong Password'})
                 }
