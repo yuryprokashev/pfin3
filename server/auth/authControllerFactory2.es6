@@ -81,6 +81,7 @@ module.exports = (workerFactory, config) => {
 
     };
     authController.loginLocal = (request, response, next) =>{
+        console.log('authController.loginLocal executing...');
         passport.authenticate(
             'local',
             (err, user, info)=>{
@@ -115,6 +116,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle('user-find-one-and-update', query, data).then(
             (result) => {
+                console.log(`authCallback result is ${JSON.stringify(result)}`);
                 cb(null, result);
                 workerFactory.purge(worker.id);
             },
@@ -166,6 +168,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle("user-find-one", query, data).then(
             (result) => {
+                console.log(`fineOne result is ${JSON.stringify(result)}`);
                 done(null, result);
                 workerFactory.purge(worker.id);
             },
