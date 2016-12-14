@@ -67,12 +67,12 @@ module.exports = (workerFactory, config) => {
             (err, user, info) => {
                 if(err) {return next(err);}
                 if(!user) {
-                    console.log('no user');
+                    // console.log('no user');
                     return response.redirect('/');
                 }
 
                 request.logIn(user, function (err) {
-                    console.log('logging user in...');
+                    // console.log('logging user in...');
                     // console.log(request.session.passport.user);
                     if(err) {return next(err);}
                     response.redirect(config.passport[strategy].successAuthRedirectPATH);
@@ -81,7 +81,7 @@ module.exports = (workerFactory, config) => {
 
     };
     authController.loginLocal = (request, response, next) =>{
-        console.log('authController.loginLocal executing...');
+        // console.log('authController.loginLocal executing...');
         passport.authenticate(
             'local',
             (err, user, info)=>{
@@ -91,7 +91,7 @@ module.exports = (workerFactory, config) => {
                     return response.redirect('/');
                 }
                 request.logIn(user, (err)=>{
-                    console.log('logging in with local');
+                    // console.log('logging in with local');
                     if(err){return next(err);}
                     response.redirect('/#/log-and-plan');
                 });
@@ -116,7 +116,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle('user-find-one-and-update', query, data).then(
             (result) => {
-                console.log(`authCallback result is ${JSON.stringify(result)}`);
+                // console.log(`authCallback result is ${JSON.stringify(result)}`);
                 cb(null, result);
                 workerFactory.purge(worker.id);
             },
@@ -141,7 +141,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle('user-find-one', query, data).then(
             (result) => {
-                console.log(`localAuthCallback result is ${JSON.stringify(result)}`);
+                // console.log(`localAuthCallback result is ${JSON.stringify(result)}`);
                 if(result.private.local.password !== password) {
                     return done(null, false, {message: 'Wrong Password'})
                 }
@@ -149,7 +149,7 @@ module.exports = (workerFactory, config) => {
                 workerFactory.purge(worker.id);
             },
             (error) => {
-                console.log(`localAuthCallback error is ${JSON.stringify(error)}`);
+                // console.log(`localAuthCallback error is ${JSON.stringify(error)}`);
                 done({error: `${JSON.stringify(error)}`});
                 workerFactory.purge(result.worker.id);
             }
@@ -169,7 +169,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle("user-find-one", query, data).then(
             (result) => {
-                console.log(`fineOne result is ${JSON.stringify(result)}`);
+                // console.log(`fineOne result is ${JSON.stringify(result)}`);
                 done(null, result);
                 workerFactory.purge(worker.id);
             },
