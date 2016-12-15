@@ -89,12 +89,18 @@ module.exports = (workerFactory) => {
         let worker, query, data;
 
         worker = workerFactory.worker();
-        query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
-            sortOrder: request.params.sortOrder,
-            targetPeriod: request.params.targetPeriod,
-        };
+        // query = {
+        //     user: request.user._id.toString(),
+        //     payloadType: Number(request.params.payloadType),
+        //     sortOrder: request.params.sortOrder,
+        //     targetPeriod: request.params.targetPeriod,
+        // };
+        query = [
+            {$match: {userId: request.query.user, "labels.isDeleted": false}},
+            {$project: {_id:1, amount:1, monthCode: 1, isPlanned: {$cond:{if:{$eq:["$labels.isPlan",true]}, then:"plan", else:"fact"}}}},
+            {$match: {monthCode: request.query.targetPeriod}},
+            {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
+            {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}];
         data = undefined;
 
         worker.handle('get-month-data', query, data).then(
