@@ -96,9 +96,9 @@ module.exports = (workerFactory) => {
         //     targetPeriod: request.params.targetPeriod,
         // };
         query = [
-            {$match: {userId: request.query.user, "labels.isDeleted": false}},
+            {$match: {userId: request.user._id, "labels.isDeleted": false}},
             {$project: {_id:1, amount:1, monthCode: 1, isPlanned: {$cond:{if:{$eq:["$labels.isPlan",true]}, then:"plan", else:"fact"}}}},
-            {$match: {monthCode: request.query.targetPeriod}},
+            {$match: {monthCode: request.params.targetPeriod}},
             {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
             {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}];
         data = undefined;
