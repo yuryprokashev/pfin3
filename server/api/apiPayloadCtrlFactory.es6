@@ -7,7 +7,10 @@ module.exports = (workerFactory) => {
 
     apiPayloadCtrl.getPayloads = (request, response) => {
 
-        let query = {
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+        query = {
             user: request.user._id.toString(),
             payloadType: Number(request.params.payloadType),
             sortOrder: {},
@@ -21,13 +24,17 @@ module.exports = (workerFactory) => {
             case 6:
                 query.monthCode = request.params.dayCode;
         }
-        let worker = workerFactory.worker("payload", undefined);
-        worker.handle(query, response).then(
+
+        data = undefined;
+
+        worker.handle('get-payload', query, data).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         )
 
@@ -103,7 +110,7 @@ module.exports = (workerFactory) => {
             {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}];
         data = undefined;
 
-        worker.handle('get-month-data', query, data).then(
+        worker.handle('agg-month-data', query, data).then(
             (result) => {
                 response.json(result);
                 workerFactory.purge(worker.id);
