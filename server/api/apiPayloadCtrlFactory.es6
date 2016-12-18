@@ -14,6 +14,7 @@ module.exports = (workerFactory) => {
             user: request.user._id.toString(),
             payloadType: Number(request.params.payloadType),
             sortOrder: {},
+            'labels.isDeleted': false
         };
 
         switch (request.params.dayCode.length) {
