@@ -57,7 +57,7 @@ module.exports = (workerFactory) => {
             targetPeriod: request.params.targetPeriod,
             sourcePeriod: request.params.sourcePeriod,
             commandType: request.params.commandType,
-            occuredAt: new Date().valueOf()
+            occurredAt: new Date().valueOf()
         };
         let worker = workerFactory.worker("copyPayload", request.params.commandId);
         worker.handle(query, response).then(
@@ -77,7 +77,7 @@ module.exports = (workerFactory) => {
             sortOrder:{},
             targetPeriod: request.params.targetPeriod,
             commandType: request.params.commandType,
-            occuredAt: new Date().valueOf()
+            occurredAt: new Date().valueOf()
         };
         let worker = workerFactory.worker("clearPayload", request.params.commandId);
         worker.handle(query, response).then(

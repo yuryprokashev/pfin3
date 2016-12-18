@@ -46,7 +46,7 @@ Message = function(user, sourceId, type, emp, userToken, commandId) {
 
     this.commandId = commandId;
 
-    this.occuredAt = MyDates.now();
+    this.occurredAt = MyDates.now();
 };
 
 

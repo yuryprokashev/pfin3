@@ -28,7 +28,7 @@ describe('Message', function () {
             var emp = new ExpenseMessagePayload(mp, 1000, "test");
             var m = new Message("wwehjwerkjqw02134", 1, 1, emp);
 
-            expect(m.occuredAt).to.be.a('number');
+            expect(m.occurredAt).to.be.a('number');
         });
 
         it('should throw an Error, when "user" does not exists OR not String', function () {

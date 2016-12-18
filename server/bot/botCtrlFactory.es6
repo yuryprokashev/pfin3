@@ -52,7 +52,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         let worker;
         worker = workerFactory.worker('botMessage');
         query = {
-            occuredAt: item.update.message.date,
+            occurredAt: item.update.message.date,
             sourceId: 2,
             user: item.user.msg._id,
             payload: {

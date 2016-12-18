@@ -19,7 +19,7 @@ class BotMessageWorker2 extends Worker2 {
         };
 
         data = {
-            occuredAt: item.update.message.date,
+            occurredAt: item.update.message.date,
             sourceId: 2,
             user: item.user.msg._id,
             payload: {
