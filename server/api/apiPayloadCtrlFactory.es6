@@ -11,8 +11,8 @@ module.exports = (workerFactory) => {
 
         worker = workerFactory.worker();
         query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
+            userID: request.user._id.toString(),
+            type: Number(request.params.payloadType),
             sortOrder: {},
             'labels.isDeleted': false
         };
