@@ -83,6 +83,7 @@ module.exports = (workerFactory) => {
             userId: request.user._id.toString(),
             type: Number(request.params.payloadType),
             monthCode: request.params.sourcePeriod,
+            'labels.isDeleted': false
         };
 
         data = {
