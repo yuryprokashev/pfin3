@@ -43,10 +43,10 @@ module.exports = (workerFactory) => {
 
     apiPayloadCtrl.handleCommand = (request, response) => {
         if (/copy/.test(request.url)) {
-            handleCopyCommand(request,response);
+            handleCopyCommand2(request,response);
         }
         else if(/clear/.test(request.url)) {
-            handleClearCommand(request, response)
+            handleClearCommand(request, response);
         }
     };
 
@@ -70,6 +70,40 @@ module.exports = (workerFactory) => {
             }
         )
     };
+
+    let handleCopyCommand2 = (request, response) => {
+
+        let worker, query, data;
+
+        let newDayCode;
+
+        worker = workerFactory.worker();
+
+        query = {
+            userId: request.user._id.toString(),
+            type: Number(request.params.payloadType),
+            monthCode: request.params.sourcePeriod,
+        };
+
+        data = {
+            monthCode: request.params.targetPeriod,
+            occurredAt: new Date().valueOf(),
+            commandId: request.params.commandId
+        };
+
+        worker.handle('copy-payload', query, data).then(
+            (result) => {
+                response.json(result);
+                workerFactory.purge(worker.id);
+            },
+            (error) => {
+                response.json(error);
+                workerFactory.purge(worker.id);
+            }
+        )
+    };
+
+
 
     let handleClearCommand = (request, response) => {
         let query = {
@@ -97,12 +131,7 @@ module.exports = (workerFactory) => {
         let worker, query, data;
 
         worker = workerFactory.worker();
-        // query = {
-        //     user: request.user._id.toString(),
-        //     payloadType: Number(request.params.payloadType),
-        //     sortOrder: request.params.sortOrder,
-        //     targetPeriod: request.params.targetPeriod,
-        // };
+
         query = [
             {$match: {userId: request.user._id, "labels.isDeleted": false}},
             {$project: {_id:1, amount:1, monthCode: 1, isPlanned: {$cond:{if:{$eq:["$labels.isPlan",true]}, then:"plan", else:"fact"}}}},
