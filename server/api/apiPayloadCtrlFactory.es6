@@ -43,7 +43,7 @@ module.exports = (workerFactory) => {
 
     apiPayloadCtrl.handleCommand = (request, response) => {
         if (/copy/.test(request.url)) {
-            handleCopyCommand2(request,response);
+            handleCopyCommand(request,response);
         }
         else if(/clear/.test(request.url)) {
             handleClearCommand(request, response);
@@ -51,31 +51,8 @@ module.exports = (workerFactory) => {
     };
 
     let handleCopyCommand = (request, response) => {
-        let query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
-            sortOrder:{},
-            targetPeriod: request.params.targetPeriod,
-            sourcePeriod: request.params.sourcePeriod,
-            commandType: request.params.commandType,
-            occurredAt: new Date().valueOf()
-        };
-        let worker = workerFactory.worker("copyPayload", request.params.commandId);
-        worker.handle(query, response).then(
-            (result) => {
-                send(result, workerFactory);
-            },
-            (error) => {
-                send(error, workerFactory);
-            }
-        )
-    };
-
-    let handleCopyCommand2 = (request, response) => {
 
         let worker, query, data;
-
-        let newDayCode;
 
         worker = workerFactory.worker();
 
@@ -107,21 +84,27 @@ module.exports = (workerFactory) => {
 
 
     let handleClearCommand = (request, response) => {
-        let query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
-            sortOrder:{},
-            targetPeriod: request.params.targetPeriod,
-            commandType: request.params.commandType,
-            occurredAt: new Date().valueOf()
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {
+            userId: request.user._id.toString(),
+            type: Number(request.params.payloadType),
+            monthCode: request.params.targetPeriod,
+            'labels.isDeleted': false
         };
-        let worker = workerFactory.worker("clearPayload", request.params.commandId);
+
+        data = undefined;
+
         worker.handle(query, response).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         )
 
