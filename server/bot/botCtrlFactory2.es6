@@ -20,7 +20,6 @@ module.exports = (workerFactory, httpCtrl, config) => {
             (resolve, reject) => {
                 worker.handle('user-find-one', query, data).then(
                     (result) => {
-                        console.log(result);
                         resolve({update: tgUpdate, user: result});
                     },
                     (error) => {
@@ -41,7 +40,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         data = {
             occurredAt: promiseResult.update.message.date,
             sourceId: 2,
-            userId: promiseResult.user.msg._id,
+            userId: promiseResult.user._id,
             payload: {
                 chatId: promiseResult.update.message.chat.id,
                 messageId: promiseResult.update.message.message_id,
