@@ -20,6 +20,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
             (resolve, reject) => {
                 worker.handle('user-find-one', query, data).then(
                     (result) => {
+                        console.log(result);
                         resolve({update: tgUpdate, user: result});
                     },
                     (error) => {
