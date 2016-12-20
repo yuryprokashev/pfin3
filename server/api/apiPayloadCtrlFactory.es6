@@ -81,8 +81,6 @@ module.exports = (workerFactory) => {
         )
     };
 
-
-
     let handleClearCommand = (request, response) => {
         let worker, query, data;
 

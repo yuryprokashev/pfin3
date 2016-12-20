@@ -3,7 +3,7 @@
  */
 
 'use strict';
-const Worker2 = require('./Worker2.es6');
+const Worker2 = require('./Worker.es6');
 class BotMessageWorker2 extends Worker2 {
     constructor(id, commandId, bus) {
         super(id, commandId, bus);
