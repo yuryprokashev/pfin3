@@ -16,6 +16,8 @@ module.exports = (workerFactory) => {
         worker = workerFactory.worker();
         query = {};
         data = request.body;
+        data.userId = data.user;
+        delete data['user'];
 
         worker.handle('create-message', query, data).then(
             (result) => {

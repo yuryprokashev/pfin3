@@ -4,7 +4,66 @@
 
 'use strict';
 module.exports = (workerFactory, httpCtrl, config) => {
-    let handleUpdate, appendUserToUpdate;
+
+    const appendUserToUpdate = (tgUpdate) => {
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {
+            "private.telegramId": tgUpdate.message.from.id
+        };
+
+        data = undefined;
+
+        return new Promise(
+            (resolve, reject) => {
+                worker.handle('user-find-one', query, data).then(
+                    (result) => {
+                        resolve({update: tgUpdate, user: result});
+                    },
+                    (error) => {
+                        reject({update: tgUpdate, user: undefined, error: error});
+                    }
+                )
+            }
+        );
+    };
+
+    const handleUpdate = (promiseResult) => {
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {};
+
+        data = {
+            occurredAt: promiseResult.update.message.date,
+            sourceId: 2,
+            userId: promiseResult.user.msg._id,
+            payload: {
+                chatId: promiseResult.update.message.chat.id,
+                messageId: promiseResult.update.message.message_id,
+                text: promiseResult.update.message.text,
+                entities: promiseResult.update.message.entities
+            }
+        };
+
+        worker.handle('create-message', query, data).then(
+            (result) => {
+                let message;
+                message = {chat_id: promiseResult.update.message.chat.id, text: `Saved: "${promiseResult.update.message.text}"`};
+                httpCtrl.sendMessage(message);
+            },
+            (error) => {
+                let message;
+                message = {chat_id: promiseResult.update.message.chat.id, text: `ERROR: Can't save "${promiseResult.update.message.text}"`};
+                httpCtrl.sendMessage(message);
+
+
+            }
+        )
+    };
 
     const botCtrl = {};
 
@@ -23,6 +82,8 @@ module.exports = (workerFactory, httpCtrl, config) => {
             }
         );
     };
+
+
 
 
 
