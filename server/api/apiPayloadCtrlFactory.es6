@@ -97,7 +97,7 @@ module.exports = (workerFactory) => {
 
         data = undefined;
 
-        worker.handle(query, response).then(
+        worker.handle('clear-payload', query,data).then(
             (result) => {
                 response.json(result);
                 workerFactory.purge(worker.id);
@@ -122,6 +122,7 @@ module.exports = (workerFactory) => {
             {$match: {monthCode: request.params.targetPeriod}},
             {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
             {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}];
+
         data = undefined;
 
         worker.handle('agg-month-data', query, data).then(
@@ -134,11 +135,6 @@ module.exports = (workerFactory) => {
                 workerFactory.purge(worker.id);
             }
         );
-    };
-
-    let send = (data, workerFactory) => {
-        data.response.json(data.msg);
-        workerFactory.purge(data.worker.id);
     };
 
     return apiPayloadCtrl;
