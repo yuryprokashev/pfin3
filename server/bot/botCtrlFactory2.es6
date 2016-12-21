@@ -54,7 +54,8 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 worker.subscribe('create-message-response-processed',
                     (kafkaMessage) => {
                         let message;
-                        message = {chat_id: promiseResult.update.message.chat.id, text: `Saved to Payloads: "${result}"`};
+                        let v = JSON.parse(kafkaMessage.value).response;
+                        message = {chat_id: promiseResult.update.message.chat.id, text: `Status: "${JSON.stringify(v)}"`};
                         httpCtrl.sendMessage(message);
                     }
                 );
