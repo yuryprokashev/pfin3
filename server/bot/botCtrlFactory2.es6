@@ -38,14 +38,22 @@ module.exports = (workerFactory, httpCtrl, config) => {
         query = {};
 
         data = {
-            occurredAt: promiseResult.update.message.date,
-            sourceId: 2,
+            occurredAt: promiseResult.update.message.date * 1000, // tg sends seconds, not milliseconds
+            sourceId: 2, // 1 - browser, 2 - tg bot
             userId: promiseResult.user._id,
             payload: {
-                chatId: promiseResult.update.message.chat.id,
-                messageId: promiseResult.update.message.message_id,
-                text: promiseResult.update.message.text,
-                entities: promiseResult.update.message.entities
+                type: 0, // meaning other than expense (unsorted)
+                amount: undefined,
+                dayCode: transformTgDateToCode('day', promiseResult.update.message.date),
+                monthCode: transformTgDateToCode('month', promiseResult.update.message.date),
+                description: promiseResult.update.message.text,
+                labels: {
+                    isDeleted:false,
+                    isPlan: false
+                }
+
+
+                // entities: promiseResult.update.message.entities
             }
         };
 
@@ -68,6 +76,26 @@ module.exports = (workerFactory, httpCtrl, config) => {
 
             }
         )
+    };
+
+    const transformTgDateToCode = (codeType, tgDate) => {
+        let d, year, month, day;
+
+        d = new Date(tgDate*1000);
+        year = d.getFullYear();
+        month = d.getMonth() + 1;
+        day = d.getDate();
+
+        switch (codeType){
+            case 'day':
+                return `${year}${month}${day}`;
+                break;
+            case 'month':
+                return `${year}${month}`;
+                break;
+            default:
+                return null;
+        }
     };
 
     const botCtrl = {};
