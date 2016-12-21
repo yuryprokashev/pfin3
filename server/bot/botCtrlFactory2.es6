@@ -51,9 +51,13 @@ module.exports = (workerFactory, httpCtrl, config) => {
 
         worker.handle('create-message', query, data).then(
             (result) => {
-                let message;
-                message = {chat_id: promiseResult.update.message.chat.id, text: `Saved: "${promiseResult.update.message.text}"`};
-                httpCtrl.sendMessage(message);
+                worker.subscribe('create-message-response-processed',
+                    (kafkaMessage) => {
+                        let message;
+                        message = {chat_id: promiseResult.update.message.chat.id, text: `Saved to Payloads: "${result}"`};
+                        httpCtrl.sendMessage(message);
+                    }
+                );
             },
             (error) => {
                 let message;
@@ -82,11 +86,6 @@ module.exports = (workerFactory, httpCtrl, config) => {
             }
         );
     };
-
-
-
-
-
 
     return botCtrl;
 };
