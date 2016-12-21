@@ -65,6 +65,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                         let v = JSON.parse(kafkaMessage.value).response;
                         message = {chat_id: promiseResult.update.message.chat.id, text: `Status: "${JSON.stringify(v.description)}"`};
                         httpCtrl.sendMessage(message);
+                        workerFactory.purge(worker.id);
                     }
                 );
             },
@@ -72,8 +73,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 let message;
                 message = {chat_id: promiseResult.update.message.chat.id, text: `ERROR: Can't save "${promiseResult.update.message.text}"`};
                 httpCtrl.sendMessage(message);
-
-
+                workerFactory.purge(worker.id);
             }
         )
     };
