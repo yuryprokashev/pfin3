@@ -52,8 +52,6 @@ module.exports = (workerFactory, httpCtrl, config) => {
                     isPlan: false
                 }
 
-
-                // entities: promiseResult.update.message.entities
             }
         };
 
@@ -63,7 +61,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                     (kafkaMessage) => {
                         let message;
                         let v = JSON.parse(kafkaMessage.value).response;
-                        message = {chat_id: promiseResult.update.message.chat.id, text: `Status: "${JSON.stringify(v.description)}"`};
+                        message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
                         httpCtrl.sendMessage(message);
                         workerFactory.purge(worker.id);
                     }
