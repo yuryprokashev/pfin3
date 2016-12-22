@@ -1,5 +1,5 @@
-<!--<div class = "row">-->
-    <div class="col-md-10">
+<div class = "row">
+    <div class="col-md-12">
         <p class="text-center"
            ng-class = "{'text-primary': isHoverIcon, 'text-muted': !isHoverIcon}">
             <i class="fa fa-chevron-up fa-2x"
@@ -9,7 +9,7 @@
                aria-hidden="true"></i>
         </p>
     </div>
-    <div class = "col-md-10" ng-repeat = "m in self.months.slice(self.html.window[0], self.html.window[1])  track by $index">
+    <div class = "col-md-12" ng-repeat = "m in self.months.slice(self.html.window[0], self.html.window[1])  track by $index">
         <ctx-menu-btn ext-ctx-menu = "m.ctxMenu"
                       ng-show = "true"></ctx-menu-btn>
         <div class = "panel" ng-class = "{'panel-primary': m.html.isSelected, 'panel-default': !m.html.isSelected}"
@@ -31,7 +31,7 @@
             </div>
         </div>
     </div>
-    <div class = "col-md-10">
+    <div class = "col-md-12">
         <p class="text-center"
            ng-class = "{'text-primary': isHoverIcon, 'text-muted': !isHoverIcon}">
             <i class="fa fa-chevron-down fa-2x"
@@ -41,4 +41,4 @@
                aria-hidden="true"></i>
         </p>
     </div>
-<!--</div>-->
+</div>
