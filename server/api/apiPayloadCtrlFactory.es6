@@ -12,7 +12,7 @@ module.exports = (workerFactory) => {
         worker = workerFactory.worker();
         query = {
             userId: request.user._id.toString(),
-            type: Number(request.params.payloadType),
+            // type: Number(request.params.payloadType),
             sortOrder: {},
             'labels.isDeleted': false
         };

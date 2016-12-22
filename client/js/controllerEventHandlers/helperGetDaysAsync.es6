@@ -10,7 +10,7 @@ const UIItem = require('../UIItem.es6');
 function helperGetDaysAsync (scope, http) {
     // HELPERS
     function getAllItemsForMonth(fnSuccess, fnError) {
-        http.get('/browser/api/v1/payload/' + scope.state.monthRef.monthString + '/1/dayCode/-1').then(fnSuccess).catch(fnError);
+        http.get('/browser/api/v1/payload/' + scope.state.monthRef.monthString + '/dayCode/-1').then(fnSuccess).catch(fnError);
     }
     function setItemsToDays(response) {
         // let days = $scope.view.calendarView.getFlatDays();
