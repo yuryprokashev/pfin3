@@ -32,10 +32,9 @@ Day = function (dayNum, weekNum, month, state, weekDayNum) {
         self.month = month;
         self.timeWindow = self.month + MyDates.dayToString(dayNum);
         var dayCode = self.timeWindow;
-        var payloadType = self.state.payloadType;
         var sortParam = self.state.sortParam;
         var sortOrder = self.state.sortOrder;
-        self.getUrl = `/browser/api/v1/payload/${dayCode}/${payloadType}/${sortParam}/${sortOrder}`;
+        self.getUrl = `/browser/api/v1/payload/${dayCode}/${sortParam}/${sortOrder}`;
         // self.getUrl = `api/v1/day/${dayCode}`;
         return self;
     };
