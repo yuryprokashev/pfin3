@@ -10,7 +10,7 @@ var ExpenseMessagePayload;
 // param: String id - optional parameter, id of existing expense.
 // function: Object constructor
 // return: ExpenseMessagePayload object
-ExpenseMessagePayload = function (p, amount, desc, id) {
+ExpenseMessagePayload = function (p, amount, desc, id, type) {
     // this.messagePayload = p;
     this.dayCode = p.dayCode;
     this.monthCode = p.monthCode;
@@ -35,6 +35,12 @@ ExpenseMessagePayload = function (p, amount, desc, id) {
     }
     else {
         this.id = id;
+    }
+    if(type === undefined) {
+        this.type = 0; // unsorted
+    }
+    else {
+        this.type = type;
     }
 };
 
