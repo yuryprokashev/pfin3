@@ -40,7 +40,7 @@
         </p>
         <div class = "list-group">
             <div class="list-group-item" ng-repeat = "e in self.html.shownItems track by $index">
-                <item ext-item = "e"></item>
+                <item ext-item = "e" ng-if = "e.type == self.state.payloadType"></item>
             </div>
         </div>
     </div>

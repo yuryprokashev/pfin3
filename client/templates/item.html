@@ -1,7 +1,6 @@
 <div>
     <p class = "item text-muted small truncate-ellipsis copied-{{self.isCopied}}"
        ng-class = "{'highlight-on-hover': isHover, 'is-not-synced': self.isItemProcessing, 'is-planned': self.labels.isPlan, 'is-not-synced': !self.isSaved}"
-       ng-if = "self.type == self.state.payloadType"
        ng-mouseenter = "isHover = true"
        ng-mouseleave = "isHover = false" draggable = "true">{{self.amount | number : 0}} {{self.description}}</p>
     <!--<p class = 'tip' ng-if = "self.isCopied">Copied</p>-->
