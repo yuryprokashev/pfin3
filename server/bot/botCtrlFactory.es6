@@ -57,19 +57,16 @@ module.exports = (workerFactory, httpCtrl, config) => {
 
         worker.handle('create-message', query, data).then(
             (result) => {
-                workerFactory.purge(worker.id);
-                
-                let nextWorker = workerFactory.worker();
-
-                nextWorker.subscribe('create-message-response-processed',
+                worker.subscribe('create-message-response-processed',
                     (kafkaMessage) => {
                         let message;
                         let v = JSON.parse(kafkaMessage.value).response;
                         message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
                         httpCtrl.sendMessage(message);
-                        workerFactory.purge(nextWorker.id);
+                        workerFactory.purge(worker.id);
                     }
                 );
+
             },
             (error) => {
                 let message;
@@ -77,7 +74,9 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 httpCtrl.sendMessage(message);
                 workerFactory.purge(worker.id);
             }
-        )
+        );
+
+
     };
 
     const transformTgDateToCode = (codeType, tgDate) => {
