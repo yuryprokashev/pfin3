@@ -14,7 +14,7 @@
                       ng-show = "true"></ctx-menu-btn>
         <div class = "panel" ng-class = "{'panel-primary': m.html.isSelected, 'panel-default': !m.html.isSelected}"
              ng-click = "$emit('clicked::month', {month: m, index: $index})">
-            <div class = "panel-body"
+            <div style = "height: 5em" class = "panel-body"
                  ng-mouseenter = "$index === 0 || $index === 5 ? isHover = {'chevron': true, 'context': true} : isHover = {'chevron': false, 'context': true}"
                  ng-mouseleave = "isHover = {'chevron': false, 'context': false}">
 
