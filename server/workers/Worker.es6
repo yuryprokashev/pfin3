@@ -34,7 +34,7 @@
 */
 
 'use strict';
-class Worker2 {
+class Worker {
 
     constructor (id, commandId, bus) {
         this.id = id;
@@ -125,4 +125,4 @@ class Worker2 {
         }
     };
 }
-module.exports = Worker2;
+module.exports = Worker;
