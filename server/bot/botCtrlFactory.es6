@@ -61,9 +61,11 @@ module.exports = (workerFactory, httpCtrl, config) => {
                     (kafkaMessage) => {
                         let message;
                         let v = JSON.parse(kafkaMessage.value).response;
-                        message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
-                        httpCtrl.sendMessage(message);
-                        workerFactory.purge(worker.id);
+                        if(v.id === worker.id) {
+                            message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
+                            httpCtrl.sendMessage(message);
+                            workerFactory.purge(worker.id);
+                        }
                     }
                 );
             },
