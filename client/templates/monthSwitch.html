@@ -26,7 +26,7 @@
                         {{m.html.all() | number : 0}}
                         <i class="fa fa-{{self.html.currency}}" aria-hidden="true"></i>
                     </p>
-                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected"></progress>
+                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected && self.state.payloadType === 1"></progress>
                 </div>
             </div>
         </div>
