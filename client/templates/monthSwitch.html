@@ -14,19 +14,19 @@
                       ng-show = "true"></ctx-menu-btn>
         <div class = "panel" ng-class = "{'panel-primary': m.html.isSelected, 'panel-default': !m.html.isSelected}"
              ng-click = "$emit('clicked::month', {month: m, index: $index})">
-            <div style = "height: 5em" class = "panel-body"
+            <div class = "panel-body"
                  ng-mouseenter = "$index === 0 || $index === 5 ? isHover = {'chevron': true, 'context': true} : isHover = {'chevron': false, 'context': true}"
                  ng-mouseleave = "isHover = {'chevron': false, 'context': false}">
 
                 <div style = "height: 2.5em;">
                     <h4 class="text-center" ng-class = "{'text-muted': !m.html.isSelected}">{{m.html.formattedMonth}}</h4>
                 </div>
-                <div style="height: 2.5em" ng-if = "self.state.payloadType === 1">
-                    <p class="text-muted text-center" ng-show = "!m.html.isSelected">
+                <div style="height: 2.5em">
+                    <p class="text-muted text-center" ng-show = "!m.html.isSelected && self.state.payloadType === 1">
                         {{m.html.all() | number : 0}}
                         <i class="fa fa-{{self.html.currency}}" aria-hidden="true"></i>
                     </p>
-                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected"></progress>
+                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected && self.state.payloadType === 1"></progress>
                 </div>
             </div>
         </div>
