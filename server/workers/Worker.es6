@@ -93,7 +93,11 @@ class Worker2 {
     };
 
     subscribe (topic, callback) {
-        this.bus.subscribe(topic, callback);
+        this.bus.subscribe(topic, (kafkaMessage) => {
+            if(this.id === JSON.parse(kafkaMessage.value).id){
+                callback(kafkaMessage);
+            }
+        });
     };
 
     send (topic, context) {
