@@ -85,10 +85,10 @@ module.exports = (workerFactory, httpCtrl, config) => {
                         message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
                         httpCtrl.sendMessage(message);
                         deliveredKafkaMessages.set(kafkaMessage.offset, new Date().valueOf());
-                        console.log('http sent to telegram');
+                        // console.log('http sent to telegram');
                     }
                     else {
-                        console.log('offset delivered already. no http sent');
+                        // console.log('offset delivered already. no http sent');
                     }
                 });
 
