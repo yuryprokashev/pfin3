@@ -22,6 +22,12 @@ class WorkerFactory {
     purge(id) {
         this.currentWorkers.delete(id);
     }
+
+    log() {
+        for(let w of this.currentWorkers) {
+            console.log(JSON.stringify(w));
+        }
+    }
 }
 
 module.exports = WorkerFactory;

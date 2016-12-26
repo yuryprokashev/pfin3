@@ -34,6 +34,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         let worker, query, data;
 
         worker = workerFactory.worker();
+        workerFactory.log();
 
         query = {};
 
@@ -64,6 +65,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                         message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
                         httpCtrl.sendMessage(message);
                         workerFactory.purge(worker.id);
+                        workerFactory.log();
                     }
                 );
 
@@ -73,9 +75,9 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 message = {chat_id: promiseResult.update.message.chat.id, text: `ERROR: Can't save "${promiseResult.update.message.text}"`};
                 httpCtrl.sendMessage(message);
                 workerFactory.purge(worker.id);
+                workerFactory.log();
             }
         );
-
 
     };
 
