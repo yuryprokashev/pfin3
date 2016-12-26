@@ -6,30 +6,41 @@
 module.exports = (workerFactory, httpCtrl, config) => {
 
     const appendUserToUpdate = (tgUpdate) => {
-        let worker, query, data;
+        let users, worker, query, data;
+        users = new Map();
 
-        worker = workerFactory.worker();
+        if(users.has(tgUpdate.message.from.id.toString())) {
+            return new Promise(
+                (resolve, reject) => {
+                    resolve(users.get(tgUpdate.message.from.id.toString()))
+                }
+            )
+        }
+        else {
+            worker = workerFactory.worker();
 
-        query = {
-            "private.telegramId": tgUpdate.message.from.id
-        };
+            query = {
+                "private.telegramId": tgUpdate.message.from.id
+            };
 
-        data = undefined;
+            data = undefined;
 
-        return new Promise(
-            (resolve, reject) => {
-                worker.handle('user-find-one', query, data).then(
-                    (result) => {
-                        resolve({update: tgUpdate, user: result});
-                        workerFactory.purge(worker.id);
-                    },
-                    (error) => {
-                        reject({update: tgUpdate, user: undefined, error: error});
-                        workerFactory.purge(worker.id);
-                    }
-                )
-            }
-        );
+            return new Promise(
+                (resolve, reject) => {
+                    worker.handle('user-find-one', query, data).then(
+                        (result) => {
+                            users.set(tgUpdate.message.from.id.toString(), result);
+                            resolve({update: tgUpdate, user: result});
+                            workerFactory.purge(worker.id);
+                        },
+                        (error) => {
+                            reject({update: tgUpdate, user: undefined, error: error});
+                            workerFactory.purge(worker.id);
+                        }
+                    )
+                }
+            );
+        }
     };
 
     const handleUpdate = (promiseResult) => {
