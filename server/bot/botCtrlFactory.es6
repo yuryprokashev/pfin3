@@ -9,11 +9,11 @@ module.exports = (workerFactory, httpCtrl, config) => {
         let users, worker, query, data;
         users = new Map();
 
-        if(users.has(tgUpdate.message.from.id.toString())) {
+        if(users.has(tgUpdate.message.from.id)) {
             console.log('USER EXISTS IN CACHE!');
             return new Promise(
                 (resolve, reject) => {
-                    resolve({update: tgUpdate, user: users.get(tgUpdate.message.from.id.toString())});
+                    resolve({update: tgUpdate, user: users.get(tgUpdate.message.from.id)});
                 }
             )
         }
@@ -30,7 +30,8 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 (resolve, reject) => {
                     worker.handle('user-find-one', query, data).then(
                         (result) => {
-                            users.set(tgUpdate.message.from.id.toString(), result);
+                            users.set(tgUpdate.message.from.id, result);
+                            console.log(users);
                             resolve({update: tgUpdate, user: result});
                             workerFactory.purge(worker.id);
                         },
