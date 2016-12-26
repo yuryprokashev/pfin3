@@ -10,6 +10,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         users = new Map();
 
         if(users.has(tgUpdate.message.from.id.toString())) {
+            console.log('USER EXISTS IN CACHE!');
             return new Promise(
                 (resolve, reject) => {
                     resolve({update: tgUpdate, user: users.get(tgUpdate.message.from.id.toString())});
