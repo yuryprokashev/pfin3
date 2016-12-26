@@ -5,6 +5,10 @@
 "use strict";
 module.exports = (kafkaBus) =>{
 
+    let deliveredMessages;
+
+    deliveredMessages = new Map();
+
     let kafkaService = {};
 
     kafkaService.send = (topic, message)=>{
@@ -42,8 +46,11 @@ module.exports = (kafkaBus) =>{
             }
         };
         let onConsumerMessage = (message) => {
-            if(message.topic === topic){
+            let mKey;
+            mKey = `${message.topic}-${message.partition}-${message.offset}`;
+            if(message.topic === topic && !deliveredMessages.has(mKey)){
                 callback(message);
+                deliveredMessages.set(mKey, message);
             }
         };
         let onConsumerError = (err) => {
