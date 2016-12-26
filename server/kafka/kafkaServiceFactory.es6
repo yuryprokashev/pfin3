@@ -4,10 +4,7 @@
 
 "use strict";
 module.exports = (kafkaBus) =>{
-
-    let deliveredMessages;
-
-    deliveredMessages = new Map();
+    
 
     let kafkaService = {};
 
@@ -48,15 +45,8 @@ module.exports = (kafkaBus) =>{
         let onConsumerMessage = (message) => {
             let mKey;
             mKey = `${message.topic}-${message.partition}-${message.offset}`;
-            if(message.topic === topic && deliveredMessages.has(mKey) === false){
+            if(message.topic === topic){
                 callback(message);
-                if(deliveredMessages.size > 100) {
-                    let keys = deliveredMessages.keys();
-                    // keys.sort();
-                    console.log(keys);
-                }
-                deliveredMessages.set(mKey, new Date().valueOf());
-
             }
         };
         let onConsumerError = (err) => {
