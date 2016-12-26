@@ -4,8 +4,10 @@
 
 'use strict';
 module.exports = (workerFactory, httpCtrl, config) => {
-    let users;
+    let users, deliveredKafkaMessages;
     users = new Map();
+    deliveredKafkaMessages = new Map();
+
 
     const appendUserToUpdate = (tgUpdate) => {
         let worker, query, data;
@@ -75,13 +77,19 @@ module.exports = (workerFactory, httpCtrl, config) => {
         worker.handle('create-message', query, data).then(
             (result) => {
                 worker.subscribe('create-message-response-processed', (kafkaMessage) => {
-                    workerFactory.purge(worker.id);
                     console.log(JSON.stringify(kafkaMessage));
-                    let message;
-                    let v = JSON.parse(kafkaMessage.value).response;
-                    message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
-                    httpCtrl.sendMessage(message);
-
+                    if(!deliveredKafkaMessages.has(kafkaMessage.offset)) {
+                        workerFactory.purge(worker.id);
+                        let message;
+                        let v = JSON.parse(kafkaMessage.value).response;
+                        message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
+                        httpCtrl.sendMessage(message);
+                        deliveredKafkaMessages.set(kafkaMessage.offset, new Date().valueOf());
+                        console.log('http sent to telegram');
+                    }
+                    else {
+                        console.log('offset delivered already. no http sent');
+                    }
                 });
 
             },

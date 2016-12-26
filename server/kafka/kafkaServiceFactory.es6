@@ -4,7 +4,7 @@
 
 "use strict";
 module.exports = (kafkaBus) =>{
-    
+
 
     let kafkaService = {};
 
