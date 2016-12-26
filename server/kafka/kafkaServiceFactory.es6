@@ -50,7 +50,13 @@ module.exports = (kafkaBus) =>{
             mKey = `${message.topic}-${message.partition}-${message.offset}`;
             if(message.topic === topic && !deliveredMessages.has(mKey)){
                 callback(message);
-                deliveredMessages.set(mKey, message);
+                if(deliveredMessages.size > 3) {
+                    let keys = deliveredMessages.keys();
+                    keys.sort();
+                    console.log(keys);
+                }
+                deliveredMessages.set(mKey, new Date().valueOf());
+
             }
         };
         let onConsumerError = (err) => {
