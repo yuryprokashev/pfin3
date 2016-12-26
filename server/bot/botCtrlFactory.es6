@@ -12,7 +12,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         if(users.has(tgUpdate.message.from.id.toString())) {
             return new Promise(
                 (resolve, reject) => {
-                    resolve(users.get(tgUpdate.message.from.id.toString()))
+                    resolve({update: tgUpdate, user: users.get(tgUpdate.message.from.id.toString())});
                 }
             )
         }
