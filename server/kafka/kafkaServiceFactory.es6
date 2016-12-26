@@ -52,7 +52,7 @@ module.exports = (kafkaBus) =>{
                 callback(message);
                 if(deliveredMessages.size > 3) {
                     let keys = deliveredMessages.keys();
-                    keys.sort();
+                    // keys.sort();
                     console.log(keys);
                 }
                 deliveredMessages.set(mKey, new Date().valueOf());
