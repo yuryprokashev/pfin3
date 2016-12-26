@@ -75,12 +75,13 @@ module.exports = (workerFactory, httpCtrl, config) => {
         worker.handle('create-message', query, data).then(
             (result) => {
                 worker.subscribe('create-message-response-processed', (kafkaMessage) => {
+                    workerFactory.purge(worker.id);
                     console.log(JSON.stringify(kafkaMessage));
                     let message;
                     let v = JSON.parse(kafkaMessage.value).response;
                     message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
                     httpCtrl.sendMessage(message);
-                    workerFactory.purge(worker.id);
+
                 });
 
             },
