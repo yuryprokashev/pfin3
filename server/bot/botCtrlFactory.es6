@@ -11,10 +11,8 @@ module.exports = (workerFactory, httpCtrl, config) => {
         let worker, query, data;
 
 
-        console.log(users.has(tgUpdate.message.from.id));
-
         if(users.has(tgUpdate.message.from.id) === true) {
-            console.log('USER EXISTS IN CACHE!');
+            // console.log('USER EXISTS IN CACHE!');
             return new Promise(
                 (resolve, reject) => {
                     resolve({update: tgUpdate, user: users.get(tgUpdate.message.from.id)});
@@ -35,7 +33,6 @@ module.exports = (workerFactory, httpCtrl, config) => {
                     worker.handle('user-find-one', query, data).then(
                         (result) => {
                             users.set(tgUpdate.message.from.id, result);
-                            console.log(users);
                             resolve({update: tgUpdate, user: result});
                             workerFactory.purge(worker.id);
                         },
@@ -53,7 +50,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         let worker, query, data;
 
         worker = workerFactory.worker();
-        workerFactory.log();
+        // workerFactory.log();
 
         query = {};
 
@@ -84,7 +81,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                         message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
                         httpCtrl.sendMessage(message);
                         workerFactory.purge(worker.id);
-                        workerFactory.log();
+                        // workerFactory.log();
                     }
                 );
 
@@ -94,7 +91,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 message = {chat_id: promiseResult.update.message.chat.id, text: `ERROR: Can't save "${promiseResult.update.message.text}"`};
                 httpCtrl.sendMessage(message);
                 workerFactory.purge(worker.id);
-                workerFactory.log();
+                // workerFactory.log();
             }
         );
 
