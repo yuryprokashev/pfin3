@@ -4,12 +4,14 @@
 
 'use strict';
 module.exports = (workerFactory, httpCtrl, config) => {
+    let users;
+    users = new Map();
 
     const appendUserToUpdate = (tgUpdate) => {
-        let users, worker, query, data;
-        users = new Map();
+        let worker, query, data;
 
-        console.log(users.has(tgUpdate.message.from.id.toString()));
+
+        console.log(users.has(tgUpdate.message.from.id));
 
         if(users.has(tgUpdate.message.from.id) === true) {
             console.log('USER EXISTS IN CACHE!');
