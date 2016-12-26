@@ -21,9 +21,11 @@ module.exports = (workerFactory, httpCtrl, config) => {
                 worker.handle('user-find-one', query, data).then(
                     (result) => {
                         resolve({update: tgUpdate, user: result});
+                        workerFactory.purge(worker.id);
                     },
                     (error) => {
                         reject({update: tgUpdate, user: undefined, error: error});
+                        workerFactory.purge(worker.id);
                     }
                 )
             }
