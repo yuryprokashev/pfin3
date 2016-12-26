@@ -25,8 +25,9 @@ class WorkerFactory {
 
     log() {
         for(let w of this.currentWorkers) {
-            console.log(JSON.stringify(w));
+            console.log(`${JSON.stringify(w)} \n`);
         }
+        console.log('-----------------\n');
     }
 }
 
