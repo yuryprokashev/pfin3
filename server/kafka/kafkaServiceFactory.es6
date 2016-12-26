@@ -48,9 +48,9 @@ module.exports = (kafkaBus) =>{
         let onConsumerMessage = (message) => {
             let mKey;
             mKey = `${message.topic}-${message.partition}-${message.offset}`;
-            if(message.topic === topic && !deliveredMessages.has(mKey)){
+            if(message.topic === topic && deliveredMessages.has(mKey) === false){
                 callback(message);
-                if(deliveredMessages.size > 3) {
+                if(deliveredMessages.size > 100) {
                     let keys = deliveredMessages.keys();
                     // keys.sort();
                     console.log(keys);
