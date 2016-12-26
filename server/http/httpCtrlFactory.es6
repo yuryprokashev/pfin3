@@ -7,7 +7,7 @@ module.exports = (httpService, config) => {
 
     httpCtrl.sendMessage = (message) => {
         let path = `/bot${config.bot.token}/sendMessage`;
-        console.log('POSTING TO HTTP SERVICE');
+        // console.log('POSTING TO HTTP SERVICE');
         httpService.post(path, message);
     };
 
