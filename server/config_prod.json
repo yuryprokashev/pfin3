@@ -1,6 +1,6 @@
 {
   "db": {
-    "dbURL": "mongodb://pfdb.edufun.me:27017/pfin"
+    "dbURL": "mongodb://172.31.37.222:27017/pfin"
   },
   "passport": {
     "GOOGLE_CLIENT_ID": "746362895265-vh9obqfi1vph4u18ue0q04tl8dg4c3p5.apps.googleusercontent.com",
