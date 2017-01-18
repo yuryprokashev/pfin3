@@ -23,7 +23,7 @@ Month = function (t, state) {
     // return: self, so method can be chained.
     self.setUp = function(t) {
         self.monthString = t;
-        self.getUrl = `/browser/api/v1/payload/monthData/${self.monthString}`;
+        self.getUrl = `/browser/api/v1/payload/monthData/${self.monthString}/${self.monthString}`;
         self.ctxMenu = new ContextMenu(self.state, self);
         return self;
     };

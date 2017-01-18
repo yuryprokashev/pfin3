@@ -12,7 +12,7 @@ module.exports = (apiController) => {
     apiApp.get('/me', apiController.me);
     apiApp.get('/payload/:dayCode/:sortParam/:sortOrder', payloadCtrl.getPayloads);
     apiApp.get('/command/:commandType/:targetPeriod/:sourcePeriod/:payloadType/:commandId', payloadCtrl.handleCommand);
-    apiApp.get('/payload/monthData/:targetPeriod', payloadCtrl.getMonthData);
+    // apiApp.get('/payload/monthData/:targetPeriod', payloadCtrl.getMonthData);
     apiApp.get('/payload/monthData/:startMonth/:endMonth', payloadCtrl.getMonthData);
     apiApp.post('/message/:t', messageCtrl.handleStructuredMessage);
     return apiApp;
