@@ -34,7 +34,7 @@ Day = function (dayNum, weekNum, month, state, weekDayNum) {
         var dayCode = self.timeWindow;
         var sortParam = self.state.sortParam;
         var sortOrder = self.state.sortOrder;
-        self.getUrl = `/browser/api/v1/payload/${dayCode}/${sortParam}/${sortOrder}`;
+        self.getUrl = `/browser/api/v1/payload/dayData/${dayCode}/${sortParam}/${sortOrder}`;
         // self.getUrl = `api/v1/day/${dayCode}`;
         return self;
     };
