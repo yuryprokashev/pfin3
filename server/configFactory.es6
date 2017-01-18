@@ -18,6 +18,7 @@ module.exports = (kafkaService) => {
         let message = JSON.parse(kafkaMessage.value);
         if(message.requestId === requestId) {
             config = message.responsePayload[0];
+            console.log(JSON.stringify(config));
             configService.emit('ready');
         }
     });
