@@ -11,6 +11,7 @@ const updateDayFromServer = require('./helperUpdateDayFromServer.es6');
 function handleClickedItemBtn (event, args, scope, http) {
 
     var pushCallback = function pushCallback(pushData) {
+        // console.log(`this is push arrived ${pushData}`);
         var dayNum = MyDates.getDateFromString(pushData);
         var week = setWeekRef(dayNum, scope);
         var day = week.getDayRef(pushData);

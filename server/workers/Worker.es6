@@ -1,76 +1,128 @@
 /**
- *Created by py on 08/11/2016
+ *Created by py on 13/12/2016
  */
-"use strict";
-// const EventEmitter = require('events').EventEmitter;
+/**
+* Worker is responsible for sending queries to particular Kafka topic
+ * and outputs the result of these queries.
+ * Worker 'handle' method, which returns Promise.
+ * 'handle' method gets three things as input:
+ * 1) Topic Prefix
+ * Required.
+ * The Kafka Topic prefix (one without '-request' or '-response').
+ * The one which this Worker instance will subscribe and will send the Query and Data.
+ * If undefined, Worker.handle will resolve to {error: 'topic is not defined'}
+ *
+ * 2) Query object.
+ * Required.
+ * Object with data fields for selection and sorting.
+ * If undefined, Worker.handle will resolve to {error: 'query is not defined'}
+ *
+ * 3) Data object.
+ * Optional. Object with data to write into DB (createOrUpdate operation).
+ *
+ * Returns Promise, that will resolve to MontData object: {total: {plan: 100, fact: 200}}.
+ * Promise will be rejected with errors in following cases:
+ * 1) Payload service replied with KafkaMessage with no Context:
+ * {error: 'kafkaMessage contains no value'}
+ *
+ * 2) Payload service replied with KafkaMessage with Context, but it has empty response property:
+ * {error: 'context.response is empty'}
+ *
+ * 3) Topic is undefined or not string: {error: 'topic is not defined or not string'}
+ *
+ * 4) Query is undefined or not object: {error: 'query is not defined or not object'}
+*/
 
+'use strict';
 class Worker {
-    constructor(id, commandId, bus){
+
+    constructor (id, commandId, bus) {
         this.id = id;
-        this.commandId = commandId || undefined;
-        this.busValue = {
-            requestId: id,
-            requestPayload: {},
-            requestErrors:[]
-        };
         this.bus = bus;
-    }
+        this.commandId = commandId || undefined;
+    };
 
-    handle(request) {
+    handle (topicPrefix, query, data) {
+        let _this = this;
+        return new Promise(
+            (res, rej) => {
 
-    }
+                let context;
+                if(topicPrefix === undefined || typeof topicPrefix !== 'string') {
+                    rej({error: 'topic is not defined or not string'});
+                }
+                if(query === undefined || typeof query !== 'object') {
+                    rej({error: 'query is not defined or not object'});
+                }
+                if(data) {
+                    context = _this.createWriteContext(query, data);
+                }
+                else {
+                    context = _this.createReadContext(query);
+                }
 
-    extract (request) {
-        function isPOST(){
-            return request.body !== undefined && request.method === 'POST';
+                _this.subscribe(`${topicPrefix}-response`,
+                    ((resolve, reject) => {
+                    return (kafkaMessage) => {
+                        _this.answer(kafkaMessage, resolve, reject);
+                    }
+                })(res, rej));
+
+                _this.send(`${topicPrefix}-request`, context);
+            }
+        )
+
+    };
+
+    answer (kafkaMessage, resolve, reject) {
+        let context = JSON.parse(kafkaMessage.value);
+        // check if context has been passed from service
+        if(context === undefined) {
+            reject({error: 'kafkaMessage contains no value'});
         }
-
-        function isGET() {
-            return request.method === "GET";
+        // filter only this worker response
+        if(context.id === this.id) {
+            if(context.response === undefined) {
+                reject({error: 'context.response is empty'});
+            }
+            if(context.response.error !== undefined) {
+                reject(context.response);
+            }
+            resolve(context.response);
         }
+    };
 
-        if(isGET()){
-            this.busValue.requestPayload = request.params;
-            return this;
+    subscribe (topic, callback) {
+        this.bus.subscribe(topic, (kafkaMessage) => {
+            if(this.id === JSON.parse(kafkaMessage.value).id){
+                callback(kafkaMessage);
+            }
+        });
+    };
+
+    send (topic, context) {
+        this.bus.send(topic, context);
+    };
+
+    createReadContext (query) {
+        return {
+            id: this.id,
+            request: {
+                query: query
+            },
+            response: undefined
         }
+    };
 
-        if(isPOST()) {
-            this.busValue.requestPayload = request.body;
-            return this;
+    createWriteContext (query, data) {
+        return {
+            id: this.id,
+            request: {
+                query: query,
+                writeData: data
+            },
+            response: undefined
         }
-    }
-
-    parseMsgValue(msg){
-        return JSON.parse(msg.value);
-    }
-
-    parseResponsePayload(msg, key) {
-        return JSON.parse(JSON.parse(msg.value).responsePayload[key]);
-    }
-
-    isMyResponse(msg){
-        let responseRequestId = JSON.parse(msg.value).requestId;
-        return responseRequestId === this.busValue.requestId;
-    }
-
-    isErrors (msg) {
-        return JSON.parse(msg.value).errorName !== undefined;
-    }
-
-    assembleErrors(msg) {
-        return JSON.parse(msg.value).errorName;
-    }
-
-    subscribe(topic, callback){
-        this.bus.subscribe(topic, callback);
-    }
-    send(topic, message){
-        this.bus.send(topic, message);
-    }
-
-
-
-
+    };
 }
-
 module.exports = Worker;

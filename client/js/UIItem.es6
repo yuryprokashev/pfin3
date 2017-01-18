@@ -26,7 +26,7 @@ class UIItem {
         item.__v = obj.__v;
         item.campaignId = obj.campaignId;
         item.messageId = obj.messageId;
-        item.occuredAt = obj.occuredAt;
+        item.occurredAt = obj.occurredAt;
         item.sourceId = obj.sourceId;
         item.storedAt = obj.storedAt;
         item.userId = obj.userId;

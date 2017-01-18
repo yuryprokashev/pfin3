@@ -3,13 +3,13 @@
  */
 
 "use strict";
-module.exports = (kafkaService, workerFactory, config) =>{
+module.exports = (workerFactory, config) =>{
     const apiController = {};
     const status = require('http-status');
     const apiPayloadCtrlFactory = require('./apiPayloadCtrlFactory.es6');
     const apiMessageCtrlFactory = require('./apiMessageCtrlFactory.es6');
-    apiController.payload = apiPayloadCtrlFactory(kafkaService, workerFactory);
-    apiController.message = apiMessageCtrlFactory(kafkaService, workerFactory);
+    apiController.payload = apiPayloadCtrlFactory(workerFactory);
+    apiController.message = apiMessageCtrlFactory(workerFactory);
 
     apiController.configPusher = (request, response) => {
         if(!request.user) {

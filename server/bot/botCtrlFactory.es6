@@ -1,55 +1,143 @@
 /**
- *Created by py on 29/11/2016
+ *Created by py on 14/12/2016
  */
+
 'use strict';
 module.exports = (workerFactory, httpCtrl, config) => {
-    const botCtrl = {};
-    let updatesWithUsers = [];
-    //@param: telegram updates array
-    //@function: create one kafka message to 'bot-updates-request'
-    // for each update and create listeners for 'bot-updates-response'
-    botCtrl.handleUpdates = (updates) => {
-        updatesWithUsers = updates.map(appendUserToUpdate);
-        Promise.all(updatesWithUsers).then(
-            (items) => {
-                items.forEach(handleUpdate);
+    let users, deliveredKafkaMessages;
+    users = new Map();
+    deliveredKafkaMessages = new Map();
+
+
+    const appendUserToUpdate = (tgUpdate) => {
+        let worker, query, data;
+
+
+        if(users.has(tgUpdate.message.from.id) === true) {
+            // console.log('USER EXISTS IN CACHE!');
+            return new Promise(
+                (resolve, reject) => {
+                    resolve({update: tgUpdate, user: users.get(tgUpdate.message.from.id)});
+                }
+            )
+        }
+        else {
+            worker = workerFactory.worker();
+
+            query = {
+                "private.telegramId": tgUpdate.message.from.id
+            };
+
+            data = undefined;
+
+            return new Promise(
+                (resolve, reject) => {
+                    worker.handle('user-find-one', query, data).then(
+                        (result) => {
+                            users.set(tgUpdate.message.from.id, result);
+                            resolve({update: tgUpdate, user: result});
+                            workerFactory.purge(worker.id);
+                        },
+                        (error) => {
+                            reject({update: tgUpdate, user: undefined, error: error});
+                            workerFactory.purge(worker.id);
+                        }
+                    )
+                }
+            );
+        }
+    };
+
+    const handleUpdate = (promiseResult) => {
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+        // workerFactory.log();
+
+        query = {};
+
+        data = {
+            occurredAt: promiseResult.update.message.date * 1000, // tg sends seconds, not milliseconds
+            sourceId: 2, // 1 - browser, 2 - tg bot
+            userId: promiseResult.user._id,
+            payload: {
+                type: 0, // meaning other than expense (unsorted)
+                amount: undefined,
+                dayCode: transformTgDateToCode('day', promiseResult.update.message.date),
+                monthCode: transformTgDateToCode('month', promiseResult.update.message.date),
+                description: promiseResult.update.message.text,
+                labels: {
+                    isDeleted:false,
+                    isPlan: false
+                }
+
+            }
+        };
+
+        worker.handle('create-message', query, data).then(
+            (result) => {
+                worker.subscribe('create-message-response-processed', (kafkaMessage) => {
+                    console.log(JSON.stringify(kafkaMessage));
+                    if(!deliveredKafkaMessages.has(kafkaMessage.offset)) {
+                        workerFactory.purge(worker.id);
+                        let message;
+                        let v = JSON.parse(kafkaMessage.value).response;
+                        message = {chat_id: promiseResult.update.message.chat.id, text: `Status: ${JSON.stringify(v.description)}`};
+                        httpCtrl.sendMessage(message);
+                        deliveredKafkaMessages.set(kafkaMessage.offset, new Date().valueOf());
+                        // console.log('http sent to telegram');
+                    }
+                    else {
+                        // console.log('offset delivered already. no http sent');
+                    }
+                });
+
             },
             (error) => {
-                console.log(`failed to append users to this update`);
+                let message;
+                message = {chat_id: promiseResult.update.message.chat.id, text: `ERROR: Can't save "${promiseResult.update.message.text}"`};
+                httpCtrl.sendMessage(message);
+                workerFactory.purge(worker.id);
+                // workerFactory.log();
             }
         );
 
     };
 
-    let appendUserToUpdate = (tgUpdate) => {
-        let worker = workerFactory.worker('findUser');
-        let userQuery = {query: {telegramId: tgUpdate.from}};
-        return {update: tgUpdate, user: worker.handle(userQuery)};
+    const transformTgDateToCode = (codeType, tgDate) => {
+        let d, year, month, day;
+
+        d = new Date(tgDate*1000);
+        year = d.getFullYear();
+        month = d.getMonth() + 1;
+        day = d.getDate();
+
+        switch (codeType){
+            case 'day':
+                return `${year}${month}${day}`;
+                break;
+            case 'month':
+                return `${year}${month}`;
+                break;
+            default:
+                return null;
+        }
     };
 
-    let handleUpdate = (item) => {
-        let worker = workerFactory.worker('botMessage');
-        let query = {
-            occuredAt: item.update.date,
-            sourceId: 2,
-            userId: item.user._id,
-            payload: {
-                chatId: item.update.chat.id,
-                messageId: item.update.message_id,
-                text: item.update.text,
-                entities: item.update.entities
-            }
-        };
-        worker.handle(query).then(
+    const botCtrl = {};
+
+    botCtrl.handleUpdates = (request, response) => {
+        response.status(200).json({});
+
+        let update;
+        update = request.body;
+        appendUserToUpdate(update).then(
             (result) => {
-                //send 'saved' to telegram chat
-                let message = "saved";
-                httpCtrl.sendMessage(message);
+                // console.log(result);
+                handleUpdate(result);
             },
             (error) => {
-                //send 'error' to telegram chat
-                let message = "error";
-                httpCtrl.sendMessage(message);
+                console.log(`failed to append users to this update with ${JSON.stringify(error)}`);
             }
         );
     };

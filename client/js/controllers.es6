@@ -191,6 +191,15 @@ exports.pfinAppCtrl = function ($scope, $views, $user, $timeout, $http) {
         })($scope, $http)
     );
 
+    const handlePayloadTypeChange = require('./controllerEventHandlers/handlePayloadTypeChange.es6')
+    $scope.$on('clicked::payloadType',
+        ((s, http) => {
+        return (event, args) => {
+            handlePayloadTypeChange(event, args, s, http);
+        }
+        })($scope, $http)
+    );
+
 };
 
 //# sourceMappingURL=controllers.es6.map

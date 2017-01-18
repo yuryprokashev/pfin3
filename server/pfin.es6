@@ -26,7 +26,7 @@ const kafkaServiceFactory = require('./kafka/kafkaServiceFactory.es6');
 const configFactory = require('./configFactory.es6');
 const authServiceFactory = require('./auth/authServiceFactory.es6');
 const apiCtrlFactory = require('./api/apiControllerFactory.es6');
-const authCtrlFactory = require('./auth/authControllerFactory.es6');
+const authCtrlFactory = require('./auth/authControllerFactory2.es6');
 const authAppFactory = require('./auth/authAppFactory.es6');
 const apiAppFactory = require('./api/apiAppFactory.es6');
 const WorkerFactory = require('./workers/WorkerFactory.es6');
@@ -64,6 +64,7 @@ kafkaBus.producer.on('ready', () => {
     configService = configFactory(kafkaService);
     configService.on('ready', () => {
         config = configService.get();
+        // console.log(config);
 
         httpClient = httpClientFactory(config.bot);
         httpService = httpServiceFactory(httpClient);

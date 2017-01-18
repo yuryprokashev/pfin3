@@ -1,6 +1,7 @@
 /**
- *Created by py on 15/11/2016
+ *Created by py on 14/12/2016
  */
+
 'use strict';
 module.exports = (workerFactory, config) => {
     const passport = require('passport');
@@ -23,10 +24,6 @@ module.exports = (workerFactory, config) => {
         }
     });
 
-    let extract = (property, kafkaMessage) => {
-        const extract = require('./../helpers/extractPropertyFromKafkaMessage.es6');
-        return extract(property, kafkaMessage);
-    };
 
     let authController = {};
 
@@ -67,20 +64,21 @@ module.exports = (workerFactory, config) => {
             (err, user, info) => {
                 if(err) {return next(err);}
                 if(!user) {
-                    console.log('no user');
+                    // console.log('no user');
                     return response.redirect('/');
                 }
 
                 request.logIn(user, function (err) {
-                    console.log('logging user in...');
+                    // console.log('logging user in...');
                     // console.log(request.session.passport.user);
                     if(err) {return next(err);}
                     response.redirect(config.passport[strategy].successAuthRedirectPATH);
                 });
-        })(request, response, next);
+            })(request, response, next);
 
     };
     authController.loginLocal = (request, response, next) =>{
+        // console.log('authController.loginLocal executing...');
         passport.authenticate(
             'local',
             (err, user, info)=>{
@@ -90,7 +88,7 @@ module.exports = (workerFactory, config) => {
                     return response.redirect('/');
                 }
                 request.logIn(user, (err)=>{
-                    console.log('logging in with local');
+                    // console.log('logging in with local');
                     if(err){return next(err);}
                     response.redirect('/#/log-and-plan');
                 });
@@ -103,70 +101,78 @@ module.exports = (workerFactory, config) => {
     };
 
     authController.authCallback = (accessToken, refreshToken, profile, cb) => {
-        let query = {
-            query: {
-                'private.oauth': profile.id
-            },
-            profile: profile
-    };
-        let worker = workerFactory.worker("updateUser");
-        worker.handle(query).then(
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {
+            'private.oauth': profile.id
+        };
+
+        data = profile;
+
+        worker.handle('user-find-one-and-update', query, data).then(
             (result) => {
-                // console.log('authCallback2 called');
-                // console.log(JSON.stringify(result));
-                cb(null, result.msg);
-                workerFactory.purge(result.worker.id);
+                // console.log(`authCallback result is ${JSON.stringify(result)}`);
+                cb(null, result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                cb({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(error)});
-                workerFactory.purge(result.worker.id);
+                cb({error: `${JSON.stringify(error)}`});
+                workerFactory.purge(worker.id);
             }
         );
     };
 
     authController.localAuthCallback = (username, password, done) => {
-        // console.log('auth local callback called');
-        let query = {
-            query: {
-                "private.local.login": username
-            },
-            profile: {}
+
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {
+            "private.local.login": username
         };
-        let worker = workerFactory.worker("findUser");
-        worker.handle(query).then(
+
+        data = undefined;
+
+        worker.handle('user-find-one', query, data).then(
             (result) => {
-                if(result.msg.private.local.password !== password) {
+                // console.log(`localAuthCallback result is ${JSON.stringify(result)}`);
+                if(result.private.local.password !== password) {
                     return done(null, false, {message: 'Wrong Password'})
                 }
-                done(null, result.msg);
-                workerFactory.purge(result.worker.id);
+                done(null, result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                done({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(error)});
+                // console.log(`localAuthCallback error is ${JSON.stringify(error)}`);
+                done({error: `${JSON.stringify(error)}`});
                 workerFactory.purge(result.worker.id);
             }
         )
 
     };
 
-    // authController.send = (topic, message) => {
-    //     kafkaService.send(topic, message);
-    // };
-    // authController.subscribe = (topic, callback) => {
-    //     kafkaService.subscribe(topic, callback);
-    // };
-
     authController.findOne = (id, done) => {
-        let query = {query: {_id: id}, profile: {}};
-        let worker = workerFactory.worker("findUser");
-        worker.handle(query).then(
+
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {_id: id};
+
+        data = undefined;
+
+        worker.handle("user-find-one", query, data).then(
             (result) => {
-                done(null, result.msg);
-                workerFactory.purge(result.worker.id);
+                // console.log(`fineOne result is ${JSON.stringify(result)}`);
+                done(null, result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                done({errorName: 'kafkaResponse contains no user', kafkaResponse: JSON.stringify(error)});
-                workerFactory.purge(result.worker.id);
+                done({error: `${JSON.stringify(error)}`});
+                workerFactory.purge(worker.id);
             }
         )
     };

@@ -7,22 +7,29 @@ module.exports = (workerFactory) => {
 
     apiMessageCtrl.handleFreeMessage = (request, response) => {
         console.log(JSON.stringify(request));
+        response.status(200);
     };
 
     apiMessageCtrl.handleStructuredMessage = (request, response) => {
-        let worker = workerFactory.worker('message', undefined);
-        worker.handle(request, response).then(
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+        query = {};
+        data = request.body;
+        data.userId = data.user;
+        delete data['user'];
+
+        worker.handle('create-message', query, data).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         );
     };
-    let send = (data, workerFactory) => {
-        data.worker.response.json(data.msg);
-        workerFactory.purge(data.worker.id);
-    };
+
     return apiMessageCtrl;
 };

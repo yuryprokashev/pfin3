@@ -22,11 +22,11 @@
                     <h4 class="text-center" ng-class = "{'text-muted': !m.html.isSelected}">{{m.html.formattedMonth}}</h4>
                 </div>
                 <div style="height: 2.5em">
-                    <p class="text-muted text-center" ng-show = "!m.html.isSelected">
+                    <p class="text-muted text-center" ng-show = "!m.html.isSelected && self.state.payloadType === 1">
                         {{m.html.all() | number : 0}}
                         <i class="fa fa-{{self.html.currency}}" aria-hidden="true"></i>
                     </p>
-                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected"></progress>
+                    <progress ext-progress = "m.html" ng-show = "m.html.isSelected && self.state.payloadType === 1"></progress>
                 </div>
             </div>
         </div>

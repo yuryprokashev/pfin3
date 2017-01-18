@@ -117,7 +117,7 @@ MessagePoster = function (state) {
             isDeleted: self.html.isDeleted
             }
         );
-        var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId);
+        var emp = new ExpenseMessagePayload(p, self.html.amount.value, self.html.description.value, self.currentItemId, self.state.payloadType);
         var user = self.state.user._id;
         // console.log(self.state.user);
         return new Message(user, 1, 1, emp, clientToken);

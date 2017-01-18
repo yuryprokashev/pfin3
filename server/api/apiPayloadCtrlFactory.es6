@@ -7,10 +7,14 @@ module.exports = (workerFactory) => {
 
     apiPayloadCtrl.getPayloads = (request, response) => {
 
-        let query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+        query = {
+            userId: request.user._id.toString(),
+            // type: Number(request.params.payloadType),
             sortOrder: {},
+            'labels.isDeleted': false
         };
 
         switch (request.params.dayCode.length) {
@@ -21,13 +25,17 @@ module.exports = (workerFactory) => {
             case 6:
                 query.monthCode = request.params.dayCode;
         }
-        let worker = workerFactory.worker("payload", undefined);
-        worker.handle(query, response).then(
+
+        data = undefined;
+
+        worker.handle('get-payload', query, data).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         )
 
@@ -38,73 +46,100 @@ module.exports = (workerFactory) => {
             handleCopyCommand(request,response);
         }
         else if(/clear/.test(request.url)) {
-            handleClearCommand(request, response)
+            handleClearCommand(request, response);
         }
     };
 
     let handleCopyCommand = (request, response) => {
-        let query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
-            sortOrder:{},
-            targetPeriod: request.params.targetPeriod,
-            sourcePeriod: request.params.sourcePeriod,
-            commandType: request.params.commandType,
-            occuredAt: new Date().valueOf()
+
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {
+            userId: request.user._id.toString(),
+            type: Number(request.params.payloadType),
+            monthCode: request.params.sourcePeriod,
+            'labels.isDeleted': false
         };
-        let worker = workerFactory.worker("copyPayload", request.params.commandId);
-        worker.handle(query, response).then(
+
+        data = {
+            monthCode: request.params.targetPeriod,
+            occurredAt: new Date().valueOf(),
+            commandId: request.params.commandId
+        };
+
+        worker.handle('copy-payload', query, data).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         )
     };
 
     let handleClearCommand = (request, response) => {
-        let query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
-            sortOrder:{},
-            targetPeriod: request.params.targetPeriod,
-            commandType: request.params.commandType,
-            occuredAt: new Date().valueOf()
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        query = {
+            userId: request.user._id.toString(),
+            type: Number(request.params.payloadType),
+            monthCode: request.params.targetPeriod,
+            'labels.isDeleted': false
         };
-        let worker = workerFactory.worker("clearPayload", request.params.commandId);
-        worker.handle(query, response).then(
+
+        data = undefined;
+
+        worker.handle('clear-payload', query,data).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         )
 
     };
 
     apiPayloadCtrl.getMonthData = (request, response) => {
-        let query = {
-            user: request.user._id.toString(),
-            payloadType: Number(request.params.payloadType),
-            sortOrder: {},
-            targetPeriod: request.params.targetPeriod
-        };
-        let worker = workerFactory.worker('monthData', undefined);
-        worker.handle(query,response).then(
+
+        let worker, query, data;
+
+        worker = workerFactory.worker();
+
+        // query = [
+        //     {$match: {userId: request.user._id, "labels.isDeleted": false}},
+        //     {$project: {_id:1, amount:1, monthCode: 1, isPlanned: {$cond:{if:{$eq:["$labels.isPlan",true]}, then:"plan", else:"fact"}}}},
+        //     {$match: {monthCode: request.params.targetPeriod}},
+        //     {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
+        //     {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}];
+
+        query = [
+            {$match: {userId: request.user._id, "labels.isDeleted": false, monthCode: { $gte: request.params.startMonth, $lte: request.params.endMonth}}},
+            {$project: {_id:1, amount:1, monthCode: 1, isPlanned: {$cond:{if:{$eq:["$labels.isPlan",true]}, then:"plan", else:"fact"}}}},
+            {$match:  {monthCode: { $gte: request.params.startMonth, $lte: request.params.endMonth}}},
+            {$project: { _id:1, amount:1,isPlanned: "$isPlanned"}},
+            {$group: {_id: "$isPlanned", total: {$sum: "$amount"}}}];
+
+        data = undefined;
+
+        worker.handle('agg-month-data', query, data).then(
             (result) => {
-                send(result, workerFactory);
+                response.json(result);
+                workerFactory.purge(worker.id);
             },
             (error) => {
-                send(error, workerFactory);
+                response.json(error);
+                workerFactory.purge(worker.id);
             }
         );
-    };
-
-    let send = (data, workerFactory) => {
-        data.worker.response.json(data.msg);
-        workerFactory.purge(data.worker.id);
     };
 
     return apiPayloadCtrl;

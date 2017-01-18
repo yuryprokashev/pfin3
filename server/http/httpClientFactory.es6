@@ -4,12 +4,13 @@
 
 'use strict';
 module.exports = (hostConfig) => {
-    const http = require('http');
+    const https = require('https');
     const httpClient = {};
 
     httpClient.post = (path, data, responseCallback) => {
         let postData = JSON.stringify(data);
         let options = {
+            protocol: hostConfig.protocol,
             hostname: hostConfig.hostUrl,
             port: hostConfig.port,
             path: path,
@@ -19,12 +20,13 @@ module.exports = (hostConfig) => {
             },
             method: 'POST'
         };
-        let request = http.request(options, responseCallback);
+        let request = https.request(options, responseCallback);
 
         request.on('error', (error)=>{
             console.log(`problem with request: ${error.message}`);
         });
         request.write(postData);
+        // console.log(request);
         request.end();
 
     };
