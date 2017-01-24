@@ -21,8 +21,8 @@ const path = require ('path');
 const app = module.exports = express();
 
 // WIRE FACTORY MODULES
-const kafkaBusFactory = require('./kafka/kafkaBusFactory.es6');
-const kafkaServiceFactory = require('./kafka/kafkaServiceFactory.es6');
+const kafkaBusFactory = require('my-kafka').kafkaBusFactory;
+const kafkaServiceFactory = require('my-kafka').kafkaServiceFactory;
 const configFactory = require('./configFactory.es6');
 const authServiceFactory = require('./auth/authServiceFactory.es6');
 const apiCtrlFactory = require('./api/apiControllerFactory.es6');
