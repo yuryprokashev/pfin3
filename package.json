@@ -48,6 +48,7 @@
     "kafka-node": "^0.5.4",
     "method-override": "^2.3.5",
     "mongoose": "^4.3.7",
+    "my-kafka": "file:../shared/myKafka",
     "passport": "^0.3.2",
     "passport-facebook": "^2.1.1",
     "passport-google-oauth20": "^1.0.0",
