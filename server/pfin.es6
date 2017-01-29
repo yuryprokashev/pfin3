@@ -80,7 +80,7 @@ kafkaBus.producer.on('ready', ()=> {
         (config) => {
             configService = configServiceFactory(config);
             configCtrl = configCtrlFactory(configService, kafkaService);
-            kafkaService.subscribe('get-config-response', configCtrl.writeConfig);
+            kafkaService.subscribe('get-config-response', false, configCtrl.writeConfig);
             kafkaService.send('get-config-request', configObject);
             configCtrl.on('ready', () => {
 
@@ -122,41 +122,3 @@ kafkaBus.producer.on('ready', ()=> {
         }
     );
 });
-
-
-
-// kafkaBus.producer.on('ready', () => {
-//     configService = configFactory(kafkaService);
-//     configService.on('ready', () => {
-//         config = configService.get();
-//         // console.log(config);
-//
-//         httpClient = httpClientFactory(config.bot);
-//         httpService = httpServiceFactory(httpClient);
-//         httpCtrl = httpCtrlFactory(httpService, config);
-//
-//         apiCtrl = apiCtrlFactory(workerFactory, config);
-//         apiApp = apiAppFactory(apiCtrl);
-//
-//         authCtrl = authCtrlFactory(workerFactory, config);
-//         authApp = authAppFactory(authCtrl, config);
-//
-//         botCtrl = botCtrlFactory(workerFactory, httpCtrl, config);
-//         botApp = botAppFactory(botCtrl);
-//         // WIRE APP STATIC ROUTES
-//         app.use('/assets', express.static(path.join(__dirname, '../client')));
-//         app.get('/', function(req, res){
-//             let file = path.join(__dirname, '../client/templates/', 'index.html');
-//             res.sendFile(file);
-//         });
-//
-// // WIRE DIFFERENT APP CONTROLLERS TO THEIR ROUTES
-//         app.use(bodyParser.json());
-//         app.use('/browser', authApp);
-//         app.use('/browser/api/v1', apiApp);
-//         app.use(`/bot-${config.bot.token}`, botApp);
-//
-// // START SERVER
-//         app.listen(config.express.port);
-//     });
-// });

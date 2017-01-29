@@ -61,7 +61,7 @@ class Worker {
                     context = _this.createReadContext(query);
                 }
 
-                _this.subscribe(`${topicPrefix}-response`,
+                _this.subscribe(`${topicPrefix}-response`, false,
                     ((resolve, reject) => {
                     return (kafkaMessage) => {
                         _this.answer(kafkaMessage, resolve, reject);
@@ -93,7 +93,7 @@ class Worker {
     };
 
     subscribe (topic, callback) {
-        this.bus.subscribe(topic, (kafkaMessage) => {
+        this.bus.subscribe(topic, false, (kafkaMessage) => {
             if(this.id === JSON.parse(kafkaMessage.value).id){
                 callback(kafkaMessage);
             }
