@@ -80,7 +80,7 @@ kafkaBus.producer.on('ready', ()=> {
         (config) => {
             configService = configServiceFactory(config);
             configCtrl = configCtrlFactory(configService, kafkaService);
-            kafkaService.subscribe('get-config-response', false, configCtrl.writeConfig);
+            kafkaService.subscribe('get-config-response', true, configCtrl.writeConfig);
             kafkaService.send('get-config-request', configObject);
             configCtrl.on('ready', () => {
 
