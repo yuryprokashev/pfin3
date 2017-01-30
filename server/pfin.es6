@@ -81,7 +81,7 @@ kafkaBus.producer.on('ready', ()=> {
             configService = configServiceFactory(config);
             configCtrl = configCtrlFactory(configService, kafkaService);
             kafkaService.subscribe('get-config-response', true, configCtrl.writeConfig);
-            kafkaService.send('get-config-request', configObject);
+            kafkaService.send('get-config-request', true, configObject);
             configCtrl.on('ready', () => {
 
                 httpClient = httpClientFactory(configObject.bot);

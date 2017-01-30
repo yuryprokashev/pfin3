@@ -93,7 +93,7 @@ class Worker {
     };
 
     subscribe (topic, callback) {
-        this.bus.subscribe(topic, false, (kafkaMessage) => {
+        this.bus.subscribe(topic, true, (kafkaMessage) => {
             if(this.id === JSON.parse(kafkaMessage.value).id){
                 callback(kafkaMessage);
             }
@@ -101,7 +101,7 @@ class Worker {
     };
 
     send (topic, context) {
-        this.bus.send(topic, context);
+        this.bus.send(topic, true, context);
     };
 
     createReadContext (query) {
