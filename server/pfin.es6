@@ -84,19 +84,19 @@ kafkaBus.producer.on('ready', ()=> {
             kafkaService.send('get-config-request', true, configObject);
             configCtrl.on('ready', () => {
 
-                console.log(configObject);
+                console.log(config);
 
-                httpClient = httpClientFactory(configObject.bot);
+                httpClient = httpClientFactory(config.bot);
                 httpService = httpServiceFactory(httpClient);
-                httpCtrl = httpCtrlFactory(httpService, configObject.bot);
+                httpCtrl = httpCtrlFactory(httpService, config.bot);
 
-                apiCtrl = apiCtrlFactory(workerFactory, configObject);
+                apiCtrl = apiCtrlFactory(workerFactory, config);
                 apiApp = apiAppFactory(apiCtrl);
 
-                authCtrl = authCtrlFactory(workerFactory, configObject.passport);// TODO. Change configObject to configObject.passport
-                authApp = authAppFactory(authCtrl, configObject.passport);
+                authCtrl = authCtrlFactory(workerFactory, config);// TODO. Change configObject to configObject.passport
+                authApp = authAppFactory(authCtrl, config);
 
-                botCtrl = botCtrlFactory(workerFactory, httpCtrl, configObject); //TODO. configObject is not used in botCtrlFactory
+                botCtrl = botCtrlFactory(workerFactory, httpCtrl, config); //TODO. configObject is not used in botCtrlFactory
                 botApp = botAppFactory(botCtrl);
                 // WIRE APP STATIC ROUTES
                 app.use('/assets', express.static(path.join(__dirname, '../client')));
@@ -109,10 +109,10 @@ kafkaBus.producer.on('ready', ()=> {
                 app.use(bodyParser.json());
                 app.use('/browser', authApp);
                 app.use('/browser/api/v1', apiApp);
-                app.use(`/bot-${configObject.bot.token}`, botApp);
+                app.use(`/bot-${config.bot.token}`, botApp);
 
 // START SERVER
-                app.listen(configObject.express.port);
+                app.listen(config.express.port);
 
             });
             configCtrl.on('error', (args) => {
