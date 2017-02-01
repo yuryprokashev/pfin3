@@ -84,6 +84,8 @@ kafkaBus.producer.on('ready', ()=> {
             kafkaService.send('get-config-request', true, configObject);
             configCtrl.on('ready', () => {
 
+                console.log(configObject);
+
                 httpClient = httpClientFactory(configObject.bot);
                 httpService = httpServiceFactory(httpClient);
                 httpCtrl = httpCtrlFactory(httpService, configObject.bot);
@@ -91,8 +93,8 @@ kafkaBus.producer.on('ready', ()=> {
                 apiCtrl = apiCtrlFactory(workerFactory, configObject);
                 apiApp = apiAppFactory(apiCtrl);
 
-                authCtrl = authCtrlFactory(workerFactory, configObject);// TODO. Change configObject to configObject.passport
-                authApp = authAppFactory(authCtrl, configObject);
+                authCtrl = authCtrlFactory(workerFactory, configObject.passport);// TODO. Change configObject to configObject.passport
+                authApp = authAppFactory(authCtrl, configObject.passport);
 
                 botCtrl = botCtrlFactory(workerFactory, httpCtrl, configObject); //TODO. configObject is not used in botCtrlFactory
                 botApp = botAppFactory(botCtrl);
