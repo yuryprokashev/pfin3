@@ -114,6 +114,7 @@ bootstrapComponents = () => {
         // START SERVER
         expressConfig = configService.read('clientapi.express');
         app.listen(expressConfig.port);
+        console.log('api started');
     });
     configCtrl.on('error', (args) => {
         handleError(args);
