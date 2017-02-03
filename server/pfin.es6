@@ -87,7 +87,7 @@ bootstrapComponents = () => {
         httpService = httpServiceFactory(httpClient);
         httpCtrl = httpCtrlFactory(httpService, configService);
 
-        apiConfig = configService.read('');
+        apiConfig = configService.read('pusher');
         apiCtrl = apiCtrlFactory(workerFactory, apiConfig);
         apiApp = apiAppFactory(apiCtrl);
 

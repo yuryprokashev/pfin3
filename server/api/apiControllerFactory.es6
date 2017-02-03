@@ -15,7 +15,7 @@ module.exports = (workerFactory, config) =>{
         if(!request.user) {
             return response.status(status.UNAUTHORIZED).json({error: 'not logged in'});
         }
-        response.json(config.pusher);
+        response.json(config);
     };
 
     apiController.me = (request, response) => {
