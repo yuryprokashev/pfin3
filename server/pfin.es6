@@ -112,7 +112,7 @@ bootstrapComponents = () => {
         app.use(`/bot-${httpConfig.token}`, botApp);
 
         // START SERVER
-        expressConfig = configService.read('express');
+        expressConfig = configService.read('clientapi.express');
         app.listen(expressConfig.port);
     });
     configCtrl.on('error', (args) => {
