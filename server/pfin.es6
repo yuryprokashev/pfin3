@@ -109,7 +109,7 @@ bootstrapComponents = () => {
         app.use(bodyParser.json());
         app.use('/browser', authApp);
         app.use('/browser/api/v1', apiApp);
-        app.use(`/bot-${config.bot.token}`, botApp);
+        app.use(`/bot-${httpConfig.token}`, botApp);
 
         // START SERVER
         expressConfig = configService.read('express');
