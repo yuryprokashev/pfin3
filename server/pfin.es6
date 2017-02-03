@@ -68,59 +68,65 @@ let apiCtrl,
     httpCtrl,
     configCtrl;
 
+let httpConfig,
+    apiConfig,
+    authConfig,
+    expressConfig;
+
+let bootstrapComponents,
+    handleError;
+
+bootstrapComponents = () => {
+    configObject = configObjectFactory(SERVICE_NAME);
+    configService = configServiceFactory(configObject);
+    configCtrl = configCtrlFactory(configService, kafkaService);
+
+    configCtrl.on('ready', () => {
+        httpConfig = configService.read('bot');
+        httpClient = httpClientFactory(httpConfig);
+        httpService = httpServiceFactory(httpClient);
+        httpCtrl = httpCtrlFactory(httpService, configService);
+
+        apiConfig = configService.read('');
+        apiCtrl = apiCtrlFactory(workerFactory, apiConfig);
+        apiApp = apiAppFactory(apiCtrl);
+
+        authConfig = configService.read('clientapi.passport');
+        authCtrl = authCtrlFactory(workerFactory, authConfig);
+        authApp = authAppFactory(authCtrl, authConfig);
+
+        botCtrl = botCtrlFactory(workerFactory, httpCtrl, undefined);
+        botApp = botAppFactory(botCtrl);
+
+        // WIRE APP STATIC ROUTES
+        app.use('/assets', express.static(path.join(__dirname, '../client')));
+        app.get('/', function (req, res) {
+            let file = path.join(__dirname, '../client/templates/', 'index.html');
+            res.sendFile(file);
+        });
+
+        // WIRE DIFFERENT APP CONTROLLERS TO THEIR ROUTES
+        app.use(bodyParser.json());
+        app.use('/browser', authApp);
+        app.use('/browser/api/v1', apiApp);
+        app.use(`/bot-${config.bot.token}`, botApp);
+
+        // START SERVER
+        expressConfig = configService.read('express');
+        app.listen(expressConfig.port);
+    });
+    configCtrl.on('error', (args) => {
+        handleError(args);
+    });
+};
+
+handleError = (err) => {
+    //TODO. Implement centralized error logging.
+    console.log(err);
+};
 
 kafkaBus = kafkaBusFactory(kafkaHost, SERVICE_NAME);
 kafkaService = kafkaServiceFactory(kafkaBus);
 workerFactory = new WorkerFactory(kafkaService);
 
-kafkaBus.producer.on('ready', ()=> {
-
-    configObject = configObjectFactory(SERVICE_NAME);
-    configObject.init().then(
-        (config) => {
-            configService = configServiceFactory(config);
-            configCtrl = configCtrlFactory(configService, kafkaService);
-            kafkaService.subscribe('get-config-response', true, configCtrl.writeConfig);
-            kafkaService.send('get-config-request', true, configObject);
-            configCtrl.on('ready', () => {
-
-                console.log(config);
-
-                httpClient = httpClientFactory(config.bot);
-                httpService = httpServiceFactory(httpClient);
-                httpCtrl = httpCtrlFactory(httpService, config.bot);
-
-                apiCtrl = apiCtrlFactory(workerFactory, config);
-                apiApp = apiAppFactory(apiCtrl);
-
-                authCtrl = authCtrlFactory(workerFactory, config);// TODO. Change configObject to configObject.passport
-                authApp = authAppFactory(authCtrl, config);
-
-                botCtrl = botCtrlFactory(workerFactory, httpCtrl, config); //TODO. configObject is not used in botCtrlFactory
-                botApp = botAppFactory(botCtrl);
-                // WIRE APP STATIC ROUTES
-                app.use('/assets', express.static(path.join(__dirname, '../client')));
-                app.get('/', function(req, res){
-                    let file = path.join(__dirname, '../client/templates/', 'index.html');
-                    res.sendFile(file);
-                });
-
-// WIRE DIFFERENT APP CONTROLLERS TO THEIR ROUTES
-                app.use(bodyParser.json());
-                app.use('/browser', authApp);
-                app.use('/browser/api/v1', apiApp);
-                app.use(`/bot-${config.bot.token}`, botApp);
-
-// START SERVER
-                app.listen(config.express.port);
-
-            });
-            configCtrl.on('error', (args) => {
-                console.log(args);
-            });
-        },
-        (err) => {
-            console.log(`ConfigObject Promise rejected ${JSON.stringify(err.error)}`);
-        }
-    );
-});
+kafkaBus.producer.on('ready', bootstrapComponents);
