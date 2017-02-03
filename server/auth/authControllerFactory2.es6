@@ -39,7 +39,7 @@ module.exports = (workerFactory, config) => {
 
     authController.authenticate = (request, response, next) => {
         let strategy = request.params.authProvider;
-        let scope = config.passport[strategy].scope;
+        let scope = config[strategy].scope;
         passport.authenticate(
             strategy,
             {scope: scope},
@@ -52,7 +52,7 @@ module.exports = (workerFactory, config) => {
                 request.logIn(user, (err) => {
                     // console.log('user ok in authenticate');
                     if(err) {return next(err);}
-                    return response.redirect(config.passport[strategy].authCallbackPath);
+                    return response.redirect(config[strategy].authCallbackPath);
                 });
             })(request, response, next);
     };
@@ -72,7 +72,7 @@ module.exports = (workerFactory, config) => {
                     // console.log('logging user in...');
                     // console.log(request.session.passport.user);
                     if(err) {return next(err);}
-                    response.redirect(config.passport[strategy].successAuthRedirectPATH);
+                    response.redirect(config[strategy].successAuthRedirectPATH);
                 });
             })(request, response, next);
 

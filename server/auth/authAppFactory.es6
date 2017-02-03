@@ -12,15 +12,15 @@ module.exports = (authController, config) => {
     const LS = require('passport-local').Strategy;
 
     let gs = new GS({
-        clientID: config.passport.google.GOOGLE_CLIENT_ID,
-        clientSecret: config.passport.google.GOOGLE_CLIENT_SECRET,
-        callbackURL: config.passport.google.callbackURL
+        clientID: config.google.GOOGLE_CLIENT_ID,
+        clientSecret: config.google.GOOGLE_CLIENT_SECRET,
+        callbackURL: config.google.callbackURL
     }, authController.authCallback);
     let fs = new FS({
-        clientID: config.passport.facebook.FACEBOOK_APP_ID,
-        clientSecret: config.passport.facebook.FACEBOOK_APP_SECRET,
-        callbackURL: config.passport.facebook.callbackURL,
-        profileFields: config.passport.facebook.profileFields,
+        clientID: config.facebook.FACEBOOK_APP_ID,
+        clientSecret: config.facebook.FACEBOOK_APP_SECRET,
+        callbackURL: config.facebook.callbackURL,
+        profileFields: config.facebook.profileFields,
         enableProof: true
     }, authController.authCallback);
     let ls = new LS(authController.localAuthCallback);

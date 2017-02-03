@@ -91,7 +91,7 @@ bootstrapComponents = () => {
         apiCtrl = apiCtrlFactory(workerFactory, apiConfig);
         apiApp = apiAppFactory(apiCtrl);
 
-        authConfig = configService.read('clientapi.auth');
+        authConfig = configService.read('clientapi.auth.passport');
         authCtrl = authCtrlFactory(workerFactory, authConfig);
         authApp = authAppFactory(authCtrl, authConfig);
 
