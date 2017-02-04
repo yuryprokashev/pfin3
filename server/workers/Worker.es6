@@ -91,18 +91,24 @@ class Worker {
             resolve(context.response);
         }
     };
+    //
+    // subscribe (topic, callback) {
+    //     this.bus.subscribe(topic, true, (kafkaMessage) => {
+    //         let kafkaMessageSignature;
+    //         kafkaMessageSignature = JSON.parse(kafkaMessage.value).id;
+    //         if(this.id === kafkaMessageSignature) {
+    //             console.log(`my message ${kafkaMessageSignature} -> executing callback ${callback.name}`);
+    //             callback(kafkaMessage);
+    //         }
+    //         else {
+    //             console.log(`not my message ${kafkaMessageSignature} -> no callback executed`);
+    //         }
+    //     });
+    // };
 
     subscribe (topic, callback) {
         this.bus.subscribe(topic, true, (kafkaMessage) => {
-            let kafkaMessageSignature;
-            kafkaMessageSignature = JSON.parse(kafkaMessage.value).id;
-            if(this.id === kafkaMessageSignature) {
-                console.log(`my message ${kafkaMessageSignature} -> executing callback ${callback.name}`);
-                callback(kafkaMessage);
-            }
-            else {
-                console.log(`not my message ${kafkaMessageSignature} -> no callback executed`);
-            }
+            callback(kafkaMessage);
         });
     };
 
