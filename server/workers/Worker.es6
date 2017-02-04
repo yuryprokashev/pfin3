@@ -61,7 +61,7 @@ class Worker {
                     context = _this.createReadContext(query);
                 }
 
-                _this.subscribe(`${topicPrefix}-response`, false,
+                _this.subscribe(`${topicPrefix}-response`,
                     ((resolve, reject) => {
                     return (kafkaMessage) => {
                         _this.answer(kafkaMessage, resolve, reject);
@@ -94,8 +94,14 @@ class Worker {
 
     subscribe (topic, callback) {
         this.bus.subscribe(topic, true, (kafkaMessage) => {
-            if(this.id === JSON.parse(kafkaMessage.value).id){
+            let kafkaMessageSignature;
+            kafkaMessageSignature = JSON.parse(kafkaMessage.value).id;
+            if(this.id === kafkaMessageSignature) {
+                console.log(`my message ${kafkaMessageSignature} -> executing callback ${callback.name}`);
                 callback(kafkaMessage);
+            }
+            else {
+                console.log(`not my message ${kafkaMessageSignature} -> no callback executed`);
             }
         });
     };
