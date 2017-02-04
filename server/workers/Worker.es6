@@ -93,6 +93,8 @@ class Worker {
     // };
 
     answer (kafkaMessage, resolve, reject) {
+        console.log('before the answer');
+        console.log(kafkaMessage);
         let context = JSON.parse(kafkaMessage.value);
         // check if context has been passed from service
         if(context === undefined) {
@@ -124,12 +126,7 @@ class Worker {
     // };
 
     subscribe (topic, callback) {
-        this.bus.subscribe(topic, true, (kafkaMessage) => {
-            let kafkaMessageSignature;
-            kafkaMessageSignature = JSON.parse(kafkaMessage.value).id;
-            console.log(`my message ${kafkaMessageSignature} -> executing callback ${callback.name}`);
-            callback(kafkaMessage);
-        });
+        this.bus.subscribe(topic, true, callback);
     };
 
     send (topic, context) {
