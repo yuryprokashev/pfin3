@@ -108,6 +108,9 @@ class Worker {
 
     subscribe (topic, callback) {
         this.bus.subscribe(topic, true, (kafkaMessage) => {
+            let kafkaMessageSignature;
+            kafkaMessageSignature = JSON.parse(kafkaMessage.value).id;
+            console.log(`my message ${kafkaMessageSignature} -> executing callback ${callback.name}`);
             callback(kafkaMessage);
         });
     };
