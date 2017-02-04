@@ -94,8 +94,8 @@ class Worker {
 
     answer (kafkaMessage, resolve, reject) {
         console.log('before the answer');
-        console.log(kafkaMessage);
         let context = JSON.parse(kafkaMessage.value);
+        console.log(context.response);
         // check if context has been passed from service
         if(context === undefined) {
             reject({error: 'kafkaMessage contains no value'});
