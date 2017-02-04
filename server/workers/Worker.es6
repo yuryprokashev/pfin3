@@ -74,23 +74,40 @@ class Worker {
 
     };
 
+    // answer (kafkaMessage, resolve, reject) {
+    //     let context = JSON.parse(kafkaMessage.value);
+    //     // check if context has been passed from service
+    //     if(context === undefined) {
+    //         reject({error: 'kafkaMessage contains no value'});
+    //     }
+    //     // filter only this worker response
+    //     if(context.id === this.id) {
+    //         if(context.response === undefined) {
+    //             reject({error: 'context.response is empty'});
+    //         }
+    //         if(context.response.error !== undefined) {
+    //             reject(context.response);
+    //         }
+    //         resolve(context.response);
+    //     }
+    // };
+
     answer (kafkaMessage, resolve, reject) {
         let context = JSON.parse(kafkaMessage.value);
         // check if context has been passed from service
         if(context === undefined) {
             reject({error: 'kafkaMessage contains no value'});
         }
-        // filter only this worker response
-        if(context.id === this.id) {
-            if(context.response === undefined) {
-                reject({error: 'context.response is empty'});
-            }
-            if(context.response.error !== undefined) {
-                reject(context.response);
-            }
-            resolve(context.response);
+
+        if(context.response === undefined) {
+            reject({error: 'context.response is empty'});
         }
+        if(context.response.error !== undefined) {
+            reject(context.response);
+        }
+        resolve(context.response);
     };
+
     //
     // subscribe (topic, callback) {
     //     this.bus.subscribe(topic, true, (kafkaMessage) => {
