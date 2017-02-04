@@ -5,18 +5,6 @@
 module.exports = (httpService, config) => {
     const httpCtrl = {};
 
-    // httpCtrl.sendMessage = (message) => {
-    //     let path = `/bot${config.token}/sendMessage`;
-    //     // console.log('POSTING TO HTTP SERVICE');
-    //     httpService.post(path, message);
-    // };
-    //
-    // httpCtrl.setWebhook = (message) => {
-    //     let path = `/bot${config.token}/setWebhook`;
-    //     // console.log('POSTING TO HTTP SERVICE');
-    //     httpService.post(path, message);
-    // };
-
     httpCtrl.sendMessage = (message) => {
         let path = `/bot${config.token}/sendMessage`;
         return new Promise(
