@@ -77,7 +77,7 @@ module.exports = (workerFactory, httpCtrl, config) => {
         worker.handle('create-message', query, data).then(
             (result) => {
                 worker.subscribe('create-message-response-processed', (kafkaMessage) => {
-                    console.log(JSON.stringify(kafkaMessage));
+                    // console.log(JSON.stringify(kafkaMessage));
                     if(!deliveredKafkaMessages.has(kafkaMessage.offset)) {
                         workerFactory.purge(worker.id);
                         let message;

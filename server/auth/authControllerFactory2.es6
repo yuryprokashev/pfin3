@@ -113,7 +113,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle('user-find-one-and-update', query, data).then(
             (result) => {
-                // console.log(`authCallback result is ${JSON.stringify(result)}`);
+                console.log(`authCallback result is ${JSON.stringify(result)}`);
                 cb(null, result);
                 workerFactory.purge(worker.id);
             },
@@ -138,7 +138,7 @@ module.exports = (workerFactory, config) => {
 
         worker.handle('user-find-one', query, data).then(
             (result) => {
-                // console.log(`localAuthCallback result is ${JSON.stringify(result)}`);
+                console.log(`localAuthCallback result is ${JSON.stringify(result)}`);
                 if(result.private.local.password !== password) {
                     return done(null, false, {message: 'Wrong Password'})
                 }
