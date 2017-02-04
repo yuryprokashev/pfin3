@@ -93,21 +93,23 @@ class Worker {
     // };
 
     answer (kafkaMessage, resolve, reject) {
-        console.log('before the answer');
+        // console.log('before the answer');
         let context = JSON.parse(kafkaMessage.value);
-        console.log(context.response);
+        // console.log(context.response);
         // check if context has been passed from service
         if(context === undefined) {
             reject({error: 'kafkaMessage contains no value'});
         }
 
-        if(context.response === undefined) {
+        else if(context.response === undefined) {
             reject({error: 'context.response is empty'});
         }
-        if(context.response.error !== undefined) {
+        else if(context.response.error !== undefined) {
             reject(context.response);
         }
-        resolve(context.response);
+        else {
+            resolve(context.response);
+        }
     };
 
     //
