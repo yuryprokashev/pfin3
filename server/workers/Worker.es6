@@ -61,42 +61,23 @@ class Worker {
                     context = _this.createReadContext(query);
                 }
 
-                _this.subscribe(`${topicPrefix}-response`,
+                _this.subscribeSigned(`${topicPrefix}-response`,
                     ((resolve, reject) => {
                     return (kafkaMessage) => {
                         _this.answer(kafkaMessage, resolve, reject);
                     }
                 })(res, rej));
 
-                _this.send(`${topicPrefix}-request`, context);
+                _this.sendSigned(`${topicPrefix}-request`, context);
             }
         )
 
     };
 
-    // answer (kafkaMessage, resolve, reject) {
-    //     let context = JSON.parse(kafkaMessage.value);
-    //     // check if context has been passed from service
-    //     if(context === undefined) {
-    //         reject({error: 'kafkaMessage contains no value'});
-    //     }
-    //     // filter only this worker response
-    //     if(context.id === this.id) {
-    //         if(context.response === undefined) {
-    //             reject({error: 'context.response is empty'});
-    //         }
-    //         if(context.response.error !== undefined) {
-    //             reject(context.response);
-    //         }
-    //         resolve(context.response);
-    //     }
-    // };
 
     answer (kafkaMessage, resolve, reject) {
-        // console.log('before the answer');
         let context = JSON.parse(kafkaMessage.value);
-        // console.log(context.response);
-        // check if context has been passed from service
+
         if(context === undefined) {
             reject({error: 'kafkaMessage contains no value'});
         }
@@ -112,27 +93,12 @@ class Worker {
         }
     };
 
-    //
-    // subscribe (topic, callback) {
-    //     this.bus.subscribe(topic, true, (kafkaMessage) => {
-    //         let kafkaMessageSignature;
-    //         kafkaMessageSignature = JSON.parse(kafkaMessage.value).id;
-    //         if(this.id === kafkaMessageSignature) {
-    //             console.log(`my message ${kafkaMessageSignature} -> executing callback ${callback.name}`);
-    //             callback(kafkaMessage);
-    //         }
-    //         else {
-    //             console.log(`not my message ${kafkaMessageSignature} -> no callback executed`);
-    //         }
-    //     });
-    // };
-
-    subscribe (topic, callback) {
-        this.bus.subscribe(topic, true, callback);
+    subscribeSigned (topic, callback) {
+        this.bus.subscribe(topic, this.id, callback);
     };
 
-    send (topic, context) {
-        this.bus.send(topic, true, context);
+    sendSigned (topic, context) {
+        this.bus.send(topic, this.id, context);
     };
 
     createReadContext (query) {
