@@ -81,7 +81,6 @@ class Worker {
         if(context === undefined) {
             reject({error: 'kafkaMessage contains no value'});
         }
-
         else if(context.response === undefined) {
             reject({error: 'context.response is empty'});
         }
