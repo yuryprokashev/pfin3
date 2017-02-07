@@ -76,6 +76,7 @@ class Worker {
 
 
     answer (kafkaMessage, resolve, reject) {
+        console.log('worker started to answer...');
         let context = JSON.parse(kafkaMessage.value);
 
         if(context === undefined) {
