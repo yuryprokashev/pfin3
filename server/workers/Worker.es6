@@ -80,15 +80,20 @@ class Worker {
         let context = JSON.parse(kafkaMessage.value);
 
         if(context === undefined) {
+            console.log('... context is undefined');
             reject({error: 'kafkaMessage contains no value'});
         }
         else if(context.response === undefined) {
+            console.log('... context.response is undefined');
             reject({error: 'context.response is empty'});
         }
         else if(context.response.error !== undefined) {
+            console.log('... context.response.error exists');
             reject(context.response);
         }
         else {
+            console.log('... context.response is ok');
+            console.log(context.response);
             resolve(context.response);
         }
     };
