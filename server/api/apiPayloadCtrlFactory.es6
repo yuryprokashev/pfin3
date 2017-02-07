@@ -125,7 +125,7 @@ module.exports = (workerFactory) => {
 
         worker.handle('agg-month-data', query, data).then(
             (result) => {
-                console.log('returned from worker');
+                console.log(`returned from worker ${worker.id}`);
                 console.log(result);
                 response.json(result);
                 workerFactory.purge(worker.id);
