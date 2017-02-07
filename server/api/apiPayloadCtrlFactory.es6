@@ -113,6 +113,7 @@ module.exports = (workerFactory) => {
         let worker, query, data;
 
         worker = workerFactory.worker();
+        console.log(`created new worker ${worker.id}`);
 
         query = [
             {$match: {userId: request.user._id, "labels.isDeleted": false, monthCode: { $gte: request.params.startMonth, $lte: request.params.endMonth}}},
