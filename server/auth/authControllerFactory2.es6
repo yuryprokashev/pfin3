@@ -3,7 +3,7 @@
  */
 
 'use strict';
-module.exports = (workerFactory, config) => {
+module.exports = (workerService, kafkaService, config) => {
     const passport = require('passport');
     const status = require('http-status');
 
@@ -103,7 +103,7 @@ module.exports = (workerFactory, config) => {
     authController.authCallback = (accessToken, refreshToken, profile, cb) => {
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
 
         query = {
             'private.oauth': profile.id
@@ -115,11 +115,11 @@ module.exports = (workerFactory, config) => {
             (result) => {
                 console.log(`authCallback result is ${JSON.stringify(result)}`);
                 cb(null, result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 cb({error: `${JSON.stringify(error)}`});
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         );
     };
@@ -128,7 +128,7 @@ module.exports = (workerFactory, config) => {
 
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
 
         query = {
             "private.local.login": username
@@ -143,12 +143,12 @@ module.exports = (workerFactory, config) => {
                     return done(null, false, {message: 'Wrong Password'})
                 }
                 done(null, result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 // console.log(`localAuthCallback error is ${JSON.stringify(error)}`);
                 done({error: `${JSON.stringify(error)}`});
-                workerFactory.purge(result.worker.id);
+                workerService.purge(result.worker.id);
             }
         )
 
@@ -158,7 +158,7 @@ module.exports = (workerFactory, config) => {
 
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
 
         query = {_id: id};
 
@@ -168,11 +168,11 @@ module.exports = (workerFactory, config) => {
             (result) => {
                 // console.log(`fineOne result is ${JSON.stringify(result)}`);
                 done(null, result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 done({error: `${JSON.stringify(error)}`});
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         )
     };

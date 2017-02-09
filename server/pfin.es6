@@ -17,6 +17,8 @@ let kafkaHost = (function(bool){
     return result;
 })(args[0].isProd);
 
+const EventEmitter = require('events').EventEmitter;
+
 // WIRE EXTERNAL LIBRARIES
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -28,6 +30,8 @@ const app = module.exports = express();
 const kafkaBusFactory = require('my-kafka').kafkaBusFactory;
 const kafkaServiceFactory = require('my-kafka').kafkaServiceFactory;
 
+const loggerAgentFactory = require('my-logger').loggerAgentFactory;
+
 const configObjectFactory = require('my-config').configObjectFactory;
 const configServiceFactory = require('my-config').configServiceFactory;
 const configCtrlFactory = require('my-config').configCtrlFactory;
@@ -38,7 +42,9 @@ const authCtrlFactory = require('./auth/authControllerFactory2.es6');
 const authAppFactory = require('./auth/authAppFactory.es6');
 
 const apiAppFactory = require('./api/apiAppFactory.es6');
-const WorkerFactory = require('./workers/WorkerFactory.es6');
+// const WorkerFactory = require('./workers/WorkerFactory.es6');
+const workerStorageFactory = require('./workers/workerStorageFactory.es6');
+const workerServiceFactory = require('./workers/workerServiceFactory.es6');
 
 const botAppFactory = require('./bot/botAppFactory.es6');
 const botCtrlFactory = require('./bot/botCtrlFactory.es6');
@@ -51,7 +57,8 @@ const httpCtrlFactory = require('./http/httpCtrlFactory.es6');
 // CREATE APP COMPONENT INSTANCES USING FACTORY MODULES
 let kafkaBus,
     httpClient,
-    configObject;
+    configObject,
+    workerStorage;
 
 let apiApp,
     authApp,
@@ -60,13 +67,14 @@ let apiApp,
 let configService,
     kafkaService,
     httpService,
-    workerFactory;
+    workerService;
 
 let apiCtrl,
     authCtrl,
     botCtrl,
     httpCtrl,
-    configCtrl;
+    configCtrl,
+    loggerAgent;
 
 let httpConfig,
     apiConfig,
@@ -77,22 +85,30 @@ let bootstrapComponents,
     handleError;
 
 bootstrapComponents = () => {
-    configObject = configObjectFactory(SERVICE_NAME);
-    configService = configServiceFactory(configObject);
-    configCtrl = configCtrlFactory(configService, kafkaService);
+    configObject = configObjectFactory(SERVICE_NAME, EventEmitter);
+    configService = configServiceFactory(configObject, EventEmitter);
+    configCtrl = configCtrlFactory(configService, kafkaService, EventEmitter);
+
+    loggerAgent.listenLoggerEventsIn([configCtrl, configService, configObject]);
 
     configCtrl.on('ready', () => {
+
+        workerStorage = workerStorageFactory();
+        workerService = workerServiceFactory(workerStorage);
+
         httpConfig = configService.read('bot');
         httpClient = httpClientFactory(httpConfig);
         httpService = httpServiceFactory(httpClient);
         httpCtrl = httpCtrlFactory(httpService, configService);
 
         apiConfig = configService.read('pusher');
-        apiCtrl = apiCtrlFactory(workerFactory, apiConfig);
+        // apiCtrl = apiCtrlFactory(workerFactory, apiConfig);
+        apiCtrl = apiCtrlFactory(workerService, kafkaService, apiConfig);
         apiApp = apiAppFactory(apiCtrl);
 
         authConfig = configService.read('clientapi.auth.passport');
-        authCtrl = authCtrlFactory(workerFactory, authConfig);
+        // authCtrl = authCtrlFactory(workerFactory, authConfig);
+        authCtrl = authCtrlFactory(workerService, kafkaService, authConfig);
         authApp = authAppFactory(authCtrl, authConfig);
 
         botCtrl = botCtrlFactory(workerFactory, httpCtrl, undefined);
@@ -126,8 +142,12 @@ handleError = (err) => {
     console.log(err);
 };
 
-kafkaBus = kafkaBusFactory(kafkaHost, SERVICE_NAME);
-kafkaService = kafkaServiceFactory(kafkaBus);
-workerFactory = new WorkerFactory(kafkaService);
+kafkaBus = kafkaBusFactory(kafkaHost, SERVICE_NAME, EventEmitter);
+kafkaService = kafkaServiceFactory(kafkaBus, EventEmitter);
+
+loggerAgent = loggerAgentFactory(kafkaService, EventEmitter);
+loggerAgent.listenLoggerEventsIn([kafkaBus, kafkaService]);
+
+
 
 kafkaBus.producer.on('ready', bootstrapComponents);

@@ -2,14 +2,14 @@
  *Created by py on 22/11/2016
  */
 'use strict';
-module.exports = (workerFactory) => {
+module.exports = (workerService, kafkaService) => {
     const apiPayloadCtrl = {};
 
     apiPayloadCtrl.getPayloads = (request, response) => {
 
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
         query = {
             userId: request.user._id.toString(),
             // type: Number(request.params.payloadType),
@@ -31,11 +31,11 @@ module.exports = (workerFactory) => {
         worker.handle('get-payload', query, data).then(
             (result) => {
                 response.json(result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 response.json(error);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         )
 
@@ -54,7 +54,7 @@ module.exports = (workerFactory) => {
 
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
 
         query = {
             userId: request.user._id.toString(),
@@ -72,11 +72,11 @@ module.exports = (workerFactory) => {
         worker.handle('copy-payload', query, data).then(
             (result) => {
                 response.json(result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 response.json(error);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         )
     };
@@ -84,7 +84,7 @@ module.exports = (workerFactory) => {
     let handleClearCommand = (request, response) => {
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
 
         query = {
             userId: request.user._id.toString(),
@@ -98,11 +98,11 @@ module.exports = (workerFactory) => {
         worker.handle('clear-payload', query,data).then(
             (result) => {
                 response.json(result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 response.json(error);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         )
 
@@ -112,7 +112,7 @@ module.exports = (workerFactory) => {
 
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
         console.log(`created new worker ${worker.id}`);
 
         query = [
@@ -129,11 +129,11 @@ module.exports = (workerFactory) => {
                 console.log(`returned from worker ${worker.id}`);
                 console.log(result);
                 response.json(result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 response.json(error);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         );
     };

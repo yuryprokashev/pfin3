@@ -2,7 +2,7 @@
  *Created by py on 22/11/2016
  */
 'use strict';
-module.exports = (workerFactory) => {
+module.exports = (workerService, kafkaService) => {
     const apiMessageCtrl = {};
 
     apiMessageCtrl.handleFreeMessage = (request, response) => {
@@ -13,7 +13,7 @@ module.exports = (workerFactory) => {
     apiMessageCtrl.handleStructuredMessage = (request, response) => {
         let worker, query, data;
 
-        worker = workerFactory.worker();
+        worker = workerService.worker(kafkaService);
         query = {};
         data = request.body;
         data.userId = data.user;
@@ -22,11 +22,11 @@ module.exports = (workerFactory) => {
         worker.handle('create-message', query, data).then(
             (result) => {
                 response.json(result);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             },
             (error) => {
                 response.json(error);
-                workerFactory.purge(worker.id);
+                workerService.purge(worker.id);
             }
         );
     };
