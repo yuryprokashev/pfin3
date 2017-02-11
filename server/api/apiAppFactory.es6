@@ -15,5 +15,6 @@ module.exports = (apiController) => {
     // apiApp.get('/payload/monthData/:targetPeriod', payloadCtrl.getMonthData);
     apiApp.get('/payload/monthData/:startMonth/:endMonth', payloadCtrl.getMonthData);
     apiApp.post('/message/:t', messageCtrl.handleStructuredMessage);
+
     return apiApp;
 };

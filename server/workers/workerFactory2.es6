@@ -10,12 +10,12 @@ module.exports = (workerId, kafkaService) => {
     let handleKafkaMessage,
         isMyKafkaMessage;
 
-    isMyKafkaMessage = (kafkaMessage) => {
-        let messageSignature;
-        messageSignature = kafkaService.extractId(kafkaMessage);
-
-        return workerId === messageSignature;
-    };
+    // isMyKafkaMessage = (kafkaMessage) => {
+    //     let messageSignature;
+    //     messageSignature = kafkaService.extractId(kafkaMessage);
+    //
+    //     return workerId === messageSignature;
+    // };
 
 
     worker.handle = (topicPrefix, query, data) => {
@@ -24,7 +24,7 @@ module.exports = (workerId, kafkaService) => {
                 let context;
                 handleKafkaMessage = kafkaMessage => {
                     let response;
-                    if(isMyKafkaMessage(kafkaMessage)) {
+                    if(kafkaService.isMyMessage(workerId, kafkaMessage)) {
                         response = kafkaService.extractResponse(kafkaMessage);
                         if(response.error === undefined) {
                             resolve(response);

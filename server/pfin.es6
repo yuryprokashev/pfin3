@@ -91,6 +91,8 @@ bootstrapComponents = () => {
 
     loggerAgent.listenLoggerEventsIn([configCtrl, configService, configObject]);
 
+    configCtrl.start();
+
     configCtrl.on('ready', () => {
 
         workerStorage = workerStorageFactory();
@@ -146,8 +148,5 @@ kafkaBus = kafkaBusFactory(kafkaHost, SERVICE_NAME, EventEmitter);
 kafkaService = kafkaServiceFactory(kafkaBus, EventEmitter);
 
 loggerAgent = loggerAgentFactory(kafkaService, EventEmitter);
-loggerAgent.listenLoggerEventsIn([kafkaBus, kafkaService]);
-
-
 
 kafkaBus.producer.on('ready', bootstrapComponents);

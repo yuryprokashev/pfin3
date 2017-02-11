@@ -8,6 +8,7 @@ module.exports = (workerService, kafkaService, config) =>{
     const status = require('http-status');
     const apiPayloadCtrlFactory = require('./apiPayloadCtrlFactory.es6');
     const apiMessageCtrlFactory = require('./apiMessageCtrlFactory.es6');
+
     apiController.payload = apiPayloadCtrlFactory(workerService, kafkaService);
     apiController.message = apiMessageCtrlFactory(workerService, kafkaService);
 

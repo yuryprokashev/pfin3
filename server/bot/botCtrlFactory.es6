@@ -3,10 +3,11 @@
  */
 
 'use strict';
+// TODO. NEVER INJECT ONE CONTROLLER TO ANOTHER
 module.exports = (workerFactory, httpCtrl, config) => {
     let users, deliveredKafkaMessages;
     users = new Map();
-    deliveredKafkaMessages = new Map();
+    deliveredKafkaMessages = new Map(); //TODO. NEVER STORE IN CONTROLLER!
 
 
     const appendUserToUpdate = (tgUpdate) => {
